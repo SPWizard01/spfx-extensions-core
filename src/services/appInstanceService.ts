@@ -3,6 +3,7 @@ import { isAppAllowedInCurrentWeb } from "./allowedAppsService";
 import { SPFxExtensionCore } from "../utilities/constants";
 import type {
   SPFxExtensionAppDefinition,
+  SPFxExtensionAppEntryPoint,
   SPFxExtensionAppInstance,
 } from "../models/appModel";
 import type {
@@ -153,9 +154,11 @@ export function registerAppInstanceService() {
       // if (await isAppBlacklistedInCurrentWeb(checkApp)) {
       //   return null;
       // }
+
       if (!(await isAppAllowedInCurrentWeb(checkApp))) {
         return undefined;
       }
+
       const foundApp = ensureApp(appId);
       console.debug(SPFxExtensionCore, `Creating app instance for app`, appId);
       const appInstance = createAppInstance(runTimeConfig);
@@ -173,7 +176,7 @@ export function registerAppInstanceService() {
   }
 }
 function launchSPFxExtensionApp(
-  arg0: { launch: import("../models/appModel").SPFxExtensionAppEntryPoint },
+  arg0: { launch: SPFxExtensionAppEntryPoint },
   appInstance: SPFxExtensionAppInstance
 ) {
   throw new Error("Function not implemented.");

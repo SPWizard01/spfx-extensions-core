@@ -32,6 +32,13 @@ const AllowedAppsListDataPromise: Promise<AllowedAppsListData[]> = new Promise(
       if (cachedData.length > 0) {
         console.info(SPFxExtensionCore, "Cache mismatch, loading allowed apps data...");
       }
+
+      const appWhiteListEnabled = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
+      if (!appWhiteListEnabled) {
+        resolve([{ Id: 1, AppId: "*", FileName: "", RelativeUrl: "/", Title: "All apps allowed", date: new Date().toISOString(), expires: new Date().toISOString() }]);
+        return;
+      }
+
       const url = `${window.location.origin}/sites/appcatalog/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$top=1000`;
       const allowedAppsListData = await fetchAllAllowedApps(url);
       await addOrUpdateAllowedAppsToCache(allowedAppsListData, 5);

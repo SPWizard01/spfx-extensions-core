@@ -5,6 +5,7 @@ import type {
   SPFxExtensionAppRegistration,
 } from "../models/appModel";
 import type { SPFxExtensionAppUtils } from "../models/appUtils";
+import type { ConfigurationListData } from "../models/configurationList";
 import type {
   SPFxExtensionAppContextInjection,
   SPOnlineContextInjection,
@@ -46,6 +47,7 @@ declare global {
     MSOLayout_IsWikiEditMode?: () => boolean;
 
     __SPFxExtensions: {
+      __CoreConfig: ConfigurationListData[];
       /**
        * Required to build `window.__SPFxExtensions` object, initializes Core solution, ensures that its called only once;
        */

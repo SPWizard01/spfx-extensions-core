@@ -10,9 +10,15 @@ import { DEBUG_KEYS } from "../utilities/debug";
 export function getRootCoreLocation() {
   const devPort = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE));
   const devCDN = `https://localhost:${devPort}/core.js`;
-  return devPort > 0
+  const cdnLoc = devPort > 0
     ? devCDN
-    : "/sites/AppCatalog/CDN/SPFxExtensionAppsCore/core.js";
+    : window.__SPFxExtensions.__CoreConfig.find((c) => c.Title === "CoreUrl")?.Data;
+  if (!cdnLoc) {
+    const msg = "Core URL is not set, please set it in __SPFxExtensions.__CoreConfig.CoreUrl";
+    console.error(msg);
+    throw new Error(msg);
+  }
+  return cdnLoc;
 }
 
 /**
@@ -36,7 +42,7 @@ export function loadCoreForSPFxOrClassicWrapper() {
     coreScript.type = "module";
     coreScript.addEventListener("error", (err) => {
       console.error(
-        "Catastrophic failure, cannot load Modern Apps Core from",
+        "Catastrophic failure, cannot load SPFxExtensions Core from",
         coreUrl,
         err
       );

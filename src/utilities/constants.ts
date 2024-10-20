@@ -10,7 +10,7 @@ export const ALLOWEDAPPSLIST_NAME = "AllowedApps";
 export const MANIFEST_NAME = "manifest.txt";
 export const APPCOLLECTION_MANIFEST_NAME = "apps.txt";
 export const APP_LOADING = "Loading...";
-
+export const CONFIGURATION_LIST_NAME = "SPFxExtensionsConfiguration";
 
 export const BLACKLIST_CACHE_KEY =
   `${DEBUG_KEYS.SPFXEXT}${BLACKLIST_NAME}` as const;

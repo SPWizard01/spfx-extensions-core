@@ -11,6 +11,7 @@ import type { AllowedAppsListData } from "../models/allowedAppsListData";
 import { DEBUG_KEYS, isInDebug } from "../utilities/debug";
 import { SPFxExtensionCore } from "../utilities/constants";
 import type { HubData } from "../models/hubData";
+import type { ConfigurationListData } from "../models/configurationList";
 
 interface spfxExtensionsCoreDB extends DBSchema {
   AppFolderManifestCache: {
@@ -29,15 +30,20 @@ interface spfxExtensionsCoreDB extends DBSchema {
     key: string;
     value: HubData;
   };
+  SPFxExtensionConfig: {
+    key: string;
+    value: ConfigurationListData;
+  };
 }
 
 const AppFolderManifestCache = "AppFolderManifestCache";
 const AppCollectionManifestCache = "AppCollectionManifestCache";
 const AllowedApps = "AllowedApps";
 const HubSiteData = "HubSiteData";
+const SPFxExtensionConfig = "SPFxExtensionConfig";
 
 const DBNAME = `${DEBUG_KEYS.SPFXEXT}COREDB`;
-const openDBPromise = openDB<spfxExtensionsCoreDB>(DBNAME, 3, {
+const openDBPromise = openDB<spfxExtensionsCoreDB>(DBNAME, 1, {
   blocking(_currentVersion, _blockedVersion, _event) {
     spfxExtensionsCoreDB.close();
     alert("A new version of this page is ready. Please reload the page.");
@@ -51,14 +57,12 @@ const openDBPromise = openDB<spfxExtensionsCoreDB>(DBNAME, 3, {
       });
       database.createObjectStore(AllowedApps, { keyPath: "Id" });
       database.createObjectStore(HubSiteData, { keyPath: "SiteId" });
+      database.createObjectStore(SPFxExtensionConfig, { keyPath: "Title" });
     }
     //diff between 0 and 1 just delete the old database and let it be repopulated
-    if (oldVersion === 1) {
-      database.createObjectStore(AllowedApps, { keyPath: "Id" });
-    }
-    if (oldVersion === 2) {
-      database.createObjectStore(HubSiteData, { keyPath: "SiteId" });
-    }
+    // if (oldVersion === 1) {
+    //   database.createObjectStore(AllowedApps, { keyPath: "Id" });
+    // }
   },
 });
 openDBPromise.catch((err) => {
@@ -241,8 +245,7 @@ export async function evictManifestCache(
     if (matchingItem) {
       if (matchingItem.hash !== item.hash) {
         console.warn(
-          `Evicted ${matchingItem.url} from ${
-            isAppCollection ? "AppCollection" : "AppManifest"
+          `Evicted ${matchingItem.url} from ${isAppCollection ? "AppCollection" : "AppManifest"
           } cache. Because of hash mismatch.`
         );
         isAppCollection
@@ -256,15 +259,14 @@ export async function evictManifestCache(
   if (toEvict > 0) {
     isAppCollection
       ? await removeAppCollectionManifestsFromCache(
-          cacheToRemove.map((c) => c.url)
-        )
+        cacheToRemove.map((c) => c.url)
+      )
       : await removeAppFolderManifestsFromCache(
-          cacheToRemove.map((c) => c.url)
-        );
+        cacheToRemove.map((c) => c.url)
+      );
     console.warn(
       SPFxExtensionCore,
-      `Evicted ${toEvict} items from ${
-        isAppCollection ? "AppCollection" : "AppManifest"
+      `Evicted ${toEvict} items from ${isAppCollection ? "AppCollection" : "AppManifest"
       } cache.`
     );
   }

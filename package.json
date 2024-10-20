@@ -1,7 +1,16 @@
 {
   "name": "spfx-extensions-core",
-  "module": "index.ts",
   "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./spfx": "./dist/extensions/spfx.js",
+    "./utils/common": "./dist/utilities/common.js",
+    "./utils/display": "./dist/utilities/display.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "bun run bunbuild.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

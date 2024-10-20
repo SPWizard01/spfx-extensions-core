@@ -13,7 +13,10 @@ function initGlobal() {
   if (window.__SPFxExtensions.__CoreInitialized) {
     return;
   }
-  initHistoryInterception();
+  const historyInterceptEnabled = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "InterceptHistory")?.Data === "true";
+  if (historyInterceptEnabled) {
+    initHistoryInterception();
+  }
   registerGlobalListeners();
   registerAppService();
   registerAppInstanceService();
@@ -35,7 +38,6 @@ export async function initCoreServices() {
   initGlobal();
 
   const ctxInfo = await getContextInfoAsync();
-  //2dd351f9-7609-4019-823c-7a86253b6370
 
   let siteUrl = "NO_ABSOLUTE_URL";
   let webUrl = "NO_ABSOLUTE_URL";
