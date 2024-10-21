@@ -1,6 +1,6 @@
 import type { SPFxExtensionUtilsPlaceHolderProvider } from "./models/appUtils";
 import { getCompatiblePageContextAsync } from "./services/spContextService";
-import { loadCoreForSPFxOrClassicWrapper } from "./extensions/spfx";
+import { loadCoreForSPFxOrClassicWrapper } from "./__spfx";
 import { getClassicDisplayMode } from "./utilities/display";
 import { SPFxExtensionCore } from "./utilities/constants";
 

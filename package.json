@@ -1,18 +1,33 @@
 {
-  "name": "spfx-extensions-core",
+  "name": "@spfx-extensions/core",
+  "description": "Core Library used by SPFxExtensions",
+  "author": "SPWizard01",
+  "license": "GPL-3.0-only",
   "type": "module",
+  "version": "0.0.2",
+  "access": "public",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SPWizard01/spfx-extensions-core"
+  },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": "./dist/index.js",
-    "./spfx": "./dist/extensions/spfx.js",
+    "./spfx": "./dist/__spfx.js",
+    "./core": "./dist/__spfxCore.js",
     "./utils/common": "./dist/utilities/common.js",
     "./utils/display": "./dist/utilities/display.js",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "bun run bunbuild.ts"
+    "build": "bun run bunbuild.ts",
+    "esbuild": "bun run esbuild.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "esbuild": "^0.24.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
