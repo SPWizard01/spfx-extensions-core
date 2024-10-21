@@ -10,6 +10,7 @@ startBunDevServer({
             "BUILD_DATE": JSON.stringify(new Date().toISOString()),
         },
     },
+    writeManifest: true,
     tls: {
         cert: file("./serve_cert.pem"),
         key: file("./serve_key.pem"),

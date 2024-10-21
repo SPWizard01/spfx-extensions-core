@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "bun-dev-server": "^0.0.5",
+    "bun-dev-server": "^0.0.6",
     "esbuild": "^0.24.0"
   },
   "peerDependencies": {
