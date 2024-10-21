@@ -2,7 +2,7 @@ import { buildSync } from "esbuild"
 import { $, inspect } from "bun";
 await $`rm -rf dist`;
 const result = buildSync({
-    entryPoints: ["./src/index.ts", "./src/__spfx.ts", "./src/__spfxCore.ts", "./src/coreClassicWrapper.ts", "./src/coreClassicCustomAction.ts", "./src/utilities/common.ts", "./src/utilities/display.ts"],
+    entryPoints: ["./src/index.ts", "./src/__spfx.ts", "./src/__spfxCore.ts", "./src/services/appLauncher.ts", "./src/coreClassicWrapper.ts", "./src/coreClassicCustomAction.ts", "./src/utilities/common.ts", "./src/utilities/display.ts"],
     sourcemap: "linked",
     outdir: "./dist",
     platform: "browser",
