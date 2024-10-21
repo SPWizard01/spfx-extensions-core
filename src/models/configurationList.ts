@@ -30,7 +30,7 @@ export const CoreDefaultConfiguration = [
     },
     {
         Title: ConfigurationNames.RootCDNLocation,
-        Data: "/sites/AppCatalog",
+        Data: "/sites/appcatalog",
     }
 ];
 

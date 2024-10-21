@@ -5,7 +5,7 @@ import { DEBUG_KEYS } from "./utilities/debug";
  * Setting `localStorage["SPFXEXTDEV_CORE"]` to a number i.e. `33343` makes it load
  * from `https://localhost:33343/`.
  *
- * Default URL: ```/sites/AppCatalog/CDN/SPFxExtensionAppsCore/core.js```
+ * Default URL: ```/sites/appcatalog/CDN/SPFxExtensionAppsCore/core.js```
  */
 export async function getRootCoreLocation() {
   const devPort = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE));

@@ -55,11 +55,14 @@ export async function initCoreServices() {
     siteId = ctxInfo.context.siteId;
     hubSiteId = ctxInfo.context.hubSiteId;
   }
+  siteUrl = siteUrl.toLowerCase();
+  webUrl = webUrl.toLowerCase();
   if (siteId) {
-    siteId = siteId.replace("{", "").replace("}", "");
+    siteId = siteId.replace("{", "").replace("}", "").toLowerCase();
   }
   if (hubSiteId && siteId) {
     hubSiteUrl = await getHubSiteUrl(siteId, hubSiteId);
+    hubSiteUrl = hubSiteUrl.toLowerCase();
   }
   window.__SPFxExtensions.__CorePromiseResolver?.();
   loadModernApps(siteUrl, webUrl, hubSiteUrl);

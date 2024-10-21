@@ -4,7 +4,7 @@
   "author": "SPWizard01",
   "license": "GPL-3.0-only",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "access": "public",
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "bun-dev-server": "^0.0.5",
     "esbuild": "^0.24.0"
   },
   "peerDependencies": {

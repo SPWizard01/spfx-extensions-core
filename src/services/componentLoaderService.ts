@@ -1,6 +1,5 @@
 import {
   MANIFEST_NAME,
-  ROOT_APPS_LOCATION,
   ROOT_APPS_MANIFEST_LOCATION,
   APPCOLLECTION_MANIFEST_NAME,
   WELL_KNOWN_MANIFEST_LOCATION,
@@ -239,7 +238,7 @@ export async function fetchAppsTXTFromAllLocations(
 /***
  * @param baseUrl should be:
  *
- * Root: ```/sites/AppCatalog/CDN/SPFxExtensionApps/```
+ * Root: ```/sites/appcatalog/CDN/SPFxExtensionApps/```
  *
  * Site: ```/sites/[SomeSite]/SPFxExtensionApps/```
  */
