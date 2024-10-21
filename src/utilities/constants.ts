@@ -2,11 +2,11 @@ import { DEBUG_KEYS } from "./debug";
 
 export const APP_CATALOG = "/sites/AppCatalog";
 export const CDN_LOCATION = "CDN";
-export const ROOT_LOCATION = `${APP_CATALOG}/${CDN_LOCATION}`;
-export const MODER_APPS_FOLDER = "SPFxExtensionApps";
-export const WELL_KNOWN_MANIFEST_LOCATION = `/${MODER_APPS_FOLDER}/`;
-export const BLACKLIST_NAME = "AppBlacklist";
-export const ALLOWEDAPPSLIST_NAME = "AllowedApps";
+export const ROOT_CDN_LOCATION = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "RootCDNLocation")?.Data ?? `${APP_CATALOG}/${CDN_LOCATION}`;
+export const EXTENSION_APPS_FOLDER = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "ExtensionFolderName")?.Data ?? "SPFxExtensions";
+export const WELL_KNOWN_MANIFEST_LOCATION = `/${EXTENSION_APPS_FOLDER}/`;
+export const BLACKLIST_NAME = "SPFxExtensionsBlackList";
+export const ALLOWEDAPPSLIST_NAME = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "AppWhiteListName")?.Data ?? "SPFxExtensionsWhiteList";
 export const MANIFEST_NAME = "manifest.txt";
 export const APPCOLLECTION_MANIFEST_NAME = "apps.txt";
 export const APP_LOADING = "Loading...";
@@ -21,7 +21,7 @@ export const ALLOWEDAPPS_CACHE_KEY =
  * Points to root sharepoint location into app catalog
  * OnPrem/SPO: ```/sites/AppCatalog/CDN/SPFxExtensionApps/```
  */
-export const ROOT_APPS_LOCATION = `${ROOT_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
+export const ROOT_APPS_LOCATION = `${ROOT_CDN_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
 
 /**
  * Points to root sharepoint manifest location

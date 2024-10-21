@@ -12,6 +12,7 @@ import { isInDebug } from "../utilities/debug";
 import { getContextInfoAsync } from "./spContextService";
 import type { AllowedAppsListData } from "../models/allowedAppsListData";
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
+import { ensureAppWhiteList } from "./configurationService";
 
 const siteContextInfo = await getContextInfoAsync();
 const webUrl =
@@ -38,8 +39,8 @@ const AllowedAppsListDataPromise: Promise<AllowedAppsListData[]> = new Promise(
         resolve([{ Id: 1, AppId: "*", FileName: "", RelativeUrl: "/", Title: "All apps allowed", date: new Date().toISOString(), expires: new Date().toISOString() }]);
         return;
       }
-
-      const url = `${window.location.origin}/sites/appcatalog/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$top=1000`;
+      await ensureAppWhiteList();
+      const url = `${window.location.origin}/sites/appcatalog/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$select=Id,Title,AppId,FileName,RelativeUrl&$top=1000`;
       const allowedAppsListData = await fetchAllAllowedApps(url);
       await addOrUpdateAllowedAppsToCache(allowedAppsListData, 5);
       resolve(allowedAppsListData);

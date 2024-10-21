@@ -1,82 +1,127 @@
-import { CONFIGURATION_LIST_NAME, SPFxExtensionCore } from "../utilities/constants";
+import { ALLOWEDAPPSLIST_NAME, SPFxExtensionCore } from "../utilities/constants";
 
-export async function ensureConfigurationListDataField() {
+
+async function ensureAppWhiteListFields(digestValue: string) {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
-    const fieldsUrl = `/sites/appcatalog/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields`;
+    const fieldsUrl = `/sites/appcatalog/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')/fields`;
     try {
         const req = await fetch(
-            fieldsUrl
+            fieldsUrl,
+            {
+                headers: {
+                    Accept: "application/json;odata=verbose",
+                },
+            }
         );
         if (req.status === 200) {
             const data = await req.json();
-            const fields = data.value;
-            const fieldNames = fields.map((f: any) => f.Title);
-            if (!fieldNames.includes("Data")) {
-                // Add the Title field
-                const addFieldReq = await fetch(
-                    fieldsUrl,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            __metadata: {
-                                type: "SP.Field",
-                            },
-                            Title: "Data",
-                            FieldTypeKind: 2,
-                            Required: true,
-                        }),
-                    }
-                );
-                if (addFieldReq.status === 201) {
-                    console.info(SPFxExtensionCore, "Data field added successfully.");
-                } else {
-                    console.error(SPFxExtensionCore, "Unable to add Title field.");
+            const fields = data.d.results;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const fieldNames = fields.map((f: any) => f.InternalName);
+            const textFields = ["AppId", "FileName", "RelativeUrl"];
+            for (const fieldName of textFields) {
+                if (!fieldNames.includes(fieldName)) {
+                    // Add the Data field
+                    await ensureTextField(fieldsUrl, fieldName, false, digestValue);
                 }
             }
+
         }
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while ensuring configuration list data fields.", err);
+        console.error(SPFxExtensionCore, "Error while ensuring list fields.", err);
     }
 }
 
-export async function ensureConfigurationList() {
+async function ensureTextField(fieldsUrl: string, fieldInternalName: string, required: boolean, digestValue: string) {
+    const addFieldReq = await fetch(
+        fieldsUrl,
+        {
+            method: "POST",
+            headers: {
+                Accept: "application/json;odata=verbose",
+                "Content-Type": "application/json;odata=verbose",
+                "X-RequestDigest": digestValue,
+            },
+            body: JSON.stringify({
+                __metadata: {
+                    type: "SP.Field",
+                },
+                Title: fieldInternalName,
+                FieldTypeKind: 2,
+                Required: required,
+            }),
+        }
+    );
+    if (addFieldReq.status === 201) {
+        console.info(SPFxExtensionCore, fieldInternalName, "field added successfully.");
+    } else {
+        console.error(SPFxExtensionCore, fieldInternalName, "Unable to add field.");
+    }
+}
+
+export async function ensureAppWhiteList() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')
     try {
         const req = await fetch(
-            `/sites/appcatalog/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')`
+            `/sites/appcatalog/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')`
         );
+        const dgst = await getDigest();
+        let newList = false;
         if (req.status === 404) {
+            newList = true;
+            console.log(SPFxExtensionCore, "Creating app white list.");
             // Create the list
             const createReq = await fetch(
                 "/sites/appcatalog/_api/web/lists",
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
+                        Accept: "application/json;odata=verbose",
+                        "Content-Type": "application/json;odata=verbose",
+                        "X-RequestDigest": dgst,
                     },
                     body: JSON.stringify({
-                        __metadata: {
+                        "__metadata": {
                             type: "SP.List",
                         },
+                        // AllowContentTypes: false,
+                        // ContentTypesEnabled: false,
                         BaseTemplate: 100,
-                        Title: "SPFxExtensionsConfiguration",
-                        Description: "Configuration list for SPFxExtensions",
+                        Title: ALLOWEDAPPSLIST_NAME,
+                        Description: "App whitelist for SPFxExtensions",
                     }),
                 }
             );
             if (createReq.status === 201) {
                 console.info("Configuration list created successfully.");
+
             } else {
                 console.error("Unable to create configuration list.");
             }
         }
-        await ensureConfigurationListDataField();
+        await ensureAppWhiteListFields(dgst);
     }
     catch (err) {
         console.error(SPFxExtensionCore, "Error while ensuring configuration list.", err);
     }
+}
+
+
+async function getDigest() {
+    const req = await fetch(
+        "/sites/appcatalog/_api/contextinfo",
+        {
+            method: "POST",
+            headers: {
+                Accept: "application/json;odata=verbose",
+                "Content-Type": "application/json",
+            },
+        }
+    );
+    if (req.status === 200) {
+        const data = await req.json();
+        return data.d.GetContextWebInformation.FormDigestValue;
+    }
+    return "";
 }

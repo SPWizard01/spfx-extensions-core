@@ -1,8 +1,10 @@
 export const ConfigurationNames = {
     Status: "Status",
-    CoreUrl: "CoreUrl",
+    RootCDNLocation: "RootCDNLocation",
+    ExtensionFolderName: "ExtensionFolderName",
     InterceptHistory: "InterceptHistory",
     EnableAppWhiteList: "EnableAppWhiteList",
+    AppWhiteListName: "AppWhiteListName",
 } as const;
 
 export const CoreDefaultConfiguration = [
@@ -11,8 +13,8 @@ export const CoreDefaultConfiguration = [
         Data: "Installed",
     },
     {
-        Title: ConfigurationNames.CoreUrl,
-        Data: "/sites/AppCatalog/CDN/SPFxExtensionCore/core.js",
+        Title: ConfigurationNames.ExtensionFolderName,
+        Data: "SPFxExtensions",
     },
     {
         Title: ConfigurationNames.InterceptHistory,
@@ -21,6 +23,14 @@ export const CoreDefaultConfiguration = [
     {
         Title: ConfigurationNames.EnableAppWhiteList,
         Data: "true",
+    },
+    {
+        Title: ConfigurationNames.AppWhiteListName,
+        Data: "SPFxExtensionsWhiteList",
+    },
+    {
+        Title: ConfigurationNames.RootCDNLocation,
+        Data: "/sites/AppCatalog",
     }
 ];
 
