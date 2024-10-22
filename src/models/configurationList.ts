@@ -22,7 +22,7 @@ export const CoreDefaultConfiguration = [
     },
     {
         Title: ConfigurationNames.EnableAppWhiteList,
-        Data: "true",
+        Data: "false",
     },
     {
         Title: ConfigurationNames.AppWhiteListName,
