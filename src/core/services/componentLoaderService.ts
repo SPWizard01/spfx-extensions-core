@@ -4,12 +4,12 @@ import {
   APPCOLLECTION_MANIFEST_NAME,
   WELL_KNOWN_MANIFEST_LOCATION,
   SPFxExtensionCore,
-} from "../utilities/constants";
-import { getContentDigest } from "../utilities/digest";
+} from "../../utilities/constants";
+import { getContentDigest } from "../../utilities/digest";
 import { isFileAllowedInCurrentWeb } from "./allowedAppsService";
 
 import { getManifestFromCache, setOrUpdateManifest } from "./idbService";
-import { DEBUG_KEYS, isInDebug } from "../utilities/debug";
+import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import type {
   AppCollectionManifest,
   AppFolderManifest,
@@ -17,8 +17,8 @@ import type {
   ManifestCacheItem,
   ManifestItem,
   ManifestLocation,
-} from "../models/cache";
-import type { SPFxExtensionAppManifest } from "../models/appModel";
+} from "../../models/cache";
+import type { SPFxExtensionAppManifest } from "../../models/appModel";
 
 interface AssetPromise {
   url: string;

@@ -1,4 +1,4 @@
-import { DEBUG_KEYS } from "./utilities/debug";
+import { DEBUG_KEYS } from "../utilities/debug";
 
 const debugPort = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE));
 const isDebugging = debugPort > 0;

@@ -4,9 +4,9 @@ import { registerGlobalListeners } from "./globalModernAppsListeners";
 import { loadModernApps } from "./componentLoaderService";
 import { initHistoryInterception } from "./historyService";
 import { registerManifestWatcher } from "./manifestWatcherService";
-import { SPFxExtensionCore } from "../utilities/constants";
+import { SPFxExtensionCore } from "../../utilities/constants";
 import { getHubSiteUrl } from "./hubDataService";
-import { getContextInfoAsync } from "./spContextService";
+import { getContextInfoAsync } from "../../services/spContextService";
 
 function initGlobal() {
   //init once.

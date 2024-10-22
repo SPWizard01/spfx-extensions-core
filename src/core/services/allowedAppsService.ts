@@ -2,16 +2,16 @@ import {
   ALLOWEDAPPSLIST_ERROR,
   ALLOWEDAPPSLIST_NAME,
   SPFxExtensionCore,
-} from "../utilities/constants";
+} from "../../utilities/constants";
 import {
   addOrUpdateAllowedAppsToCache,
   evictAllowedAppsCache,
   getAllAllowedApps,
 } from "./idbService";
-import { isInDebug } from "../utilities/debug";
-import { getContextInfoAsync } from "./spContextService";
-import type { AllowedAppsListData } from "../models/allowedAppsListData";
-import type { SPFxExtensionAppRegistration } from "../models/appModel";
+import { DEBUG_KEYS, isAppInDebug, isFileInDebug } from "../../utilities/debug";
+import { getContextInfoAsync } from "../../services/spContextService";
+import type { AllowedAppsListData } from "../../models/allowedAppsListData";
+import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import { ensureAppWhiteList } from "./configurationService";
 
 const siteContextInfo = await getContextInfoAsync();
@@ -135,14 +135,14 @@ function currentWebInAllowedEntry(allowedEntry: AllowedAppsListData) {
 }
 
 export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
-  // Service should load blacklist list from whatever source which can be reached by everyone.
-  const allowedList = await AllowedAppsListDataPromise;
+  if (isFileInDebug(fileNameWithPath)) return true;
 
+  // Service should load list data from whatever source which can be reached by everyone.
+  const allowedList = await AllowedAppsListDataPromise;
   if (webUrl === "ERROR") {
     console.warn(ALLOWEDAPPSLIST_ERROR);
     return false;
   }
-  if (isInDebug) return true;
   if (!fileIsAllowed(fileNameWithPath, allowedList)) {
     console.warn(
       SPFxExtensionCore,
@@ -151,6 +151,8 @@ export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
       "is not allowed for web",
       webUrl
     );
+    console.warn(SPFxExtensionCore, `File ${fileNameWithPath} is not allowed if you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port.`);
+
     return false;
   }
   return true;
@@ -159,8 +161,8 @@ export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
 export async function isAppAllowedInCurrentWeb(
   appDef: SPFxExtensionAppRegistration
 ) {
+  if (isAppInDebug(appDef.id)) return true;
   const allowedApps = await AllowedAppsListDataPromise;
-  if (isInDebug) return true;
   if (!appIsAllowed(appDef, allowedApps)) {
     console.warn(
       SPFxExtensionCore,
@@ -171,6 +173,7 @@ export async function isAppAllowedInCurrentWeb(
       "is not enabled for web",
       webUrl
     );
+    console.warn(SPFxExtensionCore, `If you are a developer, you can enable this app by adding ${DEBUG_KEYS.SPFXEXT}${appDef.id} item to your localstorage with a number value.`);
     return false;
   }
   return true;

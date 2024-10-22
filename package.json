@@ -4,7 +4,7 @@
   "author": "SPWizard01",
   "license": "GPL-3.0-only",
   "type": "module",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "access": "public",
   "repository": {
     "type": "git",
@@ -16,7 +16,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./spfx": "./dist/__spfx.js",
-    "./core": "./dist/__spfxCore.js",
+    "./core": "./dist/core/__spfxCore.js",
     "./context": "./dist/services/spContextService.js",
     "./launcher": "./dist/services/appLauncher.js",
     "./utils/common": "./dist/utilities/common.js",
@@ -25,7 +25,8 @@
   },
   "scripts": {
     "build": "bun run bunbuild.ts",
-    "esbuild": "bun run esbuild.ts"
+    "esbuild": "bun run esbuild.ts",
+    "serve": "bun run serve.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

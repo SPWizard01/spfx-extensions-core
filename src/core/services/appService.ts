@@ -1,5 +1,5 @@
-import type { SPFxExtensionAppDefinition } from "../models/appModel";
-import { APP_LOADING, SPFxExtensionCore } from "../utilities/constants";
+import type { SPFxExtensionAppDefinition } from "../../models/appModel";
+import { APP_LOADING, SPFxExtensionCore } from "../../utilities/constants";
 import { isAppAllowedInCurrentWeb } from "./allowedAppsService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {

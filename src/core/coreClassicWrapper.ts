@@ -1,8 +1,8 @@
-import type { SPFxExtensionUtilsPlaceHolderProvider } from "./models/appUtils";
-import { getCompatiblePageContextAsync } from "./services/spContextService";
-import { loadCoreForSPFxOrClassicWrapper } from "./__spfx";
-import { getClassicDisplayMode } from "./utilities/display";
-import { SPFxExtensionCore } from "./utilities/constants";
+import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
+import { getCompatiblePageContextAsync } from "../services/spContextService";
+import { loadCoreForSPFxOrClassicWrapper } from "../__spfx";
+import { getClassicDisplayMode } from "../utilities/display";
+import { SPFxExtensionCore } from "../utilities/constants";
 
 const IS_MODERN_EXPIRIENCE = !!!window._spBodyOnLoadFunctions;
 async function initClassicCore() {

@@ -3,7 +3,7 @@ import { file } from "bun"
 
 startBunDevServer({
     buildConfig: {
-        entrypoints: ["./src/__spfxCore.ts"],
+        entrypoints: ["./src/core/__spfxCore.ts"],
         outdir: "./dist",
         sourcemap: "linked",
         define: {

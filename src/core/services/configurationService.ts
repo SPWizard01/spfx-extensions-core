@@ -1,4 +1,4 @@
-import { ALLOWEDAPPSLIST_NAME, SPFxExtensionCore } from "../utilities/constants";
+import { ALLOWEDAPPSLIST_NAME, SPFxExtensionCore } from "../../utilities/constants"
 
 
 async function ensureAppWhiteListFields(digestValue: string) {

@@ -1,16 +1,16 @@
 import { ensureApp } from "./appService";
 import { isAppAllowedInCurrentWeb } from "./allowedAppsService";
-import { SPFxExtensionCore } from "../utilities/constants";
+import { SPFxExtensionCore } from "../../utilities/constants";
 import type {
   SPFxExtensionAppDefinition,
   SPFxExtensionAppEntryPoint,
   SPFxExtensionAppInstance,
-} from "../models/appModel";
+} from "../../models/appModel";
 import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
-} from "../models/events";
-import type { SPFxExtensionAppRuntimeConfig } from "../models/appConfig";
+} from "../../models/events";
+import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
 
 const emptyDummy = () => {
   throw "This should not happen";

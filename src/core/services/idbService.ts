@@ -6,12 +6,12 @@ import type {
   AppFolderManifestCacheItem,
   ManifestBase,
   ManifestItem,
-} from "../models/cache";
-import type { AllowedAppsListData } from "../models/allowedAppsListData";
-import { DEBUG_KEYS, isInDebug } from "../utilities/debug";
-import { SPFxExtensionCore } from "../utilities/constants";
-import type { HubData } from "../models/hubData";
-import type { ConfigurationListData } from "../models/configurationList";
+} from "../../models/cache";
+import type { AllowedAppsListData } from "../../models/allowedAppsListData";
+import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import { SPFxExtensionCore } from "../../utilities/constants";
+import type { HubData } from "../../models/hubData";
+import type { ConfigurationListData } from "../../models/configurationList";
 
 interface spfxExtensionsCoreDB extends DBSchema {
   AppFolderManifestCache: {

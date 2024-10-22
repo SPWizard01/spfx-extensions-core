@@ -1,4 +1,4 @@
-import { SPFxExtensionCore } from "../utilities/constants";
+import { SPFxExtensionCore } from "../../utilities/constants";
 import {
   addOrUpdateHubDataToCache,
   evictHubDataCache,

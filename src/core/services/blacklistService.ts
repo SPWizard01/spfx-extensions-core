@@ -1,16 +1,16 @@
-import type { SPFxExtensionAppDefinition } from "../models/appModel";
+import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import type {
   BlackListData,
   BlackListDataCache,
-} from "../models/blackListData";
+} from "../../models/blackListData";
 import {
   APPBLACKLIST_ERROR,
   APPBLACKLIST_ERROR_NO_URL,
   BLACKLIST_CACHE_KEY,
   BLACKLIST_NAME,
   SPFxExtensionCore,
-} from "../utilities/constants";
-import { getContextInfoAsync } from "./spContextService";
+} from "../../utilities/constants";
+import { getContextInfoAsync } from "../../services/spContextService";
 
 const siteContextInfo = await getContextInfoAsync();
 const webUrl =
