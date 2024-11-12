@@ -5,9 +5,10 @@ export const ConfigurationNames = {
     InterceptHistory: "InterceptHistory",
     EnableAppWhiteList: "EnableAppWhiteList",
     AppWhiteListName: "AppWhiteListName",
+    AppCatalogUrl: "AppCatalogUrl",
 } as const;
 
-export const CoreDefaultConfiguration = [
+const CoreDefaultConfiguration = [
     {
         Title: ConfigurationNames.Status,
         Data: "Installed",
@@ -33,6 +34,14 @@ export const CoreDefaultConfiguration = [
         Data: "/sites/appcatalog",
     }
 ];
+
+export function getCoreDefaultConfiguration(appCatalogUrl: string) {
+    const cdnLoc = CoreDefaultConfiguration.find(c => c.Title === "RootCDNLocation");
+    if (cdnLoc) {
+        cdnLoc.Data = appCatalogUrl;
+    }
+    return CoreDefaultConfiguration;
+}
 
 export interface ConfigurationListData {
     Title: typeof ConfigurationNames[keyof typeof ConfigurationNames];

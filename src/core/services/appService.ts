@@ -1,6 +1,5 @@
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { APP_LOADING, SPFxExtensionCore } from "../../utilities/constants";
-import { isAppAllowedInCurrentWeb } from "./allowedAppsService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
   console.debug(SPFxExtensionCore, `Executing appAdded event for`, appDef.id);
@@ -40,12 +39,6 @@ export function registerAppService() {
 
   if (!window.__SPFxExtensions.RegisterApp) {
     window.__SPFxExtensions.RegisterApp = async (appdef) => {
-      // if (await isAppBlacklistedInCurrentWeb(appdef)) {
-      //   return null;
-      // }
-      if (!(await isAppAllowedInCurrentWeb(appdef))) {
-        return null;
-      }
       const app = ensureApp(appdef.id);
       const isNew = app.name === APP_LOADING && app.description === APP_LOADING;
       if (!isNew) {

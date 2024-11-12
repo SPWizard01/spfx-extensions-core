@@ -1,9 +1,8 @@
-import { ALLOWEDAPPSLIST_NAME, SPFxExtensionCore } from "../../utilities/constants"
-
+import { ALLOWEDAPPSLIST_NAME, APP_CATALOG, SPFxExtensionCore } from "../../utilities/constants"
 
 async function ensureAppWhiteListFields(digestValue: string) {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
-    const fieldsUrl = `/sites/appcatalog/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')/fields`;
+    const fieldsUrl = `${APP_CATALOG}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')/fields`;
     try {
         const req = await fetch(
             fieldsUrl,
@@ -17,15 +16,10 @@ async function ensureAppWhiteListFields(digestValue: string) {
             const data = await req.json();
             const fields = data.d.results;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const fieldNames = fields.map((f: any) => f.InternalName);
-            const textFields = ["AppId", "FileName", "RelativeUrl"];
-            for (const fieldName of textFields) {
-                if (!fieldNames.includes(fieldName)) {
-                    // Add the Data field
-                    await ensureTextField(fieldsUrl, fieldName, false, digestValue);
-                }
+            const fieldNames = fields.map((f: any) => f.InternalName) as string[];
+            if (fieldNames.some((internalName) => internalName !== "EntryPointUrl")) {
+                await ensureMultiLineField(fieldsUrl, "EntryPointUrl", "Full URL to the Entrypoint JS file, if * is specified all entries will be allowed.", true, digestValue);
             }
-
         }
     }
     catch (err) {
@@ -59,12 +53,39 @@ async function ensureTextField(fieldsUrl: string, fieldInternalName: string, req
         console.error(SPFxExtensionCore, fieldInternalName, "Unable to add field.");
     }
 }
+async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string, description: string, required: boolean, digestValue: string) {
+    const addFieldReq = await fetch(
+        fieldsUrl,
+        {
+            method: "POST",
+            headers: {
+                Accept: "application/json;odata=verbose",
+                "Content-Type": "application/json;odata=verbose",
+                "X-RequestDigest": digestValue,
+            },
+            body: JSON.stringify({
+                __metadata: {
+                    type: "SP.Field",
+                },
+                Title: fieldInternalName,
+                FieldTypeKind: 3,
+                Required: required,
+                Description: description
+            }),
+        }
+    );
+    if (addFieldReq.status === 201) {
+        console.info(SPFxExtensionCore, fieldInternalName, "field added successfully.");
+    } else {
+        console.error(SPFxExtensionCore, fieldInternalName, "Unable to add field.");
+    }
+}
 
 export async function ensureAppWhiteList() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')
     try {
         const req = await fetch(
-            `/sites/appcatalog/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')`
+            `${APP_CATALOG}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')`
         );
         const dgst = await getDigest();
         let newList = false;
@@ -73,7 +94,7 @@ export async function ensureAppWhiteList() {
             console.log(SPFxExtensionCore, "Creating app white list.");
             // Create the list
             const createReq = await fetch(
-                "/sites/appcatalog/_api/web/lists",
+                `${APP_CATALOG}/_api/web/lists`,
                 {
                     method: "POST",
                     headers: {
@@ -110,7 +131,7 @@ export async function ensureAppWhiteList() {
 
 async function getDigest() {
     const req = await fetch(
-        "/sites/appcatalog/_api/contextinfo",
+        `${APP_CATALOG}/_api/contextinfo`,
         {
             method: "POST",
             headers: {

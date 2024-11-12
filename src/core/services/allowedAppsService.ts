@@ -1,6 +1,7 @@
 import {
   ALLOWEDAPPSLIST_ERROR,
   ALLOWEDAPPSLIST_NAME,
+  APP_CATALOG,
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import {
@@ -8,10 +9,9 @@ import {
   evictAllowedAppsCache,
   getAllAllowedApps,
 } from "./idbService";
-import { DEBUG_KEYS, isAppInDebug, isFileInDebug } from "../../utilities/debug";
+import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
 import { getContextInfoAsync } from "../../services/spContextService";
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import { ensureAppWhiteList } from "./configurationService";
 
 const siteContextInfo = await getContextInfoAsync();
@@ -36,11 +36,11 @@ const AllowedAppsListDataPromise: Promise<AllowedAppsListData[]> = new Promise(
 
       const appWhiteListEnabled = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
       if (!appWhiteListEnabled) {
-        resolve([{ Id: 1, AppId: "*", FileName: "", RelativeUrl: "/", Title: "All apps allowed", date: new Date().toISOString(), expires: new Date().toISOString() }]);
+        resolve([{ Id: 1, Title: "All apps allowed", EntryPointUrl: "*", date: new Date().toISOString(), expires: new Date().toISOString() }]);
         return;
       }
       await ensureAppWhiteList();
-      const url = `${window.location.origin}/sites/appcatalog/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$select=Id,Title,AppId,FileName,RelativeUrl&$top=1000`;
+      const url = `${APP_CATALOG}/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$select=Id,Title,EntryPointUrl&$top=1000`;
       const allowedAppsListData = await fetchAllAllowedApps(url);
       await addOrUpdateAllowedAppsToCache(allowedAppsListData, 5);
       resolve(allowedAppsListData);
@@ -76,62 +76,12 @@ function fileIsAllowed(
   fileNameWithPath: string,
   allowedList: AllowedAppsListData[]
 ) {
+  const allAllowed = allowedList.some((e) => e.EntryPointUrl === "*");
+  if (allAllowed) return true;
   return allowedList.some((allowedEntry) => {
-    const fileIsProvided = !!allowedEntry.FileName;
-    const fileIsInWhiteList =
-      allowedEntry.FileName &&
-      fileNameWithPath
-        .toLowerCase()
-        .indexOf(allowedEntry.FileName.toLowerCase()) > -1;
-
-    const { webIsProvided, webIsInWhiteList } =
-      currentWebInAllowedEntry(allowedEntry);
-
-    if (fileIsProvided && webIsProvided) {
-      return fileIsInWhiteList && webIsInWhiteList;
-    }
-    if (fileIsProvided) {
-      return fileIsInWhiteList;
-    }
-    if (webIsProvided) {
-      return webIsInWhiteList;
-    }
+    return fileNameWithPath
+      .toLowerCase() === allowedEntry.EntryPointUrl.toLowerCase();
   });
-}
-
-function appIsAllowed(
-  appDefinition: SPFxExtensionAppRegistration,
-  allowedList: AllowedAppsListData[]
-) {
-  if (allowedList.some((e) => e.AppId === "*")) {
-    return true;
-  }
-  return allowedList.some((allowedEntry) => {
-    const appIsProvided = !!allowedEntry.AppId;
-    if (!appIsProvided) {
-      return false;
-    }
-
-    const appIsInWhiteList =
-      allowedEntry.AppId &&
-      appDefinition.id.toLowerCase() === allowedEntry.AppId.toLowerCase();
-
-    const { webIsProvided, webIsInWhiteList } =
-      currentWebInAllowedEntry(allowedEntry);
-
-    if (webIsProvided) {
-      return appIsInWhiteList && webIsInWhiteList;
-    }
-    return webIsInWhiteList;
-  });
-}
-
-function currentWebInAllowedEntry(allowedEntry: AllowedAppsListData) {
-  const webIsProvided = !!allowedEntry.RelativeUrl;
-  let relativeUrl = (allowedEntry.RelativeUrl ?? "").replace(/\/+$/, "");
-  const webIsInWhiteList =
-    webUrl.toLowerCase().indexOf(relativeUrl.toLowerCase()) > -1;
-  return { webIsProvided, webIsInWhiteList };
 }
 
 export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
@@ -148,32 +98,9 @@ export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
       SPFxExtensionCore,
       "File",
       fileNameWithPath,
-      "is not allowed for web",
-      webUrl
+      `is not allowed to be executed. Please add it to whitelist in the app catalog @ ${APP_CATALOG}. If you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port of the localhost server.`
     );
-    console.warn(SPFxExtensionCore, `File ${fileNameWithPath} is not allowed if you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port.`);
 
-    return false;
-  }
-  return true;
-}
-
-export async function isAppAllowedInCurrentWeb(
-  appDef: SPFxExtensionAppRegistration
-) {
-  if (isAppInDebug(appDef.id)) return true;
-  const allowedApps = await AllowedAppsListDataPromise;
-  if (!appIsAllowed(appDef, allowedApps)) {
-    console.warn(
-      SPFxExtensionCore,
-      "App",
-      appDef.id,
-      "with name",
-      appDef.name,
-      "is not enabled for web",
-      webUrl
-    );
-    console.warn(SPFxExtensionCore, `If you are a developer, you can enable this app by adding ${DEBUG_KEYS.SPFXEXT}${appDef.id} item to your localstorage with a number value.`);
     return false;
   }
   return true;

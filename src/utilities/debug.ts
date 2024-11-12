@@ -6,7 +6,7 @@ export const DEBUG_KEYS = {
   /**
    * This key points to debug location for the whole App Core
    */
-  SPFXEXT_CORE: "SPFXEXT_CORE",
+  SPFXEXT_CORE: "SPFXEXT",
 } as const;
 
 function inDebug() {
@@ -19,12 +19,5 @@ export function isFileInDebug(fullUrl: string) {
   const lower = fullUrl.toLowerCase();
   return lower.indexOf("https://localhost") > -1 || lower.indexOf("http://localhost") > -1;
 }
-
-export function isAppInDebug(appId: string) {
-  return Object.keys(localStorage).some(
-    (k) => k.indexOf(`${DEBUG_KEYS.SPFXEXT}${appId}`) > -1 && Number(localStorage[k]) > 0
-  );
-}
-
 
 export const isInDebug = inDebug();

@@ -1,6 +1,6 @@
 import { DEBUG_KEYS } from "./debug";
 
-export const APP_CATALOG = "/sites/appcatalog";
+export const APP_CATALOG = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "AppCatalogUrl")?.Data ?? "/sites/appcatalog";
 export const CDN_LOCATION = "CDN";
 export const ROOT_CDN_LOCATION = (window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "RootCDNLocation")?.Data ?? `${APP_CATALOG}/${CDN_LOCATION}`).toLowerCase();
 export const EXTENSION_APPS_FOLDER = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "ExtensionFolderName")?.Data ?? "SPFxExtensions";

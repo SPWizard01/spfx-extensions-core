@@ -1,10 +1,8 @@
 export interface AllowedAppsListData {
   Id: number;
   date: string;
+  EntryPointUrl: string;
   expires: string;
-  AppId?: string;
-  FileName?: string;
-  RelativeUrl?: string;
   Title?: string;
 }
 

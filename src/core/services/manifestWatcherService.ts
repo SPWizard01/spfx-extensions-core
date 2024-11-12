@@ -1,7 +1,7 @@
 import { SPFxExtensionCore } from "../../utilities/constants";
 import {
   fetchAppsTXTFromAllLocations,
-  getWebpackManifestsFromAllLocations,
+  getManifestsFromAllLocations,
 } from "./componentLoaderService";
 import { evictManifestCache } from "./idbService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
@@ -64,7 +64,7 @@ export async function performManifestCheck(
       hubUrl,
       true
     );
-    const allManifests = getWebpackManifestsFromAllLocations(
+    const allManifests = getManifestsFromAllLocations(
       appLocations,
       true
     );

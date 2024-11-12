@@ -11,8 +11,15 @@ export interface SPFxExtensionApp {
   //potentially other keys that we could handle i.e. fonts etc
 }
 
+export interface SPFxExtensionAppMap {
+  webId: string;
+  enabledAppIds: string[];
+}
+
 export interface SPFxExtensionAppManifest {
-  [key: string]: SPFxExtensionApp;
+  // [key: string]: SPFxExtensionApp;
+  appRelativeEntryPointUrl: string;
+  enabledApps: SPFxExtensionAppMap[];
 }
 
 /**
@@ -84,16 +91,13 @@ export interface SPFxExtensionAppInstance {
     eventName: K,
     eventData: R
   ): void;
-  start: SPFxExtensionAppLaunch;
   allEventListeners: SPFxExtensionAppInstanceEventListener[];
   /**
    * this ensures that webpart config change events are only called on the instance when its loaded
    */
   whenLoad: Promise<void>;
   /**
-   * this should be called by the instance when instance load is completed
-   * this will ensure that webpart which is using this event forwards them only when instance loads
-   * @param value will pass value if any
+   * this should only be called by the core when instance is loaded and the promise is used by spfx
    */
   whenLoadResolve(value?: any): void;
 }

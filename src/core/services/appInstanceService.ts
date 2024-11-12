@@ -1,5 +1,4 @@
 import { ensureApp } from "./appService";
-import { isAppAllowedInCurrentWeb } from "./allowedAppsService";
 import { SPFxExtensionCore } from "../../utilities/constants";
 import type {
   SPFxExtensionAppDefinition,
@@ -11,6 +10,7 @@ import type {
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
 import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
+import { launchSPFxExtensionApp } from "../../services/appLauncher";
 
 const emptyDummy = () => {
   throw "This should not happen";
@@ -119,20 +119,15 @@ export function createAppInstance(
     saveConfigValue: runTimeConfig.saveConfigValue,
     getConfigValue: runTimeConfig.getConfigValue,
     isLoaded: false,
-    start: emptyDummy,
     unmount: emptyDummy,
     allEventListeners: [],
     addEventListener: emptyDummy,
-    // removeEventListener: emptyDummy,
     executeListeners: emptyDummy,
     whenLoad: loadPromise,
     whenLoadResolve: emptyDummy,
   };
 
   appInstance.whenLoadResolve = loadPromiseResolve!;
-  appInstance.start = (launch) => {
-    launchSPFxExtensionApp({ launch }, appInstance);
-  };
 
   registerEventHandlers(appInstance);
   return appInstance;
@@ -144,20 +139,6 @@ export function registerAppInstanceService() {
       appId: string,
       runTimeConfig: SPFxExtensionAppRuntimeConfig
     ) => {
-      const checkApp = {
-        description: "",
-        id: appId,
-        isWebPartApp: false,
-        hideAppSelectorWhenAppLoaded: false,
-        name: "",
-      };
-      // if (await isAppBlacklistedInCurrentWeb(checkApp)) {
-      //   return null;
-      // }
-
-      if (!(await isAppAllowedInCurrentWeb(checkApp))) {
-        return undefined;
-      }
 
       const foundApp = ensureApp(appId);
       console.debug(SPFxExtensionCore, `Creating app instance for app`, appId);
@@ -174,10 +155,4 @@ export function registerAppInstanceService() {
       return appInstance;
     };
   }
-}
-function launchSPFxExtensionApp(
-  arg0: { launch: SPFxExtensionAppEntryPoint },
-  appInstance: SPFxExtensionAppInstance
-) {
-  throw new Error("Function not implemented.");
 }

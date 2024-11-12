@@ -4,7 +4,7 @@
   "author": "SPWizard01",
   "license": "GPL-3.0-only",
   "type": "module",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "access": "public",
   "repository": {
     "type": "git",
@@ -37,6 +37,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@pnp/sp": "^4.6.0",
+    "bun": "^1.1.34",
     "idb": "^8.0.0"
   }
 }
