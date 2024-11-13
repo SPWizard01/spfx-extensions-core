@@ -2,7 +2,7 @@
  * CURRENTLY NOT USED, NOT TESTED
  */
 
-import type { SPFxExtensionApp, SPFxExtensionAppManifest } from "../models/appModel";
+import type { SPFxExtensionAppManifest } from "../models/appModel";
 import { DEBUG_KEYS } from "../utilities/debug";
 
 /**

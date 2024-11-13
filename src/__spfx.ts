@@ -12,15 +12,15 @@ export async function getRootCoreLocation() {
   if (devPort > 0) {
     return `https://localhost:${devPort}/__spfxCore.js`;
   }
-
-  // this part is intercepted by SPFx Webpack and converted later on
-  const webpackCoreUrl = await import(/* webpackChunkName: "spfx-extension-core-location" */"__spfxCore.js");
-  if (!webpackCoreUrl.default) {
-    const msg = "Unable to resolve SPFx Core location";
-    console.error(msg, webpackCoreUrl);
-    throw new Error(msg);
-  }
-  return webpackCoreUrl.default;
+return ""
+  // // this part is intercepted by SPFx Webpack and converted later on
+  // const webpackCoreUrl = await import(/* webpackChunkName: "spfx-extension-core-location" */"__spfxCore.js");
+  // if (!webpackCoreUrl.default) {
+  //   const msg = "Unable to resolve SPFx Core location";
+  //   console.error(msg, webpackCoreUrl);
+  //   throw new Error(msg);
+  // }
+  // return webpackCoreUrl.default;
 }
 
 /**

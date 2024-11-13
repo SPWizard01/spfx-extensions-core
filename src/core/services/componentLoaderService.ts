@@ -1,14 +1,9 @@
 import {
-  MANIFEST_NAME,
-  ROOT_APPS_MANIFEST_LOCATION,
-  APPCOLLECTION_MANIFEST_NAME,
-  WELL_KNOWN_MANIFEST_LOCATION,
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import { getContentDigest } from "../../utilities/digest";
 import { isFileAllowedInCurrentWeb } from "./allowedAppsService";
 
-import { getManifestFromCache, setOrUpdateManifest } from "./idbService";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import type {
   AppCollectionManifest,
@@ -19,12 +14,16 @@ import type {
   ManifestLocation,
 } from "../../models/cache";
 import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
-import { getContextInfoAsync } from "../../services/spContextService";
+import { getWebId } from "./contextService";
+import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
+import { ROOT_APPS_MANIFEST_LOCATION, APP_CATALOG, WELL_KNOWN_MANIFEST_LOCATION, APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../utilities/coreConstants";
 
 interface AssetPromise {
   url: string;
   promise: Promise<any>;
 }
+
+const emptyManifest: SPFxExtensionAppManifest = { enabledApps: [], appRelativeEntryPointUrl: "", enabled: false, enabledOnAllHubSites: false }
 
 function validateAppCollectionManifest(manifest: any) {
   if (!Array.isArray(manifest)) {
@@ -39,33 +38,20 @@ function validateAppCollectionManifest(manifest: any) {
   }
 }
 
-function validateAppManifest(manifest: any) {
+function validateAppManifest(manifest: SPFxExtensionAppManifest) {
   if (Array.isArray(manifest) || typeof manifest !== "object") {
     throw `${SPFxExtensionCore} App manifest has to be an object.`;
   }
-  
-  if (!manifest.relativeEntryPointUrl) {
-    console.error(SPFxExtensionCore, `Manifest does not have relativeEntryPointUrl property.`, manifest);
-    throw `${SPFxExtensionCore} Manifest does not have relativeEntryPointUrl property.`;
+
+  if (!manifest.appRelativeEntryPointUrl) {
+    console.error(SPFxExtensionCore, `Manifest does not have appRelativeEntryPointUrl property.`, manifest);
+    throw `${SPFxExtensionCore} Manifest does not have appRelativeEntryPointUrl property.`;
 
   }
   if (!manifest.enabledApps) {
     console.error(SPFxExtensionCore, `Manifest does not have enabledApps property.`, manifest);
     throw `${SPFxExtensionCore} Manifest does not have enabledApps property.`;
   }
-}
-
-function getMatchingItemIndexFromCache(
-  cache: ManifestCacheItem[],
-  item: ManifestBase
-) {
-  return cache.findIndex(
-    (m) =>
-      m.url.toLowerCase() === item.url.toLowerCase() &&
-      m.domain.toLowerCase() === window.location.host.toLowerCase() &&
-      m.isAppCollection == item.isAppCollection &&
-      m.type == item.type
-  );
 }
 
 function validateManifest(manifest: any, isAppCollection: boolean) {
@@ -93,12 +79,13 @@ function validateManifest(manifest: any, isAppCollection: boolean) {
  */
 async function fetchAndCacheTXT(
   url: string,
+  siteUrl: string,
   type: ManifestLocation,
   isAppCollection: boolean,
   skipCache = false,
   cacheTimeMinutes = 60
 ): Promise<ManifestItem> {
-  let appManifest: SPFxExtensionAppManifest = { enabledApps: [], appRelativeEntryPointUrl: ""};
+  let appManifest = { ...emptyManifest };
   let appCollection: string[] = [];
 
   if (!skipCache && !isInDebug) {
@@ -127,7 +114,7 @@ async function fetchAndCacheTXT(
     );
   } catch (err) {
     console.error(SPFxExtensionCore, `Error while parsing manifest from`, url, err);
-    appManifest = { enabledApps: [], appRelativeEntryPointUrl: "" };
+    appManifest = { ...emptyManifest };
     appCollection = [];
   }
   const hash = await getContentDigest(
@@ -137,6 +124,7 @@ async function fetchAndCacheTXT(
     url,
     type,
     hash,
+    siteUrl,
   };
 
   const retResult: ManifestItem = isAppCollection
@@ -153,20 +141,13 @@ async function parseManifestAndImport(
   cdnLoc: string
 ) {
   const returnPromiseArray: AssetPromise[] = [];
-  let currentWebId = "";
-  try {
-    const ctx = await getContextInfoAsync();
-    currentWebId = ctx.contextType === "SPOModernContext" ? ctx.context.web.id.toString() : ctx.context.webId.replace("{", "").replace("}", "");
-  }
-  catch (e) {
-    console.error(SPFxExtensionCore, `Error while getting context info`, e);
-    return returnPromiseArray;
-  }
+  const currentWebId = getWebId();
 
-  const fullJSUrl = `${cdnLoc}${manifestToParse.appRelativeEntryPointUrl}`;
+  const fullJSUrl = `${cdnLoc}${manifestToParse.appRelativeEntryPointUrl}?v=${new Date().getTime()}`;
+  const url = new URL(fullJSUrl);
   console.debug(SPFxExtensionCore, `EntryPoint JS: `, fullJSUrl);
-  const isAllowed = await isFileAllowedInCurrentWeb(fullJSUrl);
-  if (!isAllowed) {
+  const isAllowed = await isFileAllowedInCurrentWeb(url.toString().replace(url.search, ""));
+  if (!isAllowed || !manifestToParse.enabled) {
     return returnPromiseArray;
   }
   const isScriptLoaded =
@@ -177,14 +158,15 @@ async function parseManifestAndImport(
       url: fullJSUrl,
       promise: new Promise(async (resolve, reject) => {
         try {
-          const appRegistrations = await import(fullJSUrl) as SPFxExtensionAppRegistration[];
-          if (!Array.isArray(appRegistrations)) {
-            console.error(SPFxExtensionCore, `App definitions should be an array.`, fullJSUrl);
+          const appRegistrations = await import(fullJSUrl);
+          const defaultExport = appRegistrations.default;
+          if (!Array.isArray(defaultExport)) {
+            console.error(SPFxExtensionCore, `Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
             reject(`App definitions should be an array.`);
           }
-          for (const appReg of appRegistrations) {
+          for (const appReg of defaultExport) {
             if (!appReg.id) {
-              console.error(SPFxExtensionCore, `App definition does not have an id. Make sure that returned array is in proper format.`, fullJSUrl, appReg);
+              console.error(SPFxExtensionCore, `App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
               continue;
             }
             const appEnabled = manifestToParse.enabledApps.some((ea) => {
@@ -192,10 +174,10 @@ async function parseManifestAndImport(
               const allWebsEnabled = ea.webId === "*";
               const isEnabledAppId = ea.enabledAppIds.some((eai) => eai.toLowerCase() === appReg.id.toLowerCase());
               const allAppsEnabled = ea.enabledAppIds.some((eai) => eai === "*");
-              return  (isSameWebId && isEnabledAppId) || 
-                      (isSameWebId && allAppsEnabled) || 
-                      (allWebsEnabled && allAppsEnabled) ||
-                      (allWebsEnabled && isEnabledAppId);
+              return (isSameWebId && isEnabledAppId) ||
+                (isSameWebId && allAppsEnabled) ||
+                (allWebsEnabled && allAppsEnabled) ||
+                (allWebsEnabled && isEnabledAppId);
             });
             if (!appEnabled) {
               console.info(SPFxExtensionCore, `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
@@ -210,7 +192,7 @@ async function parseManifestAndImport(
         }
         catch (e) {
           console.error(SPFxExtensionCore, `Error while importing`, fullJSUrl, e);
-          reject(`Unable to import manifest ${fullJSUrl}`);
+          reject(`Unable to import manifest ${fullJSUrl}, only ESM modules are supported.`);
         }
       }),
     });
@@ -228,9 +210,11 @@ export async function fetchAppsTXTFromAllLocations(
 ): Promise<AppCollectionManifest[]> {
   // all apps.txt accross the context (root / site /web)
   const allAppManifests: Promise<ManifestItem>[] = [];
+  const rootLocation = ROOT_APPS_MANIFEST_LOCATION.toLowerCase().startsWith("http") ? ROOT_APPS_MANIFEST_LOCATION : `${window.location.origin}${ROOT_APPS_MANIFEST_LOCATION}`;
   allAppManifests.push(
     fetchAndCacheTXT(
-      window.location.origin + ROOT_APPS_MANIFEST_LOCATION,
+      rootLocation,
+      APP_CATALOG,
       "root",
       true,
       skipCache
@@ -242,6 +226,7 @@ export async function fetchAppsTXTFromAllLocations(
   allAppManifests.push(
     fetchAndCacheTXT(
       `${normalizedSiteUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+      siteUrl,
       "site",
       true,
       skipCache
@@ -253,6 +238,7 @@ export async function fetchAppsTXTFromAllLocations(
     allAppManifests.push(
       fetchAndCacheTXT(
         `${normalizedHubUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+        hubUrl,
         "site",
         true,
         skipCache
@@ -266,6 +252,7 @@ export async function fetchAppsTXTFromAllLocations(
     allAppManifests.push(
       fetchAndCacheTXT(
         `${normalizedWebUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+        webUrl,
         "web",
         true,
         skipCache
@@ -316,6 +303,7 @@ function loadManifestTXT(
       manifestPromises.push(
         fetchAndCacheTXT(
           manifestLocation,
+          appCollectionManifest.siteUrl,
           appCollectionManifest.type,
           false,
           skipCache
@@ -340,9 +328,7 @@ export async function loadModernApps(
     webUrl,
     hubUrl
   );
-  const allManifestTXTs = getManifestsFromAllLocations(
-    coreCollection as AppCollectionManifest[]
-  );
+  const allManifestTXTs = getManifestsFromAllLocations(coreCollection);
 
   window.__SPFxExtensions.Utils.appManifestPromises =
     allManifestTXTs;

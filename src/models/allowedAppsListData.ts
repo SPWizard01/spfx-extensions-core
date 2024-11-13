@@ -1,12 +1,7 @@
-export interface AllowedAppsListData {
-  Id: number;
-  date: string;
-  EntryPointUrl: string;
-  expires: string;
-  Title?: string;
-}
+import type { CacheItemBase } from "./cache";
 
-export interface AllowedAppsListDataCache {
-  data: AllowedAppsListData[];
-  expires: string;
+export interface AllowedAppsListData extends CacheItemBase {
+  Id: number;
+  EntryPointUrl: string;
+  Title?: string;
 }

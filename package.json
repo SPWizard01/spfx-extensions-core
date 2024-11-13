@@ -15,11 +15,11 @@
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./spfx": "./dist/__spfx.js",
-    "./core": "./dist/core/__spfxCore.js",
+    "./spfxCoreEntry": "./dist/core/__spfxCore.js",
+    "./spfxCoreEntryMap": "./dist/core/__spfxCore.js.map",
     "./context": "./dist/services/spContextService.js",
+    "./idb": "./dist/services/idbService.js",
     "./launcher": "./dist/services/appLauncher.js",
-    "./utils/common": "./dist/utilities/common.js",
     "./utils/display": "./dist/utilities/display.js",
     "./package.json": "./package.json"
   },

@@ -7,6 +7,7 @@ import { registerManifestWatcher } from "./manifestWatcherService";
 import { SPFxExtensionCore } from "../../utilities/constants";
 import { getHubSiteUrl } from "./hubDataService";
 import { getContextInfoAsync } from "../../services/spContextService";
+import { contextInfo, currentSiteIsRootHub, getHubSiteId, getSiteAbsoluteUrl, getSiteId, getWebAbsoluteUrl } from "./contextService";
 
 function initGlobal() {
   //init once.
@@ -37,33 +38,10 @@ function initGlobal() {
 export async function initCoreServices() {
   initGlobal();
 
-  const ctxInfo = await getContextInfoAsync();
+  const siteUrl = getSiteAbsoluteUrl();
+  const webUrl = getWebAbsoluteUrl();
+  const hubSiteUrl = await getHubSiteUrl();
 
-  let siteUrl = "NO_ABSOLUTE_URL";
-  let webUrl = "NO_ABSOLUTE_URL";
-  let hubSiteId: string | null = null;
-  let siteId: string | null = null;
-  let hubSiteUrl = "";
-  if (ctxInfo.contextType === "SPOModernContext") {
-    siteUrl = ctxInfo.context.site.absoluteUrl;
-    webUrl = ctxInfo.context.web.absoluteUrl;
-    siteId = ctxInfo.context.legacyPageContext.siteId;
-    hubSiteId = ctxInfo.context.legacyPageContext.hubSiteId;
-  } else {
-    siteUrl = ctxInfo.context.siteAbsoluteUrl;
-    webUrl = ctxInfo.context.webAbsoluteUrl;
-    siteId = ctxInfo.context.siteId;
-    hubSiteId = ctxInfo.context.hubSiteId;
-  }
-  siteUrl = siteUrl.toLowerCase();
-  webUrl = webUrl.toLowerCase();
-  if (siteId) {
-    siteId = siteId.replace("{", "").replace("}", "").toLowerCase();
-  }
-  if (hubSiteId && siteId) {
-    hubSiteUrl = await getHubSiteUrl(siteId, hubSiteId);
-    hubSiteUrl = hubSiteUrl.toLowerCase();
-  }
   window.__SPFxExtensions.__CorePromiseResolver?.();
   loadModernApps(siteUrl, webUrl, hubSiteUrl);
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);

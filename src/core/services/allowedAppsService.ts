@@ -1,18 +1,13 @@
 import {
-  ALLOWEDAPPSLIST_ERROR,
-  ALLOWEDAPPSLIST_NAME,
-  APP_CATALOG,
   SPFxExtensionCore,
 } from "../../utilities/constants";
-import {
-  addOrUpdateAllowedAppsToCache,
-  evictAllowedAppsCache,
-  getAllAllowedApps,
-} from "./idbService";
+
 import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
 import { getContextInfoAsync } from "../../services/spContextService";
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
 import { ensureAppWhiteList } from "./configurationService";
+import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedApps } from "./coreIdbService";
+import { APP_CATALOG, ALLOWEDAPPSLIST_NAME, ALLOWEDAPPSLIST_ERROR } from "../utilities/coreConstants";
 
 const siteContextInfo = await getContextInfoAsync();
 const webUrl =

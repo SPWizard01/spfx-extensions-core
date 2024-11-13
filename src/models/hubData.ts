@@ -1,4 +1,6 @@
-export interface HubData {
+import type { CacheItemBase } from "./cache";
+
+export interface HubData extends CacheItemBase {
     EnablePermissionsSync: boolean;
     EnforcedECTsVersion: number;
     HideNameInNavigation: boolean;
@@ -13,7 +15,4 @@ export interface HubData {
     Targets: string;
     TenantInstanceId: string;
     Title: string;
-    date: string;
-    domain: string;
-    expires: string;
   }

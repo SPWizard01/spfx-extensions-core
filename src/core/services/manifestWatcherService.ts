@@ -3,7 +3,7 @@ import {
   fetchAppsTXTFromAllLocations,
   getManifestsFromAllLocations,
 } from "./componentLoaderService";
-import { evictManifestCache } from "./idbService";
+import { evictManifestCache } from "./coreIdbService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
 const CORE_MANIFEST_CHECK_INTERVAL = 60000;
 let manifestWatch = 0;

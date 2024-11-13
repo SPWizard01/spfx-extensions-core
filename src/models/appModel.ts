@@ -17,9 +17,13 @@ export interface SPFxExtensionAppMap {
 }
 
 export interface SPFxExtensionAppManifest {
-  // [key: string]: SPFxExtensionApp;
   appRelativeEntryPointUrl: string;
   enabledApps: SPFxExtensionAppMap[];
+  /**
+   * Only relevant if current site is a root hub site, disregards enabledApps property if enabled
+   */
+  enabledOnAllHubSites: boolean;
+  enabled: boolean;
 }
 
 /**

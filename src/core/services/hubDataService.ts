@@ -1,30 +1,25 @@
 import { SPFxExtensionCore } from "../../utilities/constants";
-import {
-  addOrUpdateHubDataToCache,
-  evictHubDataCache,
-  getHubData,
-} from "./idbService";
+import { currentSiteIsRootHub, getHubSiteId, getSiteAbsoluteUrl } from "./contextService";
+import { evictHubDataCache, getHubData, addOrUpdateHubDataToCache } from "./coreIdbService";
 
-export async function getHubSiteUrl(siteId: string, hubSiteId: string) {
-  await evictHubDataCache();
-  if (
-    siteId.toLowerCase() === hubSiteId.toLowerCase() ||
-    hubSiteId === "00000000-0000-0000-0000-000000000000"
-  ) {
+
+export async function getHubSiteUrl() {
+  if (currentSiteIsRootHub()) {
     return "";
   }
-  console.info(
-    SPFxExtensionCore,
-    "Hub site detected. SiteId:",
-    siteId,
-    "HubSiteId:",
-    hubSiteId
-  );
+  await evictHubDataCache();
+  const hubSiteId = getHubSiteId();
   const cached = await getHubData(hubSiteId);
   if (!cached) {
+    const siteUrl = getSiteAbsoluteUrl();
+    console.info(
+      SPFxExtensionCore,
+      "Getting Hub data for HubSiteId:",
+      hubSiteId
+    );
     try {
       const hubSite = await fetch(
-        `/_api/hubsites/GetById?hubSiteId='${hubSiteId}'`,
+        `${siteUrl}/_api/hubsites/GetById?hubSiteId='${hubSiteId}'`,
         {
           headers: { accept: "application/json;odata=nometadata" },
         }

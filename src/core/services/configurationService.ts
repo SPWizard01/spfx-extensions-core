@@ -1,4 +1,5 @@
-import { ALLOWEDAPPSLIST_NAME, APP_CATALOG, SPFxExtensionCore } from "../../utilities/constants"
+import { SPFxExtensionCore } from "../../utilities/constants"
+import { APP_CATALOG, ALLOWEDAPPSLIST_NAME } from "../utilities/coreConstants";
 
 async function ensureAppWhiteListFields(digestValue: string) {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
@@ -17,7 +18,7 @@ async function ensureAppWhiteListFields(digestValue: string) {
             const fields = data.d.results;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fieldNames = fields.map((f: any) => f.InternalName) as string[];
-            if (fieldNames.some((internalName) => internalName !== "EntryPointUrl")) {
+            if (!fieldNames.some((internalName) => internalName === "EntryPointUrl")) {
                 await ensureMultiLineField(fieldsUrl, "EntryPointUrl", "Full URL to the Entrypoint JS file, if * is specified all entries will be allowed.", true, digestValue);
             }
         }
@@ -87,7 +88,7 @@ export async function ensureAppWhiteList() {
         const req = await fetch(
             `${APP_CATALOG}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')`
         );
-        const dgst = await getDigest();
+        const dgst = await getAppCatalogDigest();
         let newList = false;
         if (req.status === 404) {
             newList = true;
@@ -129,7 +130,7 @@ export async function ensureAppWhiteList() {
 }
 
 
-async function getDigest() {
+export async function getAppCatalogDigest() {
     const req = await fetch(
         `${APP_CATALOG}/_api/contextinfo`,
         {
