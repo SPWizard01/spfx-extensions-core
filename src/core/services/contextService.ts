@@ -1,5 +1,5 @@
 import { getContextInfoAsync } from "../../services/spContextService";
-import { EMPTY_GUID } from "../utilities/coreConstants";
+export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
 export const contextInfo = await getContextInfoAsync();
 
@@ -20,7 +20,7 @@ export function getSiteAbsoluteUrl() {
 }
 
 export function getHubSiteId() {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.hubSiteId.toString() : contextInfo.context.hubSiteId;
+    return (contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.hubSiteId?.toString() : contextInfo.context.hubSiteId) ?? EMPTY_GUID;
 }
 
 export function currentSiteIsRootHub() {

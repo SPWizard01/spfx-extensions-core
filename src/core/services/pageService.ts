@@ -1,26 +1,22 @@
-import { CONFIGURATOR_APP_INSTANCEID, CORE_APP_ID, CONFIGURATOR_APP_ID, APP_CATALOG } from "../utilities/coreConstants";
-import { getAppCatalogDigest } from "./configurationService";
-const configuratorPage = "SitePages/SPFxExtensionsConfigurator.aspx";
+import { CONFIGURATOR_APP_ID, CONFIGURATOR_APP_INSTANCEID, CONFIGURATOR_PAGE_NAME, CONFIGURATOR_PAGE_URL, CORE_APP_ID, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
+import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
+import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+
+const appCatalogUrl = await getAppCatalogUrlCached();
+const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+const webUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
+
+
+
 const acceptHeader = { "accept": "application/json", }
-let digest = "";
-async function ensureDigest() {
-    if (!digest) {
-        digest = await getAppCatalogDigest();
-    }
-    return digest;
-}
-
-async function getDigestHeader() {
-    const currentDigest = await ensureDigest();
-    return { "X-RequestDigest": currentDigest };
-}
-
+const digestHeader = { "X-RequestDigest": digest }
+const contentType = { "Content-Type": "application/json" }
 async function createFullPage() {
-    const response = await fetch(`${APP_CATALOG}/_api/sitepages/pages`, {
+    const response = await fetch(`${webUrl}/_api/sitepages/pages`, {
         "headers": {
             ...acceptHeader,
-            ...(await getDigestHeader()),
-            "Content-Type": "application/json"
+            ...digestHeader,
+            ...contentType
         },
         "body": JSON.stringify({
             PageLayoutType: "SingleWebPartAppPage",
@@ -33,7 +29,7 @@ async function createFullPage() {
 }
 
 async function getConfiguratorPageData() {
-    const response = await fetch(`${APP_CATALOG}/_api/sitepages/pages/GetByUrl('${configuratorPage}')`, {
+    const response = await fetch(`${webUrl}/_api/sitepages/pages/GetByUrl('${CONFIGURATOR_PAGE_URL}')`, {
         "headers": {
             ...acceptHeader,
         },
@@ -43,11 +39,8 @@ async function getConfiguratorPageData() {
         return undefined;
     }
     const data = await response.json();
-    return data.d;
+    return data;
 }
-
-
-
 
 const layout = [
     {
@@ -120,23 +113,23 @@ const canvas = [
 const save = {
     CanvasContent1: `${JSON.stringify(canvas)}`,
     LayoutWebpartsContent: `${JSON.stringify(layout)}`,
-    Title: "SPFxExtensionsConfigurator",
+    Title: CONFIGURATOR_PAGE_NAME,
 }
 
 async function setPageContent(pageId: number) {
-    await fetch(`${APP_CATALOG}/_api/sitepages/pages(${pageId})/savepage`, {
+    await fetch(`${webUrl}/_api/sitepages/pages(${pageId})/savepage`, {
         "headers": {
             "Content-Type": "application/json",
             ...acceptHeader,
-            ...(await getDigestHeader()),
+            ...digestHeader
         },
         "body": JSON.stringify(save),
         "method": "POST",
     });
-    await fetch(`${APP_CATALOG}/_api/sitepages/pages(${pageId})/publish`, {
+    await fetch(`${webUrl}/_api/sitepages/pages(${pageId})/publish`, {
         "headers": {
             ...acceptHeader,
-            ...(await getDigestHeader()),
+            ...digestHeader
         },
         "method": "POST",
     })
@@ -148,15 +141,29 @@ async function createConfiguratorPage() {
     return getConfiguratorPageData();
 }
 
+async function getConfiguratorPageDataCached() {
+    const cachedData = await getExtensionConfig("ConfiguratorPageData");
+    if (cachedData?.Data) {
+        return cachedData.Data;
+    }
+    const apiData = await getConfiguratorPageData();
+    if (apiData) {
+        await addOrUpdateExtensionConfig({ Title: "ConfiguratorPageData", Data: apiData, date: "", expires: "" }, 480);
+    }
+    return apiData;
+}
+
 
 export async function ensureConfiguratorPage() {
-    const data = await getConfiguratorPageData();
+    const data = await getConfiguratorPageDataCached();
     if (!data) {
         return createConfiguratorPage();
     }
-    if(data.CanvasContent1.indexOf(CONFIGURATOR_APP_INSTANCEID) === -1) {
+    if (data.CanvasContent1.indexOf(CONFIGURATOR_APP_INSTANCEID) === -1) {
         await setPageContent(data.Id);
-        return getConfiguratorPageData();
+        const refreshData = await getConfiguratorPageData();
+        await addOrUpdateExtensionConfig({ Title: "ConfiguratorPageData", Data: refreshData, date: "", expires: "" }, 480);
+        return refreshData;
     }
     return data;
 }

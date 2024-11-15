@@ -8,21 +8,22 @@ import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import type {
   AppCollectionManifest,
   AppFolderManifest,
-  ManifestBase,
-  ManifestCacheItem,
   ManifestItem,
   ManifestLocation,
 } from "../../models/cache";
 import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
-import { getWebId } from "./contextService";
+import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
-import { ROOT_APPS_MANIFEST_LOCATION, APP_CATALOG, WELL_KNOWN_MANIFEST_LOCATION, APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../utilities/coreConstants";
+import { WELL_KNOWN_MANIFEST_LOCATION, APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
+import { getAppCatalogUrlCached } from "./appCatalogService";
+import { getRootCDNLocation } from "./coreConfigService";
 
 interface AssetPromise {
   url: string;
-  promise: Promise<any>;
+  promise: Promise<SPFxExtensionAppRegistration[]>;
+  manifest: AppFolderManifest;
 }
-
+const appCatalogUrl = await getAppCatalogUrlCached();
 const emptyManifest: SPFxExtensionAppManifest = { enabledApps: [], appRelativeEntryPointUrl: "", enabled: false, enabledOnAllHubSites: false }
 
 function validateAppCollectionManifest(manifest: any) {
@@ -82,22 +83,24 @@ async function fetchAndCacheTXT(
   siteUrl: string,
   type: ManifestLocation,
   isAppCollection: boolean,
+  isHubFetch: boolean,
   skipCache = false,
   cacheTimeMinutes = 60
 ): Promise<ManifestItem> {
   let appManifest = { ...emptyManifest };
   let appCollection: string[] = [];
-
+  let fetchLocation = url.toLowerCase();
   if (!skipCache && !isInDebug) {
-    let cachedManifest = await getManifestFromCache(url, isAppCollection);
+    let cachedManifest = await getManifestFromCache(fetchLocation, isAppCollection);
     if (cachedManifest) {
+      cachedManifest.isHubFetch = isHubFetch;
       return cachedManifest;
     }
   }
 
   try {
-    console.debug(SPFxExtensionCore, `Fetching manifest from`, url);
-    const mnfReq = await fetch(url);
+    console.debug(SPFxExtensionCore, `Fetching manifest from`, fetchLocation);
+    const mnfReq = await fetch(fetchLocation);
     const result = await mnfReq.json();
     if (isAppCollection) {
       appCollection = result;
@@ -105,7 +108,7 @@ async function fetchAndCacheTXT(
       appManifest = result;
     }
   } catch (err) {
-    console.warn(SPFxExtensionCore, `Unable to fetch manifest from`, url, err);
+    console.warn(SPFxExtensionCore, `Unable to fetch manifest from`, fetchLocation, err);
   }
   try {
     validateManifest(
@@ -113,7 +116,7 @@ async function fetchAndCacheTXT(
       isAppCollection
     );
   } catch (err) {
-    console.error(SPFxExtensionCore, `Error while parsing manifest from`, url, err);
+    console.error(SPFxExtensionCore, `Error while parsing manifest from`, fetchLocation, err);
     appManifest = { ...emptyManifest };
     appCollection = [];
   }
@@ -121,10 +124,10 @@ async function fetchAndCacheTXT(
     JSON.stringify(isAppCollection ? appCollection : appManifest)
   );
   const baseResult = {
-    url,
+    url: fetchLocation,
     type,
     hash,
-    siteUrl,
+    siteUrl
   };
 
   const retResult: ManifestItem = isAppCollection
@@ -132,22 +135,20 @@ async function fetchAndCacheTXT(
     : { appManifest, isAppCollection: false, ...baseResult };
 
   await setOrUpdateManifest(retResult, isInDebug ? 1 : cacheTimeMinutes);
-
+  retResult.isHubFetch = isHubFetch;
   return retResult;
 }
 
 async function parseManifestAndImport(
-  manifestToParse: SPFxExtensionAppManifest,
-  cdnLoc: string
+  manifestToParse: AppFolderManifest,
+  cdnLoc: string,
 ) {
   const returnPromiseArray: AssetPromise[] = [];
-  const currentWebId = getWebId();
-
-  const fullJSUrl = `${cdnLoc}${manifestToParse.appRelativeEntryPointUrl}?v=${new Date().getTime()}`;
-  const url = new URL(fullJSUrl);
+  const ep = manifestToParse.appManifest.appRelativeEntryPointUrl.replace(/\.\.\/?/g, "");
+  const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
   console.debug(SPFxExtensionCore, `EntryPoint JS: `, fullJSUrl);
-  const isAllowed = await isFileAllowedInCurrentWeb(url.toString().replace(url.search, ""));
-  if (!isAllowed || !manifestToParse.enabled) {
+  const isAllowed = await isFileAllowedInCurrentWeb(fullJSUrl);
+  if (!isAllowed || !manifestToParse.appManifest.enabled) {
     return returnPromiseArray;
   }
   const isScriptLoaded =
@@ -159,42 +160,18 @@ async function parseManifestAndImport(
       promise: new Promise(async (resolve, reject) => {
         try {
           const appRegistrations = await import(fullJSUrl);
-          const defaultExport = appRegistrations.default;
-          if (!Array.isArray(defaultExport)) {
-            console.error(SPFxExtensionCore, `Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
-            reject(`App definitions should be an array.`);
+          const defaultExport = appRegistrations.default as SPFxExtensionAppRegistration[];
+          if (!defaultExport) {
+            throw `No default export found in ${fullJSUrl}`;
           }
-          for (const appReg of defaultExport) {
-            if (!appReg.id) {
-              console.error(SPFxExtensionCore, `App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
-              continue;
-            }
-            const appEnabled = manifestToParse.enabledApps.some((ea) => {
-              const isSameWebId = ea.webId.toLowerCase() === currentWebId.toLowerCase();
-              const allWebsEnabled = ea.webId === "*";
-              const isEnabledAppId = ea.enabledAppIds.some((eai) => eai.toLowerCase() === appReg.id.toLowerCase());
-              const allAppsEnabled = ea.enabledAppIds.some((eai) => eai === "*");
-              return (isSameWebId && isEnabledAppId) ||
-                (isSameWebId && allAppsEnabled) ||
-                (allWebsEnabled && allAppsEnabled) ||
-                (allWebsEnabled && isEnabledAppId);
-            });
-            if (!appEnabled) {
-              console.info(SPFxExtensionCore, `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
-              continue;
-            }
-            window.__SPFxExtensions.RegisterApp(appReg);
-            if (!appReg.isWebPartApp) {
-              window.__SPFxExtensions.LoadApp(appReg.id, {});
-            }
-            resolve(appRegistrations);
-          }
+          resolve(defaultExport);
         }
         catch (e) {
           console.error(SPFxExtensionCore, `Error while importing`, fullJSUrl, e);
-          reject(`Unable to import manifest ${fullJSUrl}, only ESM modules are supported.`);
+          reject(`Unable to import ${fullJSUrl}, only ESM modules are supported. ${e}`);
         }
       }),
+      manifest: manifestToParse
     });
   }
 
@@ -210,12 +187,13 @@ export async function fetchAppsTXTFromAllLocations(
 ): Promise<AppCollectionManifest[]> {
   // all apps.txt accross the context (root / site /web)
   const allAppManifests: Promise<ManifestItem>[] = [];
-  const rootLocation = ROOT_APPS_MANIFEST_LOCATION.toLowerCase().startsWith("http") ? ROOT_APPS_MANIFEST_LOCATION : `${window.location.origin}${ROOT_APPS_MANIFEST_LOCATION}`;
+  const rootLocation = await getRootCDNLocation();
   allAppManifests.push(
     fetchAndCacheTXT(
       rootLocation,
-      APP_CATALOG,
+      appCatalogUrl,
       "root",
+      true,
       true,
       skipCache
     )
@@ -229,6 +207,7 @@ export async function fetchAppsTXTFromAllLocations(
       siteUrl,
       "site",
       true,
+      false,
       skipCache
     )
   );
@@ -241,20 +220,24 @@ export async function fetchAppsTXTFromAllLocations(
         hubUrl,
         "site",
         true,
+        true,
         skipCache
       )
     );
   }
 
+  const normalizedWebUrl = webUrl + WELL_KNOWN_MANIFEST_LOCATION;
+  const fullWebUrl = `${normalizedWebUrl}${APPCOLLECTION_MANIFEST_NAME}`;
   const siteIsWeb = siteUrl.toLowerCase() === webUrl.toLowerCase();
-  if (!siteIsWeb) {
-    const normalizedWebUrl = webUrl + WELL_KNOWN_MANIFEST_LOCATION;
+  const webIsRoot = fullWebUrl.toLowerCase() === rootLocation.toLowerCase();
+  if (!siteIsWeb && !webIsRoot) {
     allAppManifests.push(
       fetchAndCacheTXT(
-        `${normalizedWebUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+        fullWebUrl,
         webUrl,
         "web",
         true,
+        false,
         skipCache
       )
     );
@@ -306,6 +289,7 @@ function loadManifestTXT(
           appCollectionManifest.siteUrl,
           appCollectionManifest.type,
           false,
+          appCollectionManifest.isHubFetch ?? false,
           skipCache
         )
       );
@@ -408,12 +392,50 @@ export async function loadModernApps(
   await Promise.allSettled(assetPromises.map((a) => a.promise));
 
   for (const asset of assetPromises) {
-    asset.promise.catch((e) => {
-      console.error(SPFxExtensionCore, `Could not load or parse manifest:`, asset.url, e);
-    });
+    try {
+      const exports = await asset.promise;
+      await executeRegistration(exports, asset.manifest, asset.url);
+    }
+    catch (e) {
+      console.error(SPFxExtensionCore, `Could not load or parse manifest.`, e);
+    }
   }
   window.__SPFxExtensions.AllAppAssetsLoadedResolver();
   console.info(SPFxExtensionCore, "SPFx Extensions Core Components Loaded.");
+}
+
+async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
+  const isHub = currentSiteIsRootHub();
+  const currentWebId = getWebId();
+
+  if (!Array.isArray(registrations)) {
+    console.error(SPFxExtensionCore, `Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
+  }
+  for (const appReg of registrations) {
+    if (!appReg.id) {
+      console.error(SPFxExtensionCore, `App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
+      continue;
+    }
+    const appEnabled = manifestToParse.appManifest.enabledApps.some((ea) => {
+      const isSameWebId = ea.webId.toLowerCase() === currentWebId.toLowerCase();
+      const allWebsEnabled = ea.webId === "*";
+      const isEnabledAppId = ea.enabledAppIds.some((eai) => eai.toLowerCase() === appReg.id.toLowerCase());
+      const allAppsEnabled = ea.enabledAppIds.some((eai) => eai === "*");
+      return (isSameWebId && isEnabledAppId) ||
+        (isSameWebId && allAppsEnabled) ||
+        (allWebsEnabled && allAppsEnabled) ||
+        (allWebsEnabled && isEnabledAppId);
+    }) || isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
+
+    if (!appEnabled) {
+      console.info(SPFxExtensionCore, `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
+      continue;
+    }
+    window.__SPFxExtensions.RegisterApp(appReg);
+    if (!appReg.isWebPartApp) {
+      window.__SPFxExtensions.LoadApp(appReg.id, {});
+    }
+  }
 }
 
 export function getManifestsFromAllLocations(
@@ -485,7 +507,7 @@ function parseResolvedManifestTXT(
   );
 
   return parseManifestAndImport(
-    appManifestTXTResultValue.appManifest,
+    appManifestTXTResultValue,
     appBaseUrl
   );
 }

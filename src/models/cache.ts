@@ -7,6 +7,7 @@ export interface ManifestBase {
   type: ManifestLocation;
   hash: string;
   isAppCollection: boolean;
+  isHubFetch?: boolean;
 }
 export interface CacheItemBase {
   date: string;

@@ -1,6 +1,5 @@
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
-import {  SPFxExtensionCore } from "../../utilities/constants";
-import { APP_LOADING } from "../utilities/coreConstants";
+import {  APP_LOADING, SPFxExtensionCore } from "../../utilities/constants";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
   console.debug(SPFxExtensionCore, `Executing appAdded event for`, appDef.id);

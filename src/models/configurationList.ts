@@ -1,21 +1,20 @@
+import { SPFX_EXTENSIONS_DATA_SITE } from "../utilities/constants";
+
 export const ConfigurationNames = {
     Status: "Status",
     RootCDNLocation: "RootCDNLocation",
-    ExtensionFolderName: "ExtensionFolderName",
     InterceptHistory: "InterceptHistory",
     EnableAppWhiteList: "EnableAppWhiteList",
-    AppWhiteListName: "AppWhiteListName",
     AppCatalogUrl: "AppCatalogUrl",
+    AppCatalogWebs: "AppCatalogWebs",
+    ConfiguratorPageData: "ConfiguratorPageData",
+    AppWhiteList: "AppWhiteList",
 } as const;
 
 const CoreDefaultConfiguration = [
     {
         Title: ConfigurationNames.Status,
         Data: "Installed",
-    },
-    {
-        Title: ConfigurationNames.ExtensionFolderName,
-        Data: "SPFxExtensions",
     },
     {
         Title: ConfigurationNames.InterceptHistory,
@@ -26,26 +25,22 @@ const CoreDefaultConfiguration = [
         Data: "false",
     },
     {
-        Title: ConfigurationNames.AppWhiteListName,
-        Data: "SPFxExtensionsWhiteList",
-    },
-    {
         Title: ConfigurationNames.RootCDNLocation,
-        Data: "/sites/appcatalog",
+        Data: `/sites/appcatalog/${SPFX_EXTENSIONS_DATA_SITE}`,
     }
 ];
 
-export function getCoreDefaultConfiguration(appCatalogUrl: string) {
+export function getCoreDefaultConfiguration(cdnLocationUrl: string) {
     const cdnLoc = CoreDefaultConfiguration.find(c => c.Title === "RootCDNLocation");
     if (cdnLoc) {
-        cdnLoc.Data = appCatalogUrl;
+        cdnLoc.Data = cdnLocationUrl;
     }
     return CoreDefaultConfiguration;
 }
 
 export interface ConfigurationListData {
     Title: typeof ConfigurationNames[keyof typeof ConfigurationNames];
-    Data: string;
+    Data: any;
     date: string;
     expires: string;
 }

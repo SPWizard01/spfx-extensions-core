@@ -1,7 +1,6 @@
 import { initCoreServices } from "./services/initializationService";
-import { SPFxExtensionCore } from "../utilities/constants";
+import { CONFIGURATOR_APP_ID, SPFxExtensionCore } from "../utilities/constants";
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
-import { CONFIGURATOR_APP_ID } from "./utilities/coreConstants";
 
 const configuratorApp: SPFxExtensionAppRegistration = {
   id: CONFIGURATOR_APP_ID,

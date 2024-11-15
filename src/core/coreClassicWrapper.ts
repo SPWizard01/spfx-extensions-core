@@ -35,7 +35,7 @@ async function initClassicCore() {
       context: ctxInfo,
       displayMode: getClassicDisplayMode(),
       environmentType: "ClassicSharePoint",
-
+      ConfiguratorUrl: "",
       placeHolderProviderPromise: promise,
       placeHolderResolver: resolver!,
       placeHolderResolved: false,

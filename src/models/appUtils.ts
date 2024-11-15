@@ -37,4 +37,5 @@ export interface SPFxExtensionAppUtils extends SPFxExtensionHistoryUtils {
    */
   appManifestPromises: Promise<any>[];
   fluentIconsInitialized: boolean;
+  ConfiguratorUrl: string;
 }

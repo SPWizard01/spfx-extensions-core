@@ -3,7 +3,7 @@ import { $, inspect } from "bun";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
 const result = buildSync({
-    entryPoints: ["./src/index.ts", "./src/core/__spfxCore.ts", "./src/services/idbService.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicWrapper.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
+    entryPoints: ["./src/index.ts", "./src/core/__spfxCore.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicWrapper.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
     sourcemap: "linked",
     outdir: "./dist",
     platform: "browser",

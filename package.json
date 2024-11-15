@@ -18,7 +18,6 @@
     "./spfxCoreEntry": "./dist/core/__spfxCore.js",
     "./spfxCoreEntryMap": "./dist/core/__spfxCore.js.map",
     "./context": "./dist/services/spContextService.js",
-    "./idb": "./dist/services/idbService.js",
     "./launcher": "./dist/services/appLauncher.js",
     "./utils/display": "./dist/utilities/display.js",
     "./package.json": "./package.json"

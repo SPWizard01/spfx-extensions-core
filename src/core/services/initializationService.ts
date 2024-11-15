@@ -6,15 +6,26 @@ import { initHistoryInterception } from "./historyService";
 import { registerManifestWatcher } from "./manifestWatcherService";
 import { SPFxExtensionCore } from "../../utilities/constants";
 import { getHubSiteUrl } from "./hubDataService";
-import { getContextInfoAsync } from "../../services/spContextService";
-import { contextInfo, currentSiteIsRootHub, getHubSiteId, getSiteAbsoluteUrl, getSiteId, getWebAbsoluteUrl } from "./contextService";
+import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
+import { getCoreConfig, initializeCoreConfiguration, } from "./coreConfigService";
 
-function initGlobal() {
+
+let coreGlobalPromise: Promise<void> | undefined;
+async function initGlobal() {
+  if (coreGlobalPromise) {
+    return coreGlobalPromise;
+  }
+  coreGlobalPromise = initGlobalInternal();
+  return coreGlobalPromise;
+}
+async function initGlobalInternal() {
   //init once.
   if (window.__SPFxExtensions.__CoreInitialized) {
     return;
   }
-  const historyInterceptEnabled = window.__SPFxExtensions.__CoreConfig.find(c => c.Title === "InterceptHistory")?.Data === "true";
+  await initializeCoreConfiguration();
+  const coreConfig = await getCoreConfig();
+  const historyInterceptEnabled = coreConfig.find(c => c.Title === "InterceptHistory")?.Data === "true";
   if (historyInterceptEnabled) {
     initHistoryInterception();
   }
@@ -36,7 +47,7 @@ function initGlobal() {
  * CRITICAL!!!! DO NOT CHANGE!!!
  */
 export async function initCoreServices() {
-  initGlobal();
+  await initGlobal();
 
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
