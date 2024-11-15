@@ -20,30 +20,7 @@ const result = buildSync({
     },
     metafile: true,
 })
-// const result2 = buildSync({
-//     entryPoints: ["./src/__spfx.ts"],
-//     sourcemap: "linked",
-//     outdir: "./dist",
-//     platform: "browser",
-//     format: "esm",
-//     define: {
-//         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
-//     },
-//     external: ["__spfxCore.js"],
-//     bundle: true,
-//     minify: false,
-//     logOverride: {
-//         "direct-eval": "silent"
-//     },
-//     metafile: true,
-//     // minify: true
-// })
-// console.table(Object.getOwnPropertyNames(result2.metafile.outputs).map((key) => {
-//     return {
-//         name: key,
-//         size: `${Math.floor(result2.metafile.outputs[key].bytes / 1024)}KB`,
-//     }
-// }));
+
 console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
     return {
         name: key,

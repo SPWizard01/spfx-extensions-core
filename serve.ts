@@ -9,6 +9,7 @@ startBunDevServer({
         define: {
             "BUILD_DATE": JSON.stringify(new Date().toISOString()),
         },
+        external: [""]
     },
     writeManifest: true,
     tls: {

@@ -1,4 +1,5 @@
 import {
+  SPFX_EXTENSIONS_DATA_SITE,
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import { getContentDigest } from "../../utilities/digest";
@@ -90,6 +91,7 @@ async function fetchAndCacheTXT(
   let appManifest = { ...emptyManifest };
   let appCollection: string[] = [];
   let fetchLocation = url.toLowerCase();
+  let siteUrlLower = siteUrl.toLowerCase();
   if (!skipCache && !isInDebug) {
     let cachedManifest = await getManifestFromCache(fetchLocation, isAppCollection);
     if (cachedManifest) {
@@ -127,7 +129,7 @@ async function fetchAndCacheTXT(
     url: fetchLocation,
     type,
     hash,
-    siteUrl
+    siteUrl: siteUrlLower
   };
 
   const retResult: ManifestItem = isAppCollection
@@ -139,13 +141,36 @@ async function fetchAndCacheTXT(
   return retResult;
 }
 
-async function parseManifestAndImport(
+async function importEntryPoint(fullJSUrl: string) {
+  try {
+    const appRegistrations = await import(fullJSUrl);
+    const defaultExport = appRegistrations.default as SPFxExtensionAppRegistration[];
+    if (!defaultExport) {
+      throw `No default export found in ${fullJSUrl}, only ESM modules are supported.`;
+    }
+    return defaultExport;
+  }
+  catch (e) {
+    console.error(SPFxExtensionCore, `Error while importing or executing`, fullJSUrl, e);
+    throw e
+  }
+}
+
+async function parseManifestAndImportEntryPoints(
   manifestToParse: AppFolderManifest,
-  cdnLoc: string,
 ) {
   const returnPromiseArray: AssetPromise[] = [];
+  const cdnLoc = manifestToParse.url.replace(MANIFEST_NAME, "");
   const ep = manifestToParse.appManifest.appRelativeEntryPointUrl.replace(/\.\.\/?/g, "");
   const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
+  console.debug(
+    SPFxExtensionCore,
+    "Parsing",
+    manifestToParse.type,
+    "manifest:",
+    manifestToParse.appManifest
+  );
+
   console.debug(SPFxExtensionCore, `EntryPoint JS: `, fullJSUrl);
   const isAllowed = await isFileAllowedInCurrentWeb(fullJSUrl);
   if (!isAllowed || !manifestToParse.appManifest.enabled) {
@@ -157,20 +182,7 @@ async function parseManifestAndImport(
     window.__SPFxExtensions.LoadedAppAssets.push(fullJSUrl);
     returnPromiseArray.push({
       url: fullJSUrl,
-      promise: new Promise(async (resolve, reject) => {
-        try {
-          const appRegistrations = await import(fullJSUrl);
-          const defaultExport = appRegistrations.default as SPFxExtensionAppRegistration[];
-          if (!defaultExport) {
-            throw `No default export found in ${fullJSUrl}`;
-          }
-          resolve(defaultExport);
-        }
-        catch (e) {
-          console.error(SPFxExtensionCore, `Error while importing`, fullJSUrl, e);
-          reject(`Unable to import ${fullJSUrl}, only ESM modules are supported. ${e}`);
-        }
-      }),
+      promise: importEntryPoint(fullJSUrl),
       manifest: manifestToParse
     });
   }
@@ -188,10 +200,11 @@ export async function fetchAppsTXTFromAllLocations(
   // all apps.txt accross the context (root / site /web)
   const allAppManifests: Promise<ManifestItem>[] = [];
   const rootLocation = await getRootCDNLocation();
+  const rootUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
   allAppManifests.push(
     fetchAndCacheTXT(
       rootLocation,
-      appCatalogUrl,
+      rootUrl,
       "root",
       true,
       true,
@@ -270,12 +283,12 @@ function GetAppManifestLocation(baseUrl: string, appKey: string) {
   return siteLocation;
 }
 
-function loadManifestTXT(
+function loadAppFolderManifestTXT(
   appCollectionManifests: AppCollectionManifest[],
   skipCache = false
 ) {
   if (appCollectionManifests.length === 0) return [];
-  const manifestPromises: Promise<ManifestItem>[] = [];
+  const manifestPromises: Promise<AppFolderManifest>[] = [];
   for (const appCollectionManifest of appCollectionManifests) {
     const baseUrl = appCollectionManifest.url.replace(
       APPCOLLECTION_MANIFEST_NAME,
@@ -291,7 +304,7 @@ function loadManifestTXT(
           false,
           appCollectionManifest.isHubFetch ?? false,
           skipCache
-        )
+        ) as Promise<AppFolderManifest>
       );
     }
   }
@@ -312,7 +325,7 @@ export async function loadModernApps(
     webUrl,
     hubUrl
   );
-  const allManifestTXTs = getManifestsFromAllLocations(coreCollection);
+  const allManifestTXTs = getManifestTXTFromAllLocations(coreCollection);
 
   window.__SPFxExtensions.Utils.appManifestPromises =
     allManifestTXTs;
@@ -323,7 +336,7 @@ export async function loadModernApps(
   );
   const resolvedManifestTXTs = allManifestTXTsPromises.filter(
     (p) => p.status === "fulfilled"
-  ) as PromiseFulfilledResult<ManifestItem>[];
+  );
 
   const entryPointsFromManifestTXTs: Promise<AssetPromise[]>[] = [];
   const resolvedRootAppsManifests = resolvedManifestTXTs.filter(
@@ -341,8 +354,8 @@ export async function loadModernApps(
 
   for (const rootManifestTXT of resolvedRootAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseResolvedManifestTXT(
-        rootManifestTXT as PromiseFulfilledResult<AppFolderManifest>
+      parseManifestAndImportEntryPoints(
+        rootManifestTXT.value
       )
     );
   }
@@ -356,8 +369,8 @@ export async function loadModernApps(
   //wait for site stuff to load
   for (const siteManifests of resolvedSiteAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseResolvedManifestTXT(
-        siteManifests as PromiseFulfilledResult<AppFolderManifest>
+      parseManifestAndImportEntryPoints(
+        siteManifests.value
       )
     );
   }
@@ -370,8 +383,8 @@ export async function loadModernApps(
   //wait for web stuff to load
   for (const webManifests of resolvedWebAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseResolvedManifestTXT(
-        webManifests as PromiseFulfilledResult<AppFolderManifest>
+      parseManifestAndImportEntryPoints(
+        webManifests.value
       )
     );
   }
@@ -384,9 +397,11 @@ export async function loadModernApps(
   const entryPointSettledResults = await Promise.allSettled(
     entryPointsFromManifestTXTs
   );
+  
+  //there will be no rejected results as this returns always an array of promises
   const fetchedEntryPoints = entryPointSettledResults.filter(
     (r) => r.status === "fulfilled"
-  ) as PromiseFulfilledResult<AssetPromise[]>[];
+  )
 
   const assetPromises = fetchedEntryPoints.flatMap((a) => a.value);
   await Promise.allSettled(assetPromises.map((a) => a.promise));
@@ -438,14 +453,14 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
   }
 }
 
-export function getManifestsFromAllLocations(
+export function getManifestTXTFromAllLocations(
   coreCollection: AppCollectionManifest[],
   skipCache = false
 ) {
   const rootAppsCollectionManifest = coreCollection.filter(
     (app) => app.type === "root"
   );
-  const rootAppPromises = loadManifestTXT(
+  const rootAppPromises = loadAppFolderManifestTXT(
     rootAppsCollectionManifest,
     skipCache
   );
@@ -453,7 +468,7 @@ export function getManifestsFromAllLocations(
   const siteCollectionAppsManifest = coreCollection.filter(
     (app) => app.type === "site"
   );
-  const scAppPromises = loadManifestTXT(
+  const scAppPromises = loadAppFolderManifestTXT(
     siteCollectionAppsManifest,
     skipCache
   );
@@ -464,19 +479,19 @@ export function getManifestsFromAllLocations(
   const webAppCollectionManifest = coreCollection.filter(
     (app) => app.type === "web"
   );
-  const subsitePromises = loadManifestTXT(
+  const subsitePromises = loadAppFolderManifestTXT(
     webAppCollectionManifest,
     skipCache
   );
   //}
 
   //foreach app do stuff
-  const allWebpackManifestsTXT = [
+  const allManifestsTXT = [
     ...rootAppPromises,
     ...scAppPromises,
     ...subsitePromises,
   ];
-  return allWebpackManifestsTXT;
+  return allManifestsTXT;
 }
 
 function getModulePromises(
@@ -493,21 +508,3 @@ function getModulePromises(
   return modulePromises;
 }
 
-function parseResolvedManifestTXT(
-  manifestTXTResult: PromiseFulfilledResult<AppFolderManifest>
-) {
-  const appManifestTXTResultValue = manifestTXTResult.value;
-  const appBaseUrl = appManifestTXTResultValue.url.replace(MANIFEST_NAME, "");
-  console.debug(
-    SPFxExtensionCore,
-    "Parsing",
-    appManifestTXTResultValue.type,
-    "manifest:",
-    appManifestTXTResultValue.appManifest
-  );
-
-  return parseManifestAndImport(
-    appManifestTXTResultValue,
-    appBaseUrl
-  );
-}

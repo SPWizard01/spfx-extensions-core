@@ -1,7 +1,8 @@
 import { initCoreServices } from "./services/initializationService";
 import { CONFIGURATOR_APP_ID, SPFxExtensionCore } from "../utilities/constants";
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
-
+import { launchSPFxExtensionApp } from "../services/appLauncher";
+import { launch } from "./configurator/app";
 const configuratorApp: SPFxExtensionAppRegistration = {
   id: CONFIGURATOR_APP_ID,
   description: "Allows configuring custom apps",
@@ -10,7 +11,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
   name: "SPFx Extensions Configurator",
   async onInstanceRequested(newInstance) {
     console.log(SPFxExtensionCore, "Configurator App Instance Requested", newInstance);
-
+    launchSPFxExtensionApp({ launch }, newInstance);
   },
 }
 

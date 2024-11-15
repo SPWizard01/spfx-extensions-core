@@ -14,7 +14,7 @@ async function createWeb(webUrl: string) {
         },
         body: JSON.stringify({
             "parameters": {
-                "Description": "Site to store data for SPFxExtensions",
+                "Description": "Site that stores SPFxExtensions Data and global apps",
                 "Language": 1033,
                 "Title": "SPFxExtensions Data",
                 "Url": webUrl,

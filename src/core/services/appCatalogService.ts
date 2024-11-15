@@ -1,5 +1,6 @@
 import { SPFxExtensionCore } from "../../utilities/constants";
 import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+import { getDigest } from "./digestService";
 
 let appCatalogPromiseResolver = (_data: string | PromiseLike<string>) => { };
 let appCatalogUrlPromise: Promise<string> | undefined;
@@ -40,20 +41,8 @@ export async function getAppCatalogUrlCached(baseUrl = "") {
 }
 
 export async function getAppCatalogDigest(catalogSubWeb = "") {
+
     const appCatalogUrl = await getAppCatalogUrlData();
-    const req = await fetch(
-        `${appCatalogUrl}${(catalogSubWeb ? `/${catalogSubWeb}` : ``)}/_api/contextinfo`,
-        {
-            method: "POST",
-            headers: {
-                Accept: "application/json;odata=verbose",
-                "Content-Type": "application/json",
-            },
-        }
-    );
-    if (req.status === 200) {
-        const data = await req.json();
-        return data.d.GetContextWebInformation.FormDigestValue;
-    }
-    return "";
+    const url = `${appCatalogUrl}${(catalogSubWeb ? `/${catalogSubWeb}` : ``)}`;
+    return getDigest(url);
 }
