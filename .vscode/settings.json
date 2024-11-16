@@ -1,0 +1,8 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.sortImports": "always"
+    },
+    "typescript.preferences.organizeImports": {
+        "typeOrder": "auto"
+    }
+}

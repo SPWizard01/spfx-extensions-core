@@ -3,12 +3,12 @@ import { getCompatiblePageContextAsync } from "../services/spContextService";
 import { loadCoreForSPFxOrClassicWrapper } from "../__spfx";
 import { getClassicDisplayMode } from "../utilities/display";
 import { SPFxExtensionCore } from "../utilities/constants";
+import { logGenericCoreError } from "./services/loggingService";
 
 const IS_MODERN_EXPIRIENCE = !!!window._spBodyOnLoadFunctions;
 async function initClassicCore() {
   if (IS_MODERN_EXPIRIENCE) {
-    console.error(
-      SPFxExtensionCore,
+    logGenericCoreError(
       "This module can only be initialized in classic mode"
     );
     return window.__SPFxExtensions.__CorePromise;
@@ -63,7 +63,7 @@ function init() {
     initClassicCore();
     return;
   }
-  console.error(
+  logGenericCoreError(
     "No _spBodyOnLoadFunctions or _spBodyOnLoadCalled object present. Can not initialize classic wrapper"
   );
 }

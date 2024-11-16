@@ -1,4 +1,4 @@
-import { SPFxExtensionCore } from "../../utilities/constants";
+import { logGenericCoreError } from "./loggingService";
 
 export async function getDigest(webUrl: string) {
     const req = await fetch(
@@ -15,7 +15,7 @@ export async function getDigest(webUrl: string) {
         const data = await req.json();
         return data.d.GetContextWebInformation.FormDigestValue;
     } else {
-        console.error(SPFxExtensionCore, "Error while getting digest", req.status);
+        logGenericCoreError("Error while getting digest", req.status);
     }
     return "";
 }

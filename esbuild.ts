@@ -1,9 +1,9 @@
-import { buildSync } from "esbuild"
-import { $, inspect } from "bun";
+import { $ } from "bun";
+import { analyzeMetafile, build } from "esbuild";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
-const result = buildSync({
-    entryPoints: ["./src/index.ts", "./src/core/__spfxCore.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicWrapper.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
+const result = await build({
+    entryPoints: ["./src/index.ts", "./src/configurator/__spfxCoreConfigurator.ts", "./src/core/__spfxCore.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicWrapper.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
     sourcemap: "linked",
     outdir: "./dist",
     platform: "browser",
@@ -11,16 +11,19 @@ const result = buildSync({
     define: {
         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
     },
+    pure: ["console.debug","console.log"],
+    color: true,
     legalComments: "inline",
-    external: ["__spfxCore.js"],
     bundle: true,
+    treeShaking: true,
+    
     minify: prod,
     logOverride: {
         "direct-eval": "silent"
     },
     metafile: true,
 })
-
+await analyzeMetafile(result.metafile, { color: true, verbose: false });
 console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
     return {
         name: key,

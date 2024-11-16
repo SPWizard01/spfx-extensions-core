@@ -1,6 +1,6 @@
 import { SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getAppCatalogDigest, getAppCatalogUrlData } from "./appCatalogService";
-import { getExtensionConfig, addOrUpdateExtensionConfig } from "./coreIdbService";
+import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
 
 async function createWeb(webUrl: string) {
     const appCatalog = await getAppCatalogUrlData();

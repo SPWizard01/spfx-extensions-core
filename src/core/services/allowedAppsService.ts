@@ -1,17 +1,15 @@
+import type { AllowedAppsListData } from "../../models/allowedAppsListData";
+import { getContextInfoAsync } from "../../services/spContextService";
 import {
-  ALLOWEDAPPSLIST_ERROR,
   ALLOWEDAPPSLIST_NAME,
   SPFX_EXTENSIONS_DATA_SITE,
-  SPFxExtensionCore,
 } from "../../utilities/constants";
-
 import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
-import { getContextInfoAsync } from "../../services/spContextService";
-import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import { ensureAppWhiteList } from "./whiteListService";
-import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedApps } from "./coreIdbService";
-import { getCoreConfig } from "./coreConfigService";
 import { getAppCatalogUrlCached } from "./appCatalogService";
+import { getCoreConfig } from "./coreConfigService";
+import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedApps } from "./coreIdbService";
+import { logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
+import { ensureAppWhiteList } from "./whiteListService";
 
 const siteContextInfo = await getContextInfoAsync();
 const appCatalogUrl = await getAppCatalogUrlCached();
@@ -33,7 +31,7 @@ async function fetchAllowedAppsListData() {
       return cachedData;
     }
     if (cachedData.length > 0) {
-      console.info(SPFxExtensionCore, "Cache mismatch, loading allowed apps data...");
+      logGenericCoreInfo("Cache mismatch, loading allowed apps data...");
     }
     const coreConfig = await getCoreConfig();
     const appWhiteListEnabled = coreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
@@ -47,7 +45,7 @@ async function fetchAllowedAppsListData() {
     await addOrUpdateAllowedAppsToCache(allowedAppsListData, 5);
     return allowedAppsListData;
   } catch (err) {
-    console.error(SPFxExtensionCore, "Unable to load allowed apps data...", err);
+    logGenericCoreError("Unable to load allowed apps data...", err);
     return [];
   }
 }
@@ -91,12 +89,11 @@ export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
   // Service should load list data from whatever source which can be reached by everyone.
   const allowedList = await AllowedAppsListDataPromise;
   if (webUrl === "ERROR") {
-    console.warn(ALLOWEDAPPSLIST_ERROR);
+    logGenericCoreWarning(`Allowed Apps: Error while retrieving site context, does AllowedApps list exist?`);
     return false;
   }
   if (!fileIsAllowed(fileNameWithPath, allowedList)) {
-    console.warn(
-      SPFxExtensionCore,
+    logGenericCoreWarning(
       "File",
       fileNameWithPath,
       `is not allowed to be executed. Please add it to whitelist in the app catalog @ ${appConfigUrl}. If you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port of the localhost server.`

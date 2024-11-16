@@ -1,10 +1,10 @@
 import { deleteDB, openDB, type DBSchema } from "idb";
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
 import type { AppCollectionManifest, AppCollectionManifestCacheItem, AppFolderManifest, AppFolderManifestCacheItem, ManifestBase, ManifestItem } from "../../models/cache";
+import type { ConfigurationListData } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
-import { SPFxExtensionCore } from "../../utilities/constants";
-import type { ConfigurationListData } from "../../models/configurationList";
+import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
 
 
@@ -71,7 +71,7 @@ const openDBPromise = openDB<SPFxExtensionsCoreDB>(DBNAME, 1, {
     },
 });
 openDBPromise.catch((err) => {
-    console.error(
+    logGenericCoreError(
         "Error opening database for Core, please contact your administrator."
     );
     deleteDB(DBNAME).then(() => {
@@ -110,7 +110,7 @@ export async function evictItemsFromStore(storeName: StoreKeys, key: any) {
         const txStore = tx.objectStore(storeName);
         cacheToRemove.forEach((u) => txStore.delete((u as any)[key]));
         await tx.done;
-        console.warn(SPFxExtensionCore, `Evicted ${toEvict} items from ${storeName} cache.`);
+        logGenericCoreWarning(`Evicted ${toEvict} items from ${storeName} cache.`);
     }
     return toEvict;
 }
@@ -276,7 +276,7 @@ export async function evictManifestCache(
                 isAppCollection
                     ? await removeAppCollectionManifestFromCache(item.url)
                     : await removeAppFolderManifestFromCache(item.url);
-                console.warn(
+                logGenericCoreWarning(
                     `Evicted ${matchingItem.url} from ${isAppCollection ? "AppCollection" : "AppManifest"
                     } cache. Because of hash mismatch.`
                 );

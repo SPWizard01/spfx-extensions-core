@@ -1,16 +1,14 @@
-import { ensureApp } from "./appService";
-import { SPFxExtensionCore } from "../../utilities/constants";
+import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
 import type {
   SPFxExtensionAppDefinition,
-  SPFxExtensionAppEntryPoint,
   SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
-import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
-import { launchSPFxExtensionApp } from "../../services/appLauncher";
+import { ensureApp } from "./appService";
+import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
 
 const emptyDummy = () => {
   throw "This should not happen";
@@ -36,7 +34,7 @@ function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
       (el) => el.key === eventListener.key
     );
     if (idx > -1) {
-      console.debug(SPFxExtensionCore, "Removing event listener", eventListener);
+      logGenericCoreDebug("Removing event listener", eventListener);
       appInstance.allEventListeners.splice(idx, 1);
     }
   };
@@ -81,8 +79,7 @@ function executeAppInstanceListeners(
   appDefinition: SPFxExtensionAppDefinition,
   appInstance: SPFxExtensionAppInstance
 ) {
-  console.debug(
-    SPFxExtensionCore,
+  logGenericCoreDebug(
     `Executing instanceAdded event for app`,
     appDefinition.id,
     "instance",
@@ -94,7 +91,7 @@ function executeAppInstanceListeners(
     try {
       listener.handler({ app: appDefinition, instance: appInstance });
     } catch (e) {
-      console.error(SPFxExtensionCore, "Error executing instanceAdded event", e);
+      logGenericCoreError("Error executing instanceAdded event", e);
     }
   });
 }
@@ -141,7 +138,7 @@ export function registerAppInstanceService() {
     ) => {
 
       const foundApp = ensureApp(appId);
-      console.debug(SPFxExtensionCore, `Creating app instance for app`, appId);
+      logGenericCoreDebug(`Creating app instance for app`, appId);
       const appInstance = createAppInstance(runTimeConfig);
       foundApp.instances.push(appInstance);
       appInstance.unmount = () => {
@@ -150,7 +147,14 @@ export function registerAppInstanceService() {
 
       executeAppInstanceListeners(foundApp, appInstance);
       //this will only be available once the app registration passes, ensureApp does not create this property
-      foundApp.onInstanceRequested?.(appInstance);
+      try {
+        foundApp.onInstanceRequested?.(appInstance).catch((e) => {
+          logInstanceRequestedError(foundApp, e);
+        });
+      }
+      catch (e) {
+        logInstanceRequestedError(foundApp, e);
+      }
 
       return appInstance;
     };

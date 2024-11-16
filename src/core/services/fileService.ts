@@ -68,7 +68,6 @@ export async function createSubFolder(webUrl: string, listName: string, folderNa
 }
 
 export async function getSubFolder(webUrl: string, listName: string, folderName: string) {
-    const digest = await getDigest(webUrl);
     const response = await fetch(`${webUrl}/_api/web/lists/GetByTitle('${listName}')/rootFolder/folders('${folderName}')`, {
         method: "GET",
         headers: {

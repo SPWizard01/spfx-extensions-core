@@ -1,0 +1,15 @@
+import { SPBrowser, spfi, SPFx } from "@pnp/sp";
+import "@pnp/sp/files";
+import "@pnp/sp/folders";
+import "@pnp/sp/lists";
+import "@pnp/sp/webs";
+import { getWebAbsoluteUrl } from "../../core/services/contextService";
+import { getModernContextAsync } from "../../services/spContextService";
+const modernContext = await getModernContextAsync();
+export function getPnPSP(webUrl = "") {
+    const web = webUrl ? webUrl : getWebAbsoluteUrl();
+    if(!modernContext) {
+        return spfi(web).using(SPBrowser());
+    }
+    return spfi(web).using(SPFx(modernContext as any));
+}

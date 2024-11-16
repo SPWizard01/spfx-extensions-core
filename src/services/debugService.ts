@@ -2,6 +2,7 @@
  * CURRENTLY NOT USED, NOT TESTED
  */
 
+import { logGenericCoreDebug } from "../core/services/loggingService";
 import type { SPFxExtensionAppManifest } from "../models/appModel";
 import { DEBUG_KEYS } from "../utilities/debug";
 
@@ -33,7 +34,7 @@ export function addESBuildDebugging(debugKey: string, prodPublicPath: string) {
   const devPort = Number(localStorage.getItem(key));
   const devPublicPath = `https://localhost:${devPort}/`;
   const esbuildPublicPath = devPort > 0 ? devPublicPath : prodPublicPath;
-  console.debug(`[${key}] ESM Public path is set to ${esbuildPublicPath}`);
+  logGenericCoreDebug(`[${key}] ESM Public path is set to ${esbuildPublicPath}`);
   return esbuildPublicPath;
 }
 
@@ -46,7 +47,7 @@ export async function startAppWithESDebugging(
   const manifestData = await manifest.text();
   const manifestJson = JSON.parse(manifestData) as SPFxExtensionAppManifest;
   const modulePath = `${pubPath}/${manifestJson.appRelativeEntryPointUrl}`;
-  console.debug(`[${debugKey}] Importing module ${modulePath}`);
+  logGenericCoreDebug(`[${debugKey}] Importing module ${modulePath}`);
   await import(modulePath);
 }
 

@@ -1,8 +1,8 @@
-import { build, $, inspect } from "bun";
+import { build, $, inspect,  } from "bun";
 
 await $`rm -rf dist`;
 build({
-    entrypoints: ["./src/index.ts", "./src/core/__spfxCore.ts", "./src/core/coreClassicWrapper.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
+    entrypoints: ["./src/index.ts", "./src/configurator/__spfxCoreConfigurator.ts", "./src/core/__spfxCore.ts", "./src/core/coreClassicWrapper.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
     sourcemap: "linked",
     outdir: "./dist",
     target: "browser",

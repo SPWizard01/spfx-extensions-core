@@ -1,8 +1,8 @@
-import { initCoreServices } from "./services/initializationService";
-import { CONFIGURATOR_APP_ID, SPFxExtensionCore } from "../utilities/constants";
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
 import { launchSPFxExtensionApp } from "../services/appLauncher";
-import { launch } from "./configurator/app";
+import { CONFIGURATOR_APP_ID } from "../utilities/constants";
+import { initCoreServices } from "./services/initializationService";
+import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo } from "./services/loggingService";
 const configuratorApp: SPFxExtensionAppRegistration = {
   id: CONFIGURATOR_APP_ID,
   description: "Allows configuring custom apps",
@@ -10,16 +10,26 @@ const configuratorApp: SPFxExtensionAppRegistration = {
   hideAppSelectorWhenAppLoaded: true,
   name: "SPFx Extensions Configurator",
   async onInstanceRequested(newInstance) {
-    console.log(SPFxExtensionCore, "Configurator App Instance Requested", newInstance);
-    launchSPFxExtensionApp({ launch }, newInstance);
+    const coreIsInDebug = import.meta.url.indexOf("localhost") > -1;
+    if (coreIsInDebug) {
+      logGenericCoreDebug("Core is in debug mode");
+    }
+    const configuratorUrl = coreIsInDebug ? import.meta.resolve("./__spfxCoreConfigurator.js") : window.__SPFxExtensions.__ConfiguratorUrl;
+    const module = await import(configuratorUrl)
+    launchSPFxExtensionApp(module, newInstance);
   },
 }
 
 export async function start() {
   const buildDate = BUILD_DATE;
-  console.info(SPFxExtensionCore, `Initializing Core Services Built:`, buildDate);
+  logGenericCoreInfo(`Initializing Core Services Built:`, buildDate);
   initCoreServices().then(() => {
-    window.__SPFxExtensions.RegisterApp(configuratorApp);
+    try {
+      window.__SPFxExtensions.RegisterApp(configuratorApp);
+    }
+    catch (e) {
+      logGenericCoreError("Error registering configurator app", e);
+    }
   });
 }
 

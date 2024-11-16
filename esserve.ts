@@ -1,15 +1,16 @@
-import { context,  analyzeMetafile,initialize } from "esbuild"
 import { $ } from "bun";
+import { analyzeMetafile, context } from "esbuild";
 await $`rm -rf dist`;
-const prod = process.argv.includes("--prod");
 
 const ctx = await context({
-    entryPoints: ["./src/core/__spfxCore.ts"],
+    entryPoints: ["./src/core/__spfxCore.ts", "./src/configurator/__spfxCoreConfigurator.ts"],
+    entryNames: "[name]",
     sourcemap: "linked",
     outdir: "./dist",
     platform: "browser",
     format: "esm",
     bundle: true,
+    treeShaking: true,
     define: {
         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
     },
@@ -26,7 +27,7 @@ const ctx = await context({
                         return;
                     }
                     if (result.metafile) {
-                        const res = await analyzeMetafile(result.metafile, {color: true, verbose: false});
+                        const res = await analyzeMetafile(result.metafile, { color: true, verbose: false });
                         console.log(res);
                         // await formatMessages([], {});
                         console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {

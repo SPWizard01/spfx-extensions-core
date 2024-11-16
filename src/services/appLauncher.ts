@@ -1,3 +1,4 @@
+import { logGenericCoreError } from "../core/services/loggingService";
 import type {
   SPFxExtensionAppInstance,
   SPFxExtensionAppModule,
@@ -8,16 +9,16 @@ import type {
  * @param module
  * @param instance
  */
-export function launchSPFxExtensionApp(
+export async function launchSPFxExtensionApp(
   module: SPFxExtensionAppModule,
   instance: SPFxExtensionAppInstance
 ) {
   if (instance.isLoaded) {
-    console.error("Instance has already been loaded", instance);
+    logGenericCoreError("Instance has already been loaded", instance);
     return;
   }
   instance.isLoaded = true;
-  const moduleUnmountCall = module.launch(instance);
+  const moduleUnmountCall = await module.launch(instance);
   const coreInstanceUnmount = instance.unmount;
   // this will preserve existing umount callback
   instance.unmount = () => {

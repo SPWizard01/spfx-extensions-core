@@ -36,7 +36,7 @@ export type SPFxExtensionAppCleanup = () => void;
  */
 export type SPFxExtensionAppEntryPoint = (
   instance: SPFxExtensionAppInstance
-) => SPFxExtensionAppCleanup;
+) => SPFxExtensionAppCleanup | Promise<SPFxExtensionAppCleanup>;
 
 export type SPFxExtensionAppLaunch = (
   appEntryPoint: SPFxExtensionAppEntryPoint

@@ -1,13 +1,13 @@
 import { registerAppInstanceService } from "./appInstanceService";
 import { registerAppService } from "./appService";
-import { registerGlobalListeners } from "./globalModernAppsListeners";
 import { loadModernApps } from "./componentLoaderService";
-import { initHistoryInterception } from "./historyService";
-import { registerManifestWatcher } from "./manifestWatcherService";
-import { SPFxExtensionCore } from "../../utilities/constants";
-import { getHubSiteUrl } from "./hubDataService";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
 import { getCoreConfig, initializeCoreConfiguration, } from "./coreConfigService";
+import { registerGlobalListeners } from "./globalModernAppsListeners";
+import { initHistoryInterception } from "./historyService";
+import { getHubSiteUrl } from "./hubDataService";
+import { logGenericCoreInfo } from "./loggingService";
+import { registerManifestWatcher } from "./manifestWatcherService";
 
 
 let coreGlobalPromise: Promise<void> | undefined;
@@ -56,5 +56,5 @@ export async function initCoreServices() {
   window.__SPFxExtensions.__CorePromiseResolver?.();
   loadModernApps(siteUrl, webUrl, hubSiteUrl);
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);
-  console.info(SPFxExtensionCore, "SPFx Extensions Core Has Been initialized.");
+  logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");
 }

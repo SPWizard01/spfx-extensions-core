@@ -14,21 +14,9 @@ export const EXTENSION_APPS_FOLDER = "SPFxExtensions";
 export const WELL_KNOWN_MANIFEST_LOCATION = `/${EXTENSION_APPS_FOLDER}/`;
 
 export const IS_WORKBENCH =
-  window.location.host.toLowerCase().indexOf("/_layouts/15/workbench.aspx") >
-  -1;
+    window.location.host.toLowerCase().indexOf("/_layouts/15/workbench.aspx") >
+    -1;
 export const SPFX_EXTENSIONS_DATA_SITE = "SPFxExtensionsData";
 export const IS_MODERN_EXPIRIENCE = !!!window._spBodyOnLoadFunctions;
 export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const IS_SPO = window.location.host.includes(".sharepoint.com");
-
-
-
-
-export const APPBLACKLIST_ERROR =
-    `${SPFxExtensionCore} Blacklist service error while retrieving site context, does AppBlacklist list exist?` as const;
-export const ALLOWEDAPPSLIST_ERROR =
-    `${SPFxExtensionCore} Allowed Apps: Error while retrieving site context, does AllowedApps list exist?` as const;
-export const APPBLACKLIST_ERROR_NO_URL =
-    `${SPFxExtensionCore} Blacklist service while retrieving site context, could not find Web URL inside context` as const;
-export const ALLOWEDAPPSLIST_ERROR_NO_URL =
-    `${SPFxExtensionCore} Allowed Apps: Could not find Web URL inside context` as const;

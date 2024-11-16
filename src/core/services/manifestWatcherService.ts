@@ -1,9 +1,9 @@
-import { SPFxExtensionCore } from "../../utilities/constants";
 import {
   fetchAppsTXTFromAllLocations,
   getManifestTXTFromAllLocations,
 } from "./componentLoaderService";
 import { evictManifestCache } from "./coreIdbService";
+import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
 const CORE_MANIFEST_CHECK_INTERVAL = 60000;
 let manifestWatch = 0;
@@ -52,8 +52,7 @@ export async function performManifestCheck(
     sessionStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   }
   try {
-    console.info(
-      SPFxExtensionCore,
+    logGenericCoreInfo(
       new Date().toISOString(),
       `Checking for manifest updates across all locations...`
     );
@@ -71,6 +70,6 @@ export async function performManifestCheck(
     await Promise.allSettled(allManifests);
     sessionStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   } catch (e) {
-    console.error(SPFxExtensionCore, "Error checking for manifest updates", e);
+    logGenericCoreError("Error checking for manifest updates", e);
   }
 }

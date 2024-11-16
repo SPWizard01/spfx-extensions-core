@@ -1,15 +1,16 @@
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
-import {  APP_LOADING, SPFxExtensionCore } from "../../utilities/constants";
+import { APP_LOADING } from "../../utilities/constants";
+import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
-  console.debug(SPFxExtensionCore, `Executing appAdded event for`, appDef.id);
+  logGenericCoreDebug(`Executing appAdded event for`, appDef.id);
   window.__SPFxExtensions.AppEventListeners.filter(
     (l) => l.eventName === "appAdded"
   ).forEach((listener) => {
     try {
       listener.handler(appDef);
     } catch (e) {
-      console.error(SPFxExtensionCore, "Error executing appAdded event", e);
+      logGenericCoreError("Error executing appAdded event", e);
     }
   });
 }
@@ -18,7 +19,7 @@ export function ensureApp(appId: string) {
   let foundApp = window.__SPFxExtensions.Apps.find((a) => a.id === appId);
 
   if (!foundApp) {
-    console.debug(SPFxExtensionCore, `Registering new app`, appId);
+    logGenericCoreDebug(`Registering new app`, appId);
     foundApp = {
       id: appId,
       name: APP_LOADING,
@@ -42,8 +43,7 @@ export function registerAppService() {
       const app = ensureApp(appdef.id);
       const isNew = app.name === APP_LOADING && app.description === APP_LOADING;
       if (!isNew) {
-        console.error(
-          SPFxExtensionCore,
+        logGenericCoreError(
           "App",
           app,
           "is being re-registered. This is not allowed."
@@ -59,17 +59,11 @@ export function registerAppService() {
       app.onInstanceRequested = appdef.onInstanceRequested;
       app.instances.forEach((i) => {
         try {
-          app.onInstanceRequested?.(i);
+          app.onInstanceRequested?.(i).catch((e) => {
+            logInstanceRequestedError(app, e);
+          });
         } catch (e) {
-          console.error(
-            SPFxExtensionCore,
-            "Error while executing onInstanceRequested for app",
-            app.id,
-            "with name",
-            app.name,
-            "Error:",
-            e
-          );
+          logInstanceRequestedError(app, e);
         }
       });
       executeAppAddedEvents(app);
@@ -78,3 +72,5 @@ export function registerAppService() {
     };
   }
 }
+
+

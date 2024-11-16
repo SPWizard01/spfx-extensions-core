@@ -5,19 +5,20 @@ import {
 import { getContentDigest } from "../../utilities/digest";
 import { isFileAllowedInCurrentWeb } from "./allowedAppsService";
 
-import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
 import type {
   AppCollectionManifest,
   AppFolderManifest,
   ManifestItem,
   ManifestLocation,
 } from "../../models/cache";
-import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
-import { currentSiteIsRootHub, getWebId } from "./contextService";
-import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
-import { WELL_KNOWN_MANIFEST_LOCATION, APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
+import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import { getAppCatalogUrlCached } from "./appCatalogService";
+import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
+import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
+import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
 
 interface AssetPromise {
   url: string;
@@ -46,12 +47,12 @@ function validateAppManifest(manifest: SPFxExtensionAppManifest) {
   }
 
   if (!manifest.appRelativeEntryPointUrl) {
-    console.error(SPFxExtensionCore, `Manifest does not have appRelativeEntryPointUrl property.`, manifest);
+    logGenericCoreError(`Manifest does not have appRelativeEntryPointUrl property.`, manifest);
     throw `${SPFxExtensionCore} Manifest does not have appRelativeEntryPointUrl property.`;
 
   }
   if (!manifest.enabledApps) {
-    console.error(SPFxExtensionCore, `Manifest does not have enabledApps property.`, manifest);
+    logGenericCoreError(`Manifest does not have enabledApps property.`, manifest);
     throw `${SPFxExtensionCore} Manifest does not have enabledApps property.`;
   }
 }
@@ -101,7 +102,7 @@ async function fetchAndCacheTXT(
   }
 
   try {
-    console.debug(SPFxExtensionCore, `Fetching manifest from`, fetchLocation);
+    logGenericCoreDebug(`Fetching manifest from`, fetchLocation);
     const mnfReq = await fetch(fetchLocation);
     const result = await mnfReq.json();
     if (isAppCollection) {
@@ -110,7 +111,7 @@ async function fetchAndCacheTXT(
       appManifest = result;
     }
   } catch (err) {
-    console.warn(SPFxExtensionCore, `Unable to fetch manifest from`, fetchLocation, err);
+    logGenericCoreWarning(`Unable to fetch manifest from`, fetchLocation, err);
   }
   try {
     validateManifest(
@@ -118,7 +119,7 @@ async function fetchAndCacheTXT(
       isAppCollection
     );
   } catch (err) {
-    console.error(SPFxExtensionCore, `Error while parsing manifest from`, fetchLocation, err);
+    logGenericCoreError(`Error while parsing manifest from`, fetchLocation, err);
     appManifest = { ...emptyManifest };
     appCollection = [];
   }
@@ -151,7 +152,7 @@ async function importEntryPoint(fullJSUrl: string) {
     return defaultExport;
   }
   catch (e) {
-    console.error(SPFxExtensionCore, `Error while importing or executing`, fullJSUrl, e);
+    logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
     throw e
   }
 }
@@ -163,15 +164,14 @@ async function parseManifestAndImportEntryPoints(
   const cdnLoc = manifestToParse.url.replace(MANIFEST_NAME, "");
   const ep = manifestToParse.appManifest.appRelativeEntryPointUrl.replace(/\.\.\/?/g, "");
   const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
-  console.debug(
-    SPFxExtensionCore,
+  logGenericCoreDebug(
     "Parsing",
     manifestToParse.type,
     "manifest:",
     manifestToParse.appManifest
   );
 
-  console.debug(SPFxExtensionCore, `EntryPoint JS: `, fullJSUrl);
+  logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
   const isAllowed = await isFileAllowedInCurrentWeb(fullJSUrl);
   if (!isAllowed || !manifestToParse.appManifest.enabled) {
     return returnPromiseArray;
@@ -273,8 +273,7 @@ function GetAppManifestLocation(baseUrl: string, appKey: string) {
   const siteLocation = `${baseUrl}${appKey}/${MANIFEST_NAME}`;
   if (devSitePort > 0) {
     const debugLoc = `https://localhost:${devSitePort}/${MANIFEST_NAME}`;
-    console.info(
-      SPFxExtensionCore,
+    logGenericCoreInfo(
       `<${appKey}> App is in debug mode, loading from`,
       debugLoc
     );
@@ -364,7 +363,7 @@ export async function loadModernApps(
     entryPointsFromManifestTXTs
   );
   await Promise.allSettled(getModulePromises(rootResults));
-  console.debug(SPFxExtensionCore, "Root apps loaded.");
+  logGenericCoreDebug("Root apps loaded.");
 
   //wait for site stuff to load
   for (const siteManifests of resolvedSiteAppsManifests) {
@@ -378,7 +377,7 @@ export async function loadModernApps(
     entryPointsFromManifestTXTs
   );
   await Promise.allSettled(getModulePromises(rootAndSiteResults));
-  console.debug(SPFxExtensionCore, "Site apps loaded.");
+  logGenericCoreDebug("Site apps loaded.");
 
   //wait for web stuff to load
   for (const webManifests of resolvedWebAppsManifests) {
@@ -392,12 +391,12 @@ export async function loadModernApps(
     entryPointsFromManifestTXTs
   );
   await Promise.allSettled(getModulePromises(rootAndSiteAndWebResults));
-  console.debug(SPFxExtensionCore, "SiteWeb apps loaded.");
+  logGenericCoreDebug("SiteWeb apps loaded.");
 
   const entryPointSettledResults = await Promise.allSettled(
     entryPointsFromManifestTXTs
   );
-  
+
   //there will be no rejected results as this returns always an array of promises
   const fetchedEntryPoints = entryPointSettledResults.filter(
     (r) => r.status === "fulfilled"
@@ -412,11 +411,11 @@ export async function loadModernApps(
       await executeRegistration(exports, asset.manifest, asset.url);
     }
     catch (e) {
-      console.error(SPFxExtensionCore, `Could not load or parse manifest.`, e);
+      logGenericCoreError(`Could not load or parse manifest.`, e);
     }
   }
   window.__SPFxExtensions.AllAppAssetsLoadedResolver();
-  console.info(SPFxExtensionCore, "SPFx Extensions Core Components Loaded.");
+  logGenericCoreInfo("SPFx Extensions Core Components Loaded.");
 }
 
 async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
@@ -424,11 +423,11 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
   const currentWebId = getWebId();
 
   if (!Array.isArray(registrations)) {
-    console.error(SPFxExtensionCore, `Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
+    logGenericCoreError(`Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
   }
   for (const appReg of registrations) {
     if (!appReg.id) {
-      console.error(SPFxExtensionCore, `App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
+      logGenericCoreError(`App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
       continue;
     }
     const appEnabled = manifestToParse.appManifest.enabledApps.some((ea) => {
@@ -443,7 +442,7 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
     }) || isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
 
     if (!appEnabled) {
-      console.info(SPFxExtensionCore, `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
+      logGenericCoreInfo(`App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
       continue;
     }
     window.__SPFxExtensions.RegisterApp(appReg);

@@ -1,6 +1,7 @@
 /**
  * CURRENTLY NOT USED, NOT TESTED
  */
+import { logGenericCoreDebug, logGenericCoreError } from "../core/services/loggingService";
 import type { SPFxExtensionModuleLoadResult } from "../models/importLoader";
 import { DEBUG_KEYS } from "../utilities/debug";
 import { debuggingEnabled } from "./debugService";
@@ -39,7 +40,7 @@ function getImportCache(): ImportCacheItem[] {
     try {
       parsedItems = JSON.parse(localStorage.getItem(IMPORT_CACHE_KEY)!);
     } catch {
-      console.error(
+      logGenericCoreError(
         `Unable to parse import cache, localStorage[${IMPORT_CACHE_KEY}] will be reset.`
       );
       setImportCache([]);
@@ -95,7 +96,7 @@ function evictCache() {
   const toEvict = getImportCache().filter(
     (x) => x.cacheTime + x.cacheFor < now
   );
-  console.debug("Following items will be evicted from import cache", toEvict);
+  logGenericCoreDebug("Following items will be evicted from import cache", toEvict);
   const toRetain = getImportCache().filter(
     (x) => x.cacheTime + x.cacheFor > now
   );
@@ -197,10 +198,10 @@ export async function importESModuleViaScriptTag<T>(
   const script = document.createElement("script");
   script.type = "module";
   if (keepCurrentContext) {
-    console.debug("Requesting via script content import: " + cachedUrl);
+    logGenericCoreDebug("Requesting via script content import: " + cachedUrl);
     script.textContent = getModuleImportAsContent(cachedUrl, importKey);
   } else {
-    console.debug("Requesting via script src import: " + cachedUrl);
+    logGenericCoreDebug("Requesting via script src import: " + cachedUrl);
     script.src = cachedUrl;
     script.addEventListener("load", (d) => {
       const cb = window.__SPFxExtensions.ImportCallbacks.find(
@@ -216,7 +217,7 @@ export async function importESModuleViaScriptTag<T>(
     });
   }
   script.addEventListener("error", () => {
-    console.error(`Unable to import via script from ${cachedUrl}.`);
+    logGenericCoreError(`Unable to import via script from ${cachedUrl}.`);
     removeImportCacheItem(cacheItem.id);
     removeCallback(importKey);
   });
@@ -235,7 +236,7 @@ export async function importESModule(
 ): Promise<SPFxExtensionModuleLoadResult> {
   const cacheItem = getOrAddImportCacheItem(url, withResolve);
   const cachedUrl = `${cacheItem.url}?${cacheItem.cacheKey}`;
-  console.debug("Requesting ES Module via import: " + cachedUrl);
+  logGenericCoreDebug("Requesting ES Module via import: " + cachedUrl);
   try {
     const module = await import(/* webpackIgnore: true */ cachedUrl);
     return {
@@ -243,7 +244,7 @@ export async function importESModule(
       module,
     };
   } catch (err) {
-    console.error(`Unable to import ES Module from ${url}. Error: `, err);
+    logGenericCoreError(`Unable to import ES Module from ${url}. Error: `, err);
     removeImportCacheItem(cacheItem.id);
     return {
       isModuleAvailable: false,

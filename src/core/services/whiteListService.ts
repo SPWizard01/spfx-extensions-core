@@ -1,6 +1,7 @@
-import { ALLOWEDAPPSLIST_NAME, SPFX_EXTENSIONS_DATA_SITE, SPFxExtensionCore } from "../../utilities/constants"
+import { ALLOWEDAPPSLIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
 import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 
 const appCatalogUrl = await getAppCatalogUrlCached();
@@ -31,7 +32,7 @@ async function ensureAppWhiteListFields() {
         }
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while ensuring list fields.", err);
+        logGenericCoreError("Error while ensuring list fields.", err);
     }
 }
 async function ensureTextField(fieldsUrl: string, fieldInternalName: string, required: boolean, digestValue: string) {
@@ -55,9 +56,9 @@ async function ensureTextField(fieldsUrl: string, fieldInternalName: string, req
         }
     );
     if (addFieldReq.status === 201) {
-        console.info(SPFxExtensionCore, fieldInternalName, "field added successfully.");
+        logGenericCoreError(fieldInternalName, "field added successfully.");
     } else {
-        console.error(SPFxExtensionCore, fieldInternalName, "Unable to add field.");
+        logGenericCoreError(fieldInternalName, "Unable to add field.");
     }
 }
 async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string, description: string, required: boolean) {
@@ -82,9 +83,9 @@ async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string
         }
     );
     if (addFieldReq.status === 201) {
-        console.info(SPFxExtensionCore, fieldInternalName, "field added successfully.");
+        logGenericCoreInfo(fieldInternalName, "field added successfully.");
     } else {
-        console.error(SPFxExtensionCore, fieldInternalName, "Unable to add field.");
+        logGenericCoreError(fieldInternalName, "Unable to add field.");
     }
 }
 async function createAppWhiteList() {
@@ -100,7 +101,7 @@ async function createAppWhiteList() {
         );
         const newList = req.status === 404;
         if (newList) {
-            console.log(SPFxExtensionCore, "Creating app white list.");
+            logGenericCoreInfo("Creating app white list.");
             // Create the list
             const createReq = await fetch(
                 `${webUrl}/_api/web/lists`,
@@ -124,10 +125,10 @@ async function createAppWhiteList() {
                 }
             );
             if (createReq.status === 201) {
-                console.info("App whitelist created successfully.");
+                logGenericCoreInfo("App whitelist created successfully.");
                 return createReq.json();
             } else {
-                console.error("Unable to create app whitelist.");
+                logGenericCoreError("Unable to create app whitelist.");
                 return undefined;
             }
         }
@@ -135,7 +136,7 @@ async function createAppWhiteList() {
         return req.json();
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while ensuring app whitelist.", err);
+        logGenericCoreError("Error while ensuring app whitelist.", err);
     }
     return undefined;
 }

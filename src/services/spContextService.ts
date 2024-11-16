@@ -1,87 +1,12 @@
+import { logGenericCoreError } from "../core/services/loggingService";
 
-function getModernOnPremContextInfo() {
-  if (window.__SPFxExtensions.SPContextInjection?.context) {
-    return window.__SPFxExtensions.SPContextInjection.context;
+
+export async function getModernContextAsync() {
+  if(window.moduleLoaderPromise) {
+    const result = await window.moduleLoaderPromise;
+    return result?.context;
   }
-  const injectionPoint = "spClientSidePageContext=";
-  const xpath = `//script[contains(text(),'${injectionPoint}')]`;
-
-  const matchingElement = document.evaluate(
-    xpath,
-    document,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  ).singleNodeValue as HTMLElement | undefined;
-  
-  const injection =
-    matchingElement?.innerHTML?.replace(
-      "(window)",
-      "(window.__SPFxExtensions.SPContextInjection)"
-    ) ??
-    `console.error('Could not find injection target for ${injectionPoint}')`;
-
-  window.__SPFxExtensions.SPContextInjection = {
-    location: {
-      href: "",
-    },
-    context: undefined,
-    spModuleLoader: {
-      start: (ctx: any, _failureFunc: () => void) => {
-        window.__SPFxExtensions.SPContextInjection!.context = ctx;
-        return new Promise<void>((resolve) => {
-          resolve();
-        });
-      },
-    },
-  };
-  try {
-    eval(injection);
-  } catch {
-    console.error("Error while evaluating Modern context injection");
-  }
-  if (!window.__SPFxExtensions.SPContextInjection.context) {
-    console.error(
-      "SPReactContext could not be constructed, is this page in Modern mode?"
-    );
-  }
-  return window.__SPFxExtensions.SPContextInjection.context;
-}
-
-function getOnlineContextInfo() {
-  if (window.__SPFxExtensions.OnlineInjector?.context) {
-    return window.__SPFxExtensions.OnlineInjector.context;
-  }
-  const onlineInjectionPoint =
-    "window.moduleLoaderPromise=spModuleLoader.start";
-  //spo also has this...
-  //global.moduleLoaderPromise = global.spModuleLoader.start
-  window.__SPFxExtensions.OnlineInjector = {
-    context: undefined,
-    start: (obj: any) => {
-      window.__SPFxExtensions.OnlineInjector!.context = obj;
-      return new Promise<void>((rslv) => {
-        rslv();
-      });
-    },
-  };
-
-  const xpath = `//script[contains(text(),'${onlineInjectionPoint}')]`;
-  const matchingElement = document.evaluate(
-    xpath,
-    document,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  ).singleNodeValue as HTMLElement | undefined;
-  const inj =
-    matchingElement?.innerHTML.replace(
-      onlineInjectionPoint,
-      "window.__SPFxExtensions.OnlineInjector.start"
-    ) ??
-    `console.error('Could not find injection target for ${onlineInjectionPoint}')`;
-  eval(inj);
-  return window.__SPFxExtensions.OnlineInjector.context;
+  logGenericCoreError("Unable to retrieve Modern SP Context...");
 }
 
 export async function getContextInfoAsync() {
@@ -94,7 +19,7 @@ export async function getContextInfoAsync() {
         context: result.context.pageContext,
       };
     }
-    console.error(
+    logGenericCoreError(
       "It seems this is a modern page, however it was not possible to retrieve SP Context..."
     );
   }
@@ -116,6 +41,31 @@ const emptySPFiContext = {
     formDigestTimeoutSeconds: 0,
   },
 };
+
+
+export async function getSPFiCompatibleContextAsync() {
+  const ctxInfo = await getContextInfoAsync();
+  const ctx =
+    ctxInfo.contextType === "ClassicContext"
+      ? ctxInfo.context
+      : ctxInfo.context.legacyPageContext;
+
+  if (ctx) {
+    return {
+      web: {
+        absoluteUrl: ctx.webAbsoluteUrl,
+      },
+      legacyPageContext: {
+        formDigestValue: ctx.formDigestValue,
+        formDigestTimeoutSeconds: ctx.formDigestTimeoutSeconds,
+      },
+    };
+  }
+  logGenericCoreError("Unable to find context, returning empty context...");
+  return emptySPFiContext;
+}
+
+
 
 export async function getCompatiblePageContextAsync() {
   const ctxInfo = await getContextInfoAsync();
@@ -179,26 +129,4 @@ export async function getCompatiblePageContextAsync() {
     },
   };
   return retCtx;
-}
-
-export async function getSPFiCompatibleContextAsync() {
-  const ctxInfo = await getContextInfoAsync();
-  const ctx =
-    ctxInfo.contextType === "ClassicContext"
-      ? ctxInfo.context
-      : ctxInfo.context.legacyPageContext;
-
-  if (ctx) {
-    return {
-      web: {
-        absoluteUrl: ctx.webAbsoluteUrl,
-      },
-      legacyPageContext: {
-        formDigestValue: ctx.formDigestValue,
-        formDigestTimeoutSeconds: ctx.formDigestTimeoutSeconds,
-      },
-    };
-  }
-  console.error("Unable to find context, returning empty context...");
-  return emptySPFiContext;
 }

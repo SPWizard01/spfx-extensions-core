@@ -60,6 +60,8 @@ declare global {
        */
       __CorePromiseResolver?(): void;
 
+      __ConfiguratorUrl: string;
+
       ImportCallbacks: SPFxExtensionImportCallback[];
 
       AppLoadInitialized: boolean;

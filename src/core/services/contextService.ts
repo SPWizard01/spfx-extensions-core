@@ -8,7 +8,7 @@ export function getWebId() {
 }
 
 export function getWebAbsoluteUrl() {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.web.absoluteUrl : contextInfo.context.webAbsoluteUrl;
+    return (contextInfo.contextType === "SPOModernContext" ? contextInfo.context.web.absoluteUrl : contextInfo.context.webAbsoluteUrl) as string;
 }
 
 export function getSiteId() {

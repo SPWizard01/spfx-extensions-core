@@ -1,6 +1,6 @@
-import { SPFxExtensionCore } from "../../utilities/constants";
 import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
 import { getDigest } from "./digestService";
+import { logGenericCoreError } from "./loggingService";
 
 let appCatalogPromiseResolver = (_data: string | PromiseLike<string>) => { };
 let appCatalogUrlPromise: Promise<string> | undefined;
@@ -23,7 +23,7 @@ export async function getAppCatalogUrlData(baseUrl = "") {
         appCatalogPromiseResolver(url);
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while getting app catalog url. Trying default /sites/appcatalog", err);
+        logGenericCoreError("Error while getting app catalog url. Trying default /sites/appcatalog", err);
         const fallBackUrl = `${window.location.origin}/sites/appcatalog`;
         appCatalogPromiseResolver(fallBackUrl);
     }

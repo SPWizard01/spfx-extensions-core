@@ -1,7 +1,8 @@
 import { getCoreDefaultConfiguration, type ConfigurationListData } from "../../models/configurationList";
-import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE, SPFxExtensionCore } from "../../utilities/constants";
+import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
 import { addOrUpdateExtensionConfigs, getAllExtensionConfig } from "./coreIdbService";
+import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 const RUNTIME_CONFIG_ITEMCOUNT = 3;
 const MINIMAL_CONFIG_COUNT = getCoreDefaultConfiguration("").length + RUNTIME_CONFIG_ITEMCOUNT;
@@ -32,7 +33,7 @@ async function ensureConfigurationListDataField() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const titleField = fields.find((f: any) => f.InternalName === "Title");
             if (!titleField) {
-                console.error(SPFxExtensionCore, "Title field not found.");
+                logGenericCoreError("Title field not found.");
                 return;
             }
             if (!titleField.EnforceUniqueValues) {
@@ -58,9 +59,9 @@ async function ensureConfigurationListDataField() {
                     }
                 );
                 if (updateFieldReq.status === 204) {
-                    console.info(SPFxExtensionCore, "Title field updated successfully.");
+                    logGenericCoreInfo("Title field updated successfully.");
                 } else {
-                    console.error(SPFxExtensionCore, "Unable to update Title field.");
+                    logGenericCoreError("Unable to update Title field.");
                 }
             }
             if (!fieldNames.includes("Data")) {
@@ -85,15 +86,15 @@ async function ensureConfigurationListDataField() {
                     }
                 );
                 if (addFieldReq.status === 201) {
-                    console.info(SPFxExtensionCore, "Data field added successfully.");
+                    logGenericCoreInfo("Data field added successfully.");
                 } else {
-                    console.error(SPFxExtensionCore, "Unable to add Data field.");
+                    logGenericCoreError("Unable to add Data field.");
                 }
             }
         }
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while ensuring configuration list data fields.", err);
+        logGenericCoreError("Error while ensuring configuration list data fields.", err);
     }
 }
 
@@ -106,7 +107,7 @@ async function ensureConfigurationList() {
         );
         newList = req.status === 404;
         if (newList) {
-            console.log(SPFxExtensionCore, "Creating configuration list.");
+            logGenericCoreInfo("Creating configuration list.");
             // Create the list
             const createReq = await fetch(
                 `${spfxConfigWebUrl}/_api/web/lists`,
@@ -130,16 +131,16 @@ async function ensureConfigurationList() {
                 }
             );
             if (createReq.status === 201) {
-                console.info("Configuration list created successfully.");
+                logGenericCoreInfo("Configuration list created successfully.");
 
             } else {
-                console.error("Unable to create configuration list.");
+                logGenericCoreError("Unable to create configuration list.");
             }
         }
         await ensureConfigurationListDataField();
     }
     catch (err) {
-        console.error(SPFxExtensionCore, "Error while ensuring configuration list.", err);
+        logGenericCoreError("Error while ensuring configuration list.", err);
     }
     return newList;
 }
@@ -158,7 +159,7 @@ async function getConfigurationListItems() {
     }
     );
     if (req.status !== 200) {
-        console.error(SPFxExtensionCore, "Unable to fetch configuration list items.");
+        logGenericCoreError("Unable to fetch configuration list items.");
         return [];
     }
     let data = await req.json();
@@ -185,9 +186,9 @@ async function createDefaultListItems() {
         }
         );
         if (addReq.status === 201) {
-            console.info(SPFxExtensionCore, `Item ${item.Title} added successfully.`);
+            logGenericCoreInfo(`Item ${item.Title} added successfully.`);
         } else {
-            console.error(SPFxExtensionCore, `Unable to add item ${item.Title}.`);
+            logGenericCoreError(`Unable to add item ${item.Title}.`);
         }
     }
 }
