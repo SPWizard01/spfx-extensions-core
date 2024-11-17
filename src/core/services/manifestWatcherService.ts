@@ -39,7 +39,7 @@ export async function performManifestCheck(
   hubUrl: string
 ) {
   try {
-    const item = sessionStorage.getItem(CORE_MANIFEST_CHECK);
+    const item = localStorage.getItem(CORE_MANIFEST_CHECK);
     if (item) {
       const lastCheck = new Date(item);
       const now = new Date();
@@ -49,7 +49,7 @@ export async function performManifestCheck(
       }
     }
   } catch (e) {
-    sessionStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
+    localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   }
   try {
     logGenericCoreInfo(
@@ -68,7 +68,7 @@ export async function performManifestCheck(
       true
     );
     await Promise.allSettled(allManifests);
-    sessionStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
+    localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   } catch (e) {
     logGenericCoreError("Error checking for manifest updates", e);
   }

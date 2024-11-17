@@ -1,3 +1,4 @@
+import type { SPFxExtensionAppManifest } from "../models/appModel";
 
 export const CONFIGURATOR_APP_ID = "45e75137-13c5-4bb2-a2b3-8ab6382682ee";
 export const CONFIGURATOR_APP_INSTANCEID = "f3ab710f-2c08-422e-a7ad-5d93eb51e7a3";
@@ -20,3 +21,4 @@ export const SPFX_EXTENSIONS_DATA_SITE = "SPFxExtensionsData";
 export const IS_MODERN_EXPIRIENCE = !!!window._spBodyOnLoadFunctions;
 export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const IS_SPO = window.location.host.includes(".sharepoint.com");
+export const EMPTY_APP_MANIFEST: SPFxExtensionAppManifest = { enabledApps: [], appRelativeEntryPointUrls: [], enabled: false, enabledOnAllHubSites: false, isESM: true }

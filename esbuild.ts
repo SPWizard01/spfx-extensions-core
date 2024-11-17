@@ -1,5 +1,6 @@
 import { $ } from "bun";
 import { analyzeMetafile, build } from "esbuild";
+import { manifestPlugin } from "./src/plugins/esbuild/manifestPlugin";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
 const result = await build({
@@ -11,17 +12,20 @@ const result = await build({
     define: {
         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
     },
-    pure: ["console.debug","console.log"],
+    pure: ["console.debug", "console.log"],
     color: true,
     legalComments: "inline",
     bundle: true,
     treeShaking: true,
-    
+
     minify: prod,
     logOverride: {
         "direct-eval": "silent"
     },
     metafile: true,
+    plugins: [
+        manifestPlugin({ includeAllOutputJs: true, isESM: true }),
+    ]
 })
 await analyzeMetafile(result.metafile, { color: true, verbose: false });
 console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {

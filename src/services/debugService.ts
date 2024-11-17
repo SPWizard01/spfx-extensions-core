@@ -46,7 +46,7 @@ export async function startAppWithESDebugging(
   const manifest = await fetch(`${pubPath}/manifest.txt`);
   const manifestData = await manifest.text();
   const manifestJson = JSON.parse(manifestData) as SPFxExtensionAppManifest;
-  const modulePath = `${pubPath}/${manifestJson.appRelativeEntryPointUrl}`;
+  const modulePath = `${pubPath}/${manifestJson.appRelativeEntryPointUrls}`;
   logGenericCoreDebug(`[${debugKey}] Importing module ${modulePath}`);
   await import(modulePath);
 }

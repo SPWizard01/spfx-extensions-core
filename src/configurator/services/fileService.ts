@@ -1,15 +1,8 @@
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
-import { APPCOLLECTION_MANIFEST_NAME, EXTENSION_APPS_FOLDER, MANIFEST_NAME } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, EXTENSION_APPS_FOLDER, MANIFEST_NAME } from "../../utilities/constants";
 import { ensureSPFxExtensionsAppFolder, ensureSPFxExtensionsFolder } from "./folderService";
-
-const emptyManifest: SPFxExtensionAppManifest = {
-    appRelativeEntryPointUrl: "",
-    enabled: false,
-    enabledApps: [],
-    enabledOnAllHubSites: false
-}
 
 export async function ensurAppsTxt(sp: SPFI) {
     const appsQuery = sp.web.getFileByUrl(`${EXTENSION_APPS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
@@ -43,9 +36,9 @@ export async function ensureManifestTxt(sp: SPFI, appName: string) {
     const fileExists = await manifestQuery.exists();
     if (!fileExists) {
         await ensureSPFxExtensionsAppFolder(sp, appName);
-        await sp.web.lists.getByTitle(EXTENSION_APPS_FOLDER).rootFolder.folders.getByUrl(appName).files.addUsingPath(MANIFEST_NAME, JSON.stringify(emptyManifest));
+        await sp.web.lists.getByTitle(EXTENSION_APPS_FOLDER).rootFolder.folders.getByUrl(appName).files.addUsingPath(MANIFEST_NAME, JSON.stringify(EMPTY_APP_MANIFEST));
         logGenericCoreInfo(`Created ${MANIFEST_NAME} in ${EXTENSION_APPS_FOLDER}/${appName} folder in ${webUrl}`);
-        return emptyManifest;
+        return EMPTY_APP_MANIFEST;
     }
     try {
         const content = await manifestQuery.getBlob();

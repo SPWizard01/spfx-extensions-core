@@ -3,7 +3,6 @@ import type { SPFxExtensionAppManifest } from "./appModel";
 export type ManifestLocation = "root" | "site" | "web";
 export interface ManifestBase {
   url: string;
-  siteUrl: string;
   type: ManifestLocation;
   hash: string;
   isAppCollection: boolean;

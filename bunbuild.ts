@@ -1,7 +1,7 @@
-import { build, $, inspect,  } from "bun";
-
+import { $, build, } from "bun";
+import { bunManifestWriter } from "./src/plugins/bun/manifestPlugin";
 await $`rm -rf dist`;
-build({
+const out = await build({
     entrypoints: ["./src/index.ts", "./src/configurator/__spfxCoreConfigurator.ts", "./src/core/__spfxCore.ts", "./src/core/coreClassicWrapper.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
     sourcemap: "linked",
     outdir: "./dist",
@@ -15,19 +15,18 @@ build({
         whitespace: false
     }
     // minify: true
-}).then((out) => {
-    if (out.success) {
-        console.table(out.outputs.map((output) => ({
-            path: output.path,
-            size: `${Math.floor(output.size / 1024)}KB`,
-        }))
-        );
-
-    } else {
-        console.error(out.logs);
-    }
-
 });
+if (out.success) {
+    await bunManifestWriter({ isESM: true, outdir: "./dist", includeAllOutputJs: true }, out);
+    console.table(out.outputs.map((output) => ({
+        path: output.path,
+        size: `${Math.floor(output.size / 1024)}KB`,
+    }))
+    );
+
+} else {
+    console.error(out.logs);
+}
 
 // build({
 //     entrypoints: ["./src/__spfx.ts"],
