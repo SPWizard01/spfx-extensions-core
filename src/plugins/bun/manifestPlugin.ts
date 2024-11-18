@@ -1,4 +1,5 @@
-import { pathToFileURL, write, type BuildOutput } from "bun";
+import type { BuildOutput } from "bun";
+// import { pathToFileURL, write } from "bun";
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
 interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
@@ -23,9 +24,6 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
     const outputManifest = `${(manifestDir ? `${manifestDir}/` : ``)}manifest.txt`;
     const dist = manifestDir.replace(/^\.*\//, "");
 
-
-
-
     if (!options.includeAllOutputJs) {
         await writeManifestFile(outputManifest, manifestToWrite);
         return;
@@ -33,8 +31,8 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
 
     const epTable: string[] = [];
     for (const ep of entryPoints) {
-        const basePathUrl = pathToFileURL(manifestDir);
-        const epUrl = pathToFileURL(ep.path);
+        const basePathUrl = Bun.pathToFileURL(manifestDir);
+        const epUrl = Bun.pathToFileURL(ep.path);
         const relativePath = epUrl.href.replace(`${basePathUrl.href}/`, "");
         // const nameNoJs = relativePath.replace(".js", "");
         const hashedImport = `${relativePath}`.replace(dist,"");
@@ -46,5 +44,5 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
 }
 
 async function writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionAppManifest) {
-    await write(outputManifest, JSON.stringify(manifestToWrite));
+    await Bun.write(outputManifest, JSON.stringify(manifestToWrite));
 }

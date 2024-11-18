@@ -6,6 +6,9 @@ import { ensureSPFxWeb } from "./configurationWebService";
 import { ensureConfiguratorPage } from "./pageService";
 import { ensureAppWhiteList } from "./whiteListService";
 
+
+
+
 const appCatalogUrl = await getAppCatalogUrlCached();
 let configurationInitializationPromise: Promise<void> | undefined;
 export async function initializeCoreConfiguration() {

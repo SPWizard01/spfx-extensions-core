@@ -1,5 +1,6 @@
-import { getCoreDefaultConfiguration, type ConfigurationListData } from "../../models/configurationList";
+import type { ConfigurationListData } from "../../models/configurationList";
 import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
+import { getCoreDefaultConfiguration } from "../utility/defaultConfig";
 import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
 import { addOrUpdateExtensionConfigs, getAllExtensionConfig } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";

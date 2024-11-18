@@ -28,5 +28,5 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "exclude": ["bunbuild.ts", "esbuild.ts", "esserve.ts", "webpackbuild.js", "serve.ts", "dist"]
+  "exclude": ["esbuild.ts", "esserve.ts", "dist"]
 }

@@ -27,7 +27,29 @@ const result = await build({
         manifestPlugin({ includeAllOutputJs: true, isESM: true }),
     ]
 })
+
+const pluginResult = await build({
+    entryPoints: ["./src/plugins/esbuild/index.ts", "./src/plugins/bun/index.ts", "./src/plugins/webpack/index.ts"],
+    sourcemap: "linked",
+    outdir: "./dist/plugins",
+    platform: "node",
+    format: "esm",
+    color: true,
+    legalComments: "inline",
+    bundle: true,
+    treeShaking: true,
+    minify: false,
+    logOverride: {
+        "direct-eval": "silent"
+    },
+    metafile: true,
+
+})
+
+// 
 await analyzeMetafile(result.metafile, { color: true, verbose: false });
+await analyzeMetafile(pluginResult.metafile, { color: true, verbose: false });
+
 console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
     return {
         name: key,

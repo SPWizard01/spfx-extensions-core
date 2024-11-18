@@ -1,12 +1,12 @@
 import { writeFileSync } from "fs";
-import { Compiler, type WebpackPluginInstance } from "webpack";
+import type { Compiler, WebpackPluginInstance } from "webpack";
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
 interface SPFxWebpackManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
     outdir?: string;
 }
-export default class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance {
+export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance {
     /**
      *
      */
@@ -18,7 +18,7 @@ export default class SPFxExtensionsManifestWriterPlugin implements WebpackPlugin
     writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionAppManifest) {
         writeFileSync(outputManifest, JSON.stringify(manifestToWrite));
     }
-    
+
     apply(compiler: Compiler) {
         compiler.hooks.done.tap(
             'SPFxExtensions Manifest Writer Plugin',
@@ -37,7 +37,8 @@ export default class SPFxExtensionsManifestWriterPlugin implements WebpackPlugin
                     return;
                 }
                 const assets: string[] = [];
-                stats.compilation.assetsInfo.keys().forEach((key) => {
+                const keys = Array.from(stats.compilation.assetsInfo.keys());
+                keys.forEach((key: string) => {
                     assets.push(key.toLowerCase());
                 })
                 const jsRegex = /\.js\??/;
