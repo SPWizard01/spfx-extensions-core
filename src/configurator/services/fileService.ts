@@ -3,10 +3,11 @@ import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/log
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, EXTENSION_APPS_FOLDER, MANIFEST_NAME } from "../../utilities/constants";
 import { ensureSPFxExtensionsAppFolder, ensureSPFxExtensionsFolder } from "./folderService";
+import { getWebUrlFromSP } from "./pnpService";
 
 export async function ensurAppsTxt(sp: SPFI) {
     const appsQuery = sp.web.getFileByUrl(`${EXTENSION_APPS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
-    const webUrl = sp.web.toUrl().replace("/_api/web", "");
+    const webUrl = getWebUrlFromSP(sp);
     const fileExists = await appsQuery.exists();
     if (!fileExists) {
         await ensureSPFxExtensionsFolder(sp);
@@ -30,7 +31,7 @@ export async function ensurAppsTxt(sp: SPFI) {
 }
 
 export async function ensureManifestTxt(sp: SPFI, appName: string) {
-    const webUrl = sp.web.toUrl().replace("/_api/web", "");
+    const webUrl = getWebUrlFromSP(sp);
 
     const manifestQuery = sp.web.getFileByUrl(`${EXTENSION_APPS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     const fileExists = await manifestQuery.exists();
@@ -53,7 +54,7 @@ export async function ensureManifestTxt(sp: SPFI, appName: string) {
 
 export async function updateManifestTxt(sp: SPFI, appName: string, manifest: SPFxExtensionAppManifest) {
     await ensureManifestTxt(sp, appName);
-    const webUrl = sp.web.toUrl().replace("/_api/web", "");
+    const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${EXTENSION_APPS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     try {
         await manifestQuery.setContent(JSON.stringify(manifest));

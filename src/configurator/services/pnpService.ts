@@ -1,4 +1,4 @@
-import { SPBrowser, spfi, SPFx } from "@pnp/sp";
+import { SPBrowser, SPFI, spfi, SPFx } from "@pnp/sp";
 import "@pnp/sp/files";
 import "@pnp/sp/folders";
 import "@pnp/sp/lists";
@@ -12,4 +12,8 @@ export function getPnPSP(webUrl = "") {
         return spfi(web).using(SPBrowser());
     }
     return spfi(web).using(SPFx(modernContext as any));
+}
+
+export function getWebUrlFromSP(sp: SPFI) {
+    return sp.web.toUrl().replace("/_api/web", "");
 }

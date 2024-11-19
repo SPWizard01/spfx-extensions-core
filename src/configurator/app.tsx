@@ -15,6 +15,7 @@ import {
 import { StrictMode } from "react";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
+import { FilePicker } from "./components/filepicker";
 import { getSPFxExtensionApps } from "./services/folderService";
 import { getPnPSP } from "./services/pnpService";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
@@ -38,15 +39,13 @@ export function App(props: AppProps) {
             {queryWeb ? cfgWeb : "Global"}
           </MessageBarBody>
         </MessageBar>
-        <Skeleton>
-          <SkeletonItem />
-        </Skeleton>
+        <FilePicker />
         <div>
           {allApps.map((app) => (
-            <>
+            <div key={app}>
               <Switch></Switch>
               <Label>{app}</Label>
-            </>
+            </div>
           ))}
         </div>
       </FluentProvider>
