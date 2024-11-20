@@ -17,7 +17,13 @@ export function FilePicker() {
     <>
       <br />
       <DropZone
-        onDrop={(acceptedFiles) => console.log(acceptedFiles[0])}
+        onDrop={(acceptedFiles) => {
+          if(acceptedFiles[0]){
+            getManifestFromZip(acceptedFiles[0]).then((result) => {
+              console.log(result);
+            });
+          }
+        }}
         useFsAccessApi={true}
       >
         {({ getRootProps, getInputProps }) => (

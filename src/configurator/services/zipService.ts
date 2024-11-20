@@ -1,8 +1,24 @@
-import { gzip, unzip, type Unzipped, } from "fflate";
+import { unzip, type Unzipped, } from "fflate";
 import { MANIFEST_NAME } from "../../utilities/constants";
-export async function getManifestFromZip(data: File) {
-    const buffer = await data.arrayBuffer();
 
+interface UnzippedFile {
+    fileName: string;
+    content: Uint8Array;
+}
+interface ZipContentResult {
+    files: UnzippedFile[];
+    warnings: string[];
+    error: string;
+    isError: boolean;
+}
+export async function getManifestFromZip(data: File): Promise<ZipContentResult> {
+    const buffer = await data.arrayBuffer();
+    const result: ZipContentResult = {
+        files: [],
+        warnings: [],
+        error: "",
+        isError: false,
+    };
     const unzipPromise = new Promise<Unzipped>((resolve, reject) => {
         unzip(new Uint8Array(buffer), (err, unzipped) => {
             if (err) {
@@ -16,10 +32,11 @@ export async function getManifestFromZip(data: File) {
         unzippedFiles = await unzipPromise;
     }
     catch (error) {
-        console.error(error);
-        return;
+        result.error = `${error}`;
+        result.isError = true;
+        return result;
     }
-    
+
     const fileNames: string[] = [];
     Object.keys(unzippedFiles).forEach((key: string) => {
         fileNames.push(key);
@@ -28,8 +45,9 @@ export async function getManifestFromZip(data: File) {
     const manifestFile = fileNames.find((fileName) => fileName.toLowerCase().endsWith(MANIFEST_NAME));
 
     if (!manifestFile) {
-        console.error("No manifest file found in the zip");
-        return;
+        result.error = "No manifest file found in the zip";
+        result.isError = true;
+        return result;
     }
     const basePathIdx = manifestFile.lastIndexOf("/");
     let basePath = "";
@@ -37,9 +55,22 @@ export async function getManifestFromZip(data: File) {
         //dist/somdir/
         basePath = manifestFile.substring(0, basePathIdx + 1);
     }
-    const manifest = unzippedFiles[manifestFile];
-    //file content
-    const a = new TextDecoder().decode(manifest);
-    console.log(basePath, a);
-
+    const nonBasePathFiles = fileNames.filter((name) => !name.startsWith(basePath));
+    const basePathFiles = fileNames.filter((name) => name.startsWith(basePath));
+    if (nonBasePathFiles.length > 0) {
+        result.warnings.push("Some files are not in the root directory and wont be included.");
+        result.warnings.push(...nonBasePathFiles.map((file) => `File: ${file}`));
+    }
+    basePathFiles.forEach((name) => {
+        const content = unzippedFiles[name];
+        const fileName = name.substring(basePath.length);
+        if (content.length > 0) {
+            result.files.push({ fileName, content });
+        }
+    });
+    // const manifest = unzippedFiles[manifestFile];
+    // //file content
+    // const a = new TextDecoder().decode(manifest);
+    // console.log(basePath, a);
+    return result;
 }
