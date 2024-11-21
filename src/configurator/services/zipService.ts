@@ -1,7 +1,7 @@
 import { unzip, type Unzipped, } from "fflate";
 import { MANIFEST_NAME } from "../../utilities/constants";
 
-interface UnzippedFile {
+export interface UnzippedFile {
     fileName: string;
     content: Uint8Array;
 }

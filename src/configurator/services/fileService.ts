@@ -2,7 +2,7 @@ import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, EXTENSION_APPS_FOLDER, MANIFEST_NAME } from "../../utilities/constants";
-import { ensureSPFxExtensionsAppFolder, ensureSPFxExtensionsFolder } from "./folderService";
+import { ensureSPFxExtensionsAppFolder, ensureSPFxExtensionsAppNestedPath, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 
 export async function ensurAppsTxt(sp: SPFI) {
@@ -62,6 +62,28 @@ export async function updateManifestTxt(sp: SPFI, appName: string, manifest: SPF
     }
     catch (error) {
         logGenericCoreError(`Error while updating ${MANIFEST_NAME} in ${EXTENSION_APPS_FOLDER}/${appName} folder in ${webUrl}`, error);
+        return false;
+    }
+}
+
+export async function addFile(sp: SPFI, appName: string, fileName: string, content: Uint8Array) {
+    await ensureSPFxExtensionsAppFolder(sp, appName);
+    const webUrl = getWebUrlFromSP(sp);
+    const pathIdxBeforeFile = fileName.lastIndexOf("/");
+    const hasFolder = pathIdxBeforeFile > -1;
+    const fileNameWithoutFolder = hasFolder ? fileName.substring(pathIdxBeforeFile + 1) : fileName;
+    const subpathBeforeFile = fileName.substring(0, pathIdxBeforeFile);
+    const fullPath = `${EXTENSION_APPS_FOLDER}/${appName}${(subpathBeforeFile ? `/${subpathBeforeFile}` : ``)}`;
+    const folderQuery = sp.web.getFolderByServerRelativePath(fullPath);
+    if (hasFolder) {
+        await ensureSPFxExtensionsAppNestedPath(sp, appName, subpathBeforeFile.split("/"));
+    }
+    try {
+        await folderQuery.files.addUsingPath(fileNameWithoutFolder, new Blob([content]), { Overwrite: true });
+        return true;
+    }
+    catch (error) {
+        logGenericCoreError(`Error while uploading ${fileNameWithoutFolder} in ${fullPath} folder in ${webUrl}`, error);
         return false;
     }
 }
