@@ -5,6 +5,19 @@ import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, EXTENSION_APPS_FOLDER,
 import { ensureSPFxExtensionsAppFolder, ensureSPFxExtensionsAppNestedPath, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 
+
+export interface FileContents {
+    fileName: string;
+    content: Uint8Array;
+}
+
+export interface FileContentsResult {
+    files: FileContents[];
+    warnings: string[];
+    error: string;
+    isError: boolean;
+}
+
 export async function ensurAppsTxt(sp: SPFI) {
     const appsQuery = sp.web.getFileByUrl(`${EXTENSION_APPS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
     const webUrl = getWebUrlFromSP(sp);
@@ -64,6 +77,66 @@ export async function updateManifestTxt(sp: SPFI, appName: string, manifest: SPF
         logGenericCoreError(`Error while updating ${MANIFEST_NAME} in ${EXTENSION_APPS_FOLDER}/${appName} folder in ${webUrl}`, error);
         return false;
     }
+}
+
+export async function getFileContents(files: File[]): Promise<FileContentsResult> {
+    const result: FileContentsResult = {
+        files: [],
+        warnings: [],
+        error: "",
+        isError: false,
+    };
+
+    // dist/somdir/manifest.txt
+    const manifestFile = files.find((fl) => fl.path.toLowerCase().endsWith(MANIFEST_NAME));
+
+    if (!manifestFile) {
+        result.error = "No manifest.txt file found.";
+        result.isError = true;
+        return result;
+    }
+    const basePathIdx = manifestFile.path.lastIndexOf("/");
+    let basePath = "";
+    if (basePathIdx > -1) {
+        //dist/somdir/
+        basePath = manifestFile.path.substring(0, basePathIdx + 1);
+    }
+    let nonBasePathFiles: File[] = [];
+    let basePathFiles = [...files];
+    if (basePath) {
+        nonBasePathFiles = files.filter((fl) => !fl.path.startsWith(basePath));
+        basePathFiles = files.filter((fl) => fl.path.startsWith(basePath));
+        if (nonBasePathFiles.length > 0) {
+            result.warnings.push("Some files are outside of manifest.txt directory.");
+            result.warnings.push(...nonBasePathFiles.map((file) => `File: ${file.path}`));
+        }
+    }
+    for (const file of basePathFiles) {
+        if (file.length === 0) {
+            continue;
+        }
+        const contentBuffer = await file.arrayBuffer();
+        const content = new Uint8Array(contentBuffer);
+        const fileName = file.path.substring(basePath.length);
+        result.files.push({ fileName, content });
+    }
+    for (const file of nonBasePathFiles) {
+        if (file.length === 0) {
+            continue;
+        }
+        const contentBuffer = await file.arrayBuffer();
+        const content = new Uint8Array(contentBuffer);
+        const fileName = file.path;
+        result.files.push({ fileName, content });
+    }
+    // basePathFiles.forEach((name) => {
+    //     const content = unzippedFiles[name];
+    //     const fileName = name.substring(basePath.length);
+    //     if (content.length > 0) {
+    //         result.files.push({ fileName, content });
+    //     }
+    // });
+    return result;
 }
 
 export async function addFile(sp: SPFI, appName: string, fileName: string, content: Uint8Array) {

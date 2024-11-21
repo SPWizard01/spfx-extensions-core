@@ -9,3 +9,8 @@ declare module "__spfxCore.js" {
 }
 
 declare const BUILD_DATE: string;
+
+declare interface File {
+    path: string;
+    relativePath: string;
+}

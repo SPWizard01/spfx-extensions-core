@@ -1,19 +1,12 @@
 import { unzip, type Unzipped, } from "fflate";
 import { MANIFEST_NAME } from "../../utilities/constants";
+import type { FileContents, FileContentsResult } from "./fileService";
 
-export interface UnzippedFile {
-    fileName: string;
-    content: Uint8Array;
-}
-interface ZipContentResult {
-    files: UnzippedFile[];
-    warnings: string[];
-    error: string;
-    isError: boolean;
-}
-export async function getManifestFromZip(data: File): Promise<ZipContentResult> {
+
+
+export async function getZipManifestContents(data: File): Promise<FileContentsResult> {
     const buffer = await data.arrayBuffer();
-    const result: ZipContentResult = {
+    const result: FileContentsResult = {
         files: [],
         warnings: [],
         error: "",
