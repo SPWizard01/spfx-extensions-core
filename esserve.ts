@@ -1,5 +1,7 @@
 import { $ } from "bun";
 import { analyzeMetafile, context } from "esbuild";
+import { esbuildHMRPlugin } from "esbuild-hot-reload";
+import pc from "picocolors";
 await $`rm -rf dist`;
 
 const ctx = await context({
@@ -19,6 +21,7 @@ const ctx = await context({
     },
     metafile: true,
     plugins: [
+        esbuildHMRPlugin(33355),
         {
             name: "my-plugin",
             setup(build) {
@@ -27,8 +30,8 @@ const ctx = await context({
                         return;
                     }
                     if (result.metafile) {
-                        const res = await analyzeMetafile(result.metafile, { color: true, verbose: false });
-                        console.log(res);
+                        //const res = await analyzeMetafile(result.metafile, { color: true, verbose: false });
+                        //console.log(res);
                         // await formatMessages([], {});
                         console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
                             return {
@@ -36,6 +39,14 @@ const ctx = await context({
                                 size: `${Math.floor(result.metafile!.outputs[key].bytes / 1024)}KB`,
                             }
                         }));
+                        console.log("Performing TSC check");
+                        const tsc = (await $`tsc`.nothrow().quiet());
+                        if(tsc.exitCode === 0) {
+                            console.log(pc.bgGreen("✔ [SUCCESS]"), "TSC check passed");
+                        } else {
+                            console.log(pc.bgRed("✘ [ERROR]"), `\r\n${tsc.stdout.toString()}`);
+                        }
+                        // console.log("✘ [ERROR]", tsc.stdout.toString());
                     }
                 })
             }
@@ -59,4 +70,3 @@ const a = await ctx.serve({
 //         size: `${Math.floor(result.metafile.outputs[key].bytes / 1024)}KB`,
 //     }
 // }));
-await $`tsc`

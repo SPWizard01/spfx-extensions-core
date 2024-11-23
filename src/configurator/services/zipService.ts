@@ -1,13 +1,14 @@
 import { unzip, type Unzipped, } from "fflate";
 import { MANIFEST_NAME } from "../../utilities/constants";
-import type { FileContents, FileContentsResult } from "./fileService";
+import type { ApiCallResult } from "../models/apiCallResult";
+import type { FileContents } from "./fileService";
 
 
 
-export async function getZipManifestContents(data: File): Promise<FileContentsResult> {
+export async function getZipManifestContents(data: File): Promise<ApiCallResult<FileContents[]>> {
     const buffer = await data.arrayBuffer();
-    const result: FileContentsResult = {
-        files: [],
+    const result: ApiCallResult<FileContents[]> = {
+        data: [],
         warnings: [],
         error: "",
         isError: false,
@@ -58,7 +59,7 @@ export async function getZipManifestContents(data: File): Promise<FileContentsRe
         const content = unzippedFiles[name];
         const fileName = name.substring(basePath.length);
         if (content.length > 0) {
-            result.files.push({ fileName, content });
+            result.data.push({ fileName, content });
         }
     });
     // const manifest = unzippedFiles[manifestFile];

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { getWebAbsoluteUrl } from "../../../core/services/contextService";
-import { addFile, getFileContents } from "../../services/fileService";
+import { addFiles, parseUploadFiles } from "../../services/fileService";
 import { getPnPSP } from "../../services/pnpService";
 import { getConfiguringWebUrl } from "../../services/webConfiguratorService";
 import { getZipManifestContents } from "../../services/zipService";
@@ -14,10 +14,18 @@ const sp = getPnPSP(cfgWeb);
 export function FilePicker() {
   const { getRootProps, getInputProps, acceptedFiles, open } = useDropzone({
     onDropAccepted(files, event) {
-      getFileContents(files).then((result) => {
+      if(files.length === 1 && files[0].name.endsWith(".zip")) {
+        getZipManifestContents(files[0]).then((result) => {
+          addFiles(sp, "tests", result.data).then((result) => {
+            console.log(result);
+          });
+        });
+        return;
+      }
+      parseUploadFiles(files).then((result) => {
         console.log(result);
       });
-    },
+    }, 
     useFsAccessApi: true,
     // onDrop(acceptedFiles, fileRejections, event) {
     //   console.log(acceptedFiles);

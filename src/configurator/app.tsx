@@ -15,8 +15,9 @@ import {
 import { StrictMode } from "react";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
+import { AppList } from "./components/applist";
 import { FilePicker } from "./components/filepicker";
-import { getSPFxExtensionApps } from "./services/folderService";
+import { getAllAppCollections, getEnabledAppCollection } from "./services/appCollection";
 import { getPnPSP } from "./services/pnpService";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 
@@ -25,8 +26,6 @@ interface AppProps {
 }
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
-const sp = getPnPSP(cfgWeb);
-const allApps = await getSPFxExtensionApps(sp);
 
 export function App(props: AppProps) {
   return (
@@ -40,14 +39,7 @@ export function App(props: AppProps) {
           </MessageBarBody>
         </MessageBar>
         <FilePicker />
-        <div>
-          {allApps.map((app) => (
-            <div key={app}>
-              <Switch></Switch>
-              <Label>{app}</Label>
-            </div>
-          ))}
-        </div>
+        <AppList />
       </FluentProvider>
     </StrictMode>
   );
