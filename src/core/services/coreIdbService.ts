@@ -115,11 +115,11 @@ export async function evictItemsFromStore(storeName: StoreKeys, key: any) {
     return toEvict;
 }
 
-export async function getAllExtensionConfig() {
+export async function getAllExtensionConfigFromDB() {
     await evictItemsFromStore(StoreNames.SPFxExtensionConfig, "Title");
     return spfxExtensionsCoreDB.getAll(StoreNames.SPFxExtensionConfig);
 }
-export async function getExtensionConfig(title: string) {
+export async function getExtensionConfigFromDB(title: string) {
     await evictItemsFromStore(StoreNames.SPFxExtensionConfig, "Title");
     return spfxExtensionsCoreDB.get(StoreNames.SPFxExtensionConfig, title);
 }
@@ -153,7 +153,7 @@ export async function getAllAppManifests() {
     return spfxExtensionsCoreDB.getAll(StoreNames.AppFolderManifestCache);
 }
 
-export async function getAllAllowedApps() {
+export async function getAllAllowedAppsFromDB() {
     return spfxExtensionsCoreDB.getAll(StoreNames.AllowedApps);
 }
 

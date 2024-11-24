@@ -1,17 +1,7 @@
-export type ConfigurationNames = {
-    Status: "Status",
-    RootCDNLocation: "RootCDNLocation",
-    InterceptHistory: "InterceptHistory",
-    EnableAppWhiteList: "EnableAppWhiteList",
-    AppCatalogUrl: "AppCatalogUrl",
-    AppCatalogWebs: "AppCatalogWebs",
-    ConfiguratorPageData: "ConfiguratorPageData",
-    AppWhiteList: "AppWhiteList",
-}
-
+import type { ConfigurationNames } from '../core/utility/defaultConfig';
 
 export interface ConfigurationListData {
-    Title: keyof ConfigurationNames;
+    Title: keyof typeof ConfigurationNames;
     Data: any;
     date: string;
     expires: string;

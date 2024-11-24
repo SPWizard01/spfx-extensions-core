@@ -1,15 +1,11 @@
 import type { ConfigurationListData } from "../../models/configurationList";
 import { APPCOLLECTION_MANIFEST_NAME, CONFIGURATOR_PAGE_URL, SPFX_EXTENSIONS_DATA_SITE, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
-import { getAppCatalogUrlCached } from "./appCatalogService";
+import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getConfigurationListData } from "./configurationListService";
 import { ensureSPFxWeb } from "./configurationWebService";
 import { ensureConfiguratorPage } from "./pageService";
 import { ensureAppWhiteList } from "./whiteListService";
 
-
-
-
-const appCatalogUrl = await getAppCatalogUrlCached();
 let configurationInitializationPromise: Promise<void> | undefined;
 export async function initializeCoreConfiguration() {
     if (configurationInitializationPromise) {
@@ -22,16 +18,16 @@ async function initializeCoreConfigurationInternal() {
     await ensureSPFxWeb();
     await ensureAppWhiteList();
     await ensureConfiguratorPage();
-    window.__SPFxExtensions.Utils.ConfiguratorUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}/${CONFIGURATOR_PAGE_URL}`;
+    window.__SPFxExtensions.Utils.ConfiguratorUrl = `${SPFX_EXTENSIONS_SITE_URL}/${CONFIGURATOR_PAGE_URL}`;
 }
 
-export async function getCoreConfig(): Promise<ConfigurationListData[]> {
+export async function getCoreConfig(fresh = false): Promise<ConfigurationListData[]> {
     await initializeCoreConfiguration();
-    return getConfigurationListData();
+    return getConfigurationListData(fresh);
 }
 export async function getRootCDNLocation() {
     const coreConfig = await getCoreConfig();
-    const ROOT_CDN_LOCATION = coreConfig.find(c => c.Title === "RootCDNLocation")?.Data ?? `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
+    const ROOT_CDN_LOCATION = coreConfig.find(c => c.Title === "RootCDNLocation")?.Data ?? `${SPFX_EXTENSIONS_SITE_URL}`;
     /**
      * Points to root sharepoint location into app catalog
      * OnPrem/SPO: ```/sites/appcatalog/CDN/SPFxExtensionApps/```

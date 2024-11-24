@@ -1,9 +1,9 @@
 import { SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { getAppCatalogDigest, getAppCatalogUrlData } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+import { getAppCatalogDigest, getAppCatalogUrlFromAPI } from "./appCatalogService";
+import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
 
 async function createWeb(webUrl: string) {
-    const appCatalog = await getAppCatalogUrlData();
+    const appCatalog = await getAppCatalogUrlFromAPI();
     const appCatalogDigest = await getAppCatalogDigest();
     const response = await fetch(`${appCatalog}/_api/web/webs/add`, {
         method: "POST",
@@ -31,7 +31,7 @@ async function createWeb(webUrl: string) {
 }
 
 async function getWebData() {
-    const appCatalog = await getAppCatalogUrlData();
+    const appCatalog = await getAppCatalogUrlFromAPI();
     const appCatalogDigest = await getAppCatalogDigest();
     const response = await fetch(`${appCatalog}/_api/web/webs`, {
         method: "GET",
@@ -48,7 +48,7 @@ async function getWebData() {
 }
 
 async function getWebDataCached() {
-    const appCatalogWebs = await getExtensionConfig("AppCatalogWebs");
+    const appCatalogWebs = await getExtensionConfigFromDB("AppCatalogWebs");
     return appCatalogWebs?.Data ?? [];
 }
 //eslint-disable-next-line @typescript-eslint/no-explicit-any

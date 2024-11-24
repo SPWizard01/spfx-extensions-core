@@ -15,9 +15,8 @@ function inDebug() {
   );
 }
 
-export function isFileInDebug(fullUrl: string) {
-  const lower = fullUrl.toLowerCase();
-  return lower.indexOf("https://localhost") > -1 || lower.indexOf("http://localhost") > -1;
+export function isFileInDebug(fullUrl: URL) {
+  return fullUrl.hostname.toLowerCase() === "localhost";
 }
 
 export const isInDebug = inDebug();

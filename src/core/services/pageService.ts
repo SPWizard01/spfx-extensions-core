@@ -1,18 +1,14 @@
 import { CONFIGURATOR_APP_ID, CONFIGURATOR_APP_INSTANCEID, CONFIGURATOR_PAGE_NAME, CONFIGURATOR_PAGE_URL, CORE_APP_ID, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
+import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
 
-const appCatalogUrl = await getAppCatalogUrlCached();
 const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
-const webUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
-
-
 
 const acceptHeader = { "accept": "application/json", }
 const digestHeader = { "X-RequestDigest": digest }
 const contentType = { "Content-Type": "application/json" }
 async function createFullPage() {
-    const response = await fetch(`${webUrl}/_api/sitepages/pages`, {
+    const response = await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages`, {
         "headers": {
             ...acceptHeader,
             ...digestHeader,
@@ -29,7 +25,7 @@ async function createFullPage() {
 }
 
 async function getConfiguratorPageData() {
-    const response = await fetch(`${webUrl}/_api/sitepages/pages/GetByUrl('${CONFIGURATOR_PAGE_URL}')`, {
+    const response = await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages/GetByUrl('${CONFIGURATOR_PAGE_URL}')`, {
         "headers": {
             ...acceptHeader,
         },
@@ -117,7 +113,7 @@ const save = {
 }
 
 async function setPageContent(pageId: number) {
-    await fetch(`${webUrl}/_api/sitepages/pages(${pageId})/savepage`, {
+    await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages(${pageId})/savepage`, {
         "headers": {
             "Content-Type": "application/json",
             ...acceptHeader,
@@ -126,7 +122,7 @@ async function setPageContent(pageId: number) {
         "body": JSON.stringify(save),
         "method": "POST",
     });
-    await fetch(`${webUrl}/_api/sitepages/pages(${pageId})/publish`, {
+    await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages(${pageId})/publish`, {
         "headers": {
             ...acceptHeader,
             ...digestHeader
@@ -142,7 +138,7 @@ async function createConfiguratorPage() {
 }
 
 async function getConfiguratorPageDataCached() {
-    const cachedData = await getExtensionConfig("ConfiguratorPageData");
+    const cachedData = await getExtensionConfigFromDB("ConfiguratorPageData");
     if (cachedData?.Data) {
         return cachedData.Data;
     }

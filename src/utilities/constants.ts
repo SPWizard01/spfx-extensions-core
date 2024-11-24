@@ -11,8 +11,8 @@ export const APPCOLLECTION_MANIFEST_NAME = "apps.txt";
 export const APP_LOADING = "Loading...";
 export const CONFIGURATION_LIST_NAME = "SPFxExtensionsConfiguration";
 export const ALLOWEDAPPSLIST_NAME = "SPFxExtensionsWhiteList";
-export const EXTENSION_APPS_FOLDER = "SPFxExtensions";
-export const WELL_KNOWN_MANIFEST_LOCATION = `/${EXTENSION_APPS_FOLDER}/`;
+export const SPFX_EXTENSIONS_FOLDER = "SPFxExtensions";
+export const WELL_KNOWN_MANIFEST_LOCATION = `/${SPFX_EXTENSIONS_FOLDER}/`;
 
 export const IS_WORKBENCH =
     window.location.host.toLowerCase().indexOf("/_layouts/15/workbench.aspx") >

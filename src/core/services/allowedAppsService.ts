@@ -1,31 +1,20 @@
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import { getContextInfoAsync } from "../../services/spContextService";
 import {
   ALLOWEDAPPSLIST_NAME,
-  SPFX_EXTENSIONS_DATA_SITE,
 } from "../../utilities/constants";
 import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
-import { getAppCatalogUrlCached } from "./appCatalogService";
+import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getCoreConfig } from "./coreConfigService";
-import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedApps } from "./coreIdbService";
+import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedAppsFromDB } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
-import { ensureAppWhiteList } from "./whiteListService";
 
-const siteContextInfo = await getContextInfoAsync();
-const appCatalogUrl = await getAppCatalogUrlCached();
-const appConfigUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
 
-const webUrl =
-  siteContextInfo.contextType === "ClassicContext"
-    ? siteContextInfo.context.webAbsoluteUrl
-    : siteContextInfo.context?.legacyPageContext.webAbsoluteUrl ?? "ERROR";
+const AllowedAppsListDataPromise = getAllowedFilesDataCached();
 
-const AllowedAppsListDataPromise = fetchAllowedAppsListData();
-
-async function fetchAllowedAppsListData() {
+async function getAllowedFilesDataCached() {
   try {
     const evicted = await evictAllowedAppsCache();
-    const cachedData = await getAllAllowedApps();
+    const cachedData = await getAllAllowedAppsFromDB();
     //there is cached data and nothing was evicted
     if (cachedData.length > 0 && !evicted) {
       return cachedData;
@@ -33,15 +22,7 @@ async function fetchAllowedAppsListData() {
     if (cachedData.length > 0) {
       logGenericCoreInfo("Cache mismatch, loading allowed apps data...");
     }
-    const coreConfig = await getCoreConfig();
-    const appWhiteListEnabled = coreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
-    if (!appWhiteListEnabled) {
-      return [{ Id: 1, Title: "All apps allowed", EntryPointUrl: "*", date: new Date().toISOString(), expires: new Date().toISOString() }];
-      ;
-    }
-    await ensureAppWhiteList();
-    const url = `${appConfigUrl}/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$select=Id,Title,EntryPointUrl&$top=1000`;
-    const allowedAppsListData = await fetchAllAllowedApps(url);
+    const allowedAppsListData = await getAllowedFilesFromApi();
     await addOrUpdateAllowedAppsToCache(allowedAppsListData, 5);
     return allowedAppsListData;
   } catch (err) {
@@ -50,7 +31,23 @@ async function fetchAllowedAppsListData() {
   }
 }
 
-async function fetchAllAllowedApps(url: string) {
+export async function getAllowedFilesFromApi(fresh = false) {
+  const coreConfig = await getCoreConfig(fresh);
+  const appWhiteListEnabled = coreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
+  if (!appWhiteListEnabled) {
+    return [{ Id: 1, Title: "All apps allowed", EntryPointUrl: "*", date: new Date().toISOString(), expires: new Date().toISOString() }];
+    ;
+  }
+  return fetchAllowedFilesFromListInternal();
+}
+
+async function fetchAllowedFilesFromListInternal() {
+  const url = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/getByTitle('${ALLOWEDAPPSLIST_NAME}')/Items?$select=Id,Title,EntryPointUrl&$top=1000`;
+  const allowedAppsListData = await fetchAllowedFilesWithIterate(url);
+  return allowedAppsListData;
+}
+
+async function fetchAllowedFilesWithIterate(url: string) {
   let fetchUrl = url;
   const allowedAppsListData: AllowedAppsListData[] = [];
   while (fetchUrl) {
@@ -72,31 +69,35 @@ async function fetchAllAllowedApps(url: string) {
 }
 
 function fileIsAllowed(
-  fileNameWithPath: string,
+  absoluteFileUrl: URL,
   allowedList: AllowedAppsListData[]
 ) {
   const allAllowed = allowedList.some((e) => e.EntryPointUrl === "*");
   if (allAllowed) return true;
+  let fileOriginAndPath = (absoluteFileUrl.origin + absoluteFileUrl.pathname).toLowerCase();
   return allowedList.some((allowedEntry) => {
-    return fileNameWithPath
-      .toLowerCase() === allowedEntry.EntryPointUrl.toLowerCase();
+    try {
+      const entryURL = new URL(allowedEntry.EntryPointUrl);
+      const entryOriginAndPath = entryURL.origin + entryURL.pathname;
+      return fileOriginAndPath === entryOriginAndPath.toLowerCase();
+    }
+    catch (err) {
+      logGenericCoreError("Error while parsing allowed entry URL", allowedEntry.EntryPointUrl, err);
+      return false;
+    }
   });
 }
 
-export async function isFileAllowedInCurrentWeb(fileNameWithPath: string) {
-  if (isFileInDebug(fileNameWithPath)) return true;
+export async function isFileAllowedToRun(absoluteFileUrl: URL, fresh = false) {
+  if (isFileInDebug(absoluteFileUrl)) return true;
 
   // Service should load list data from whatever source which can be reached by everyone.
-  const allowedList = await AllowedAppsListDataPromise;
-  if (webUrl === "ERROR") {
-    logGenericCoreWarning(`Allowed Apps: Error while retrieving site context, does AllowedApps list exist?`);
-    return false;
-  }
-  if (!fileIsAllowed(fileNameWithPath, allowedList)) {
+  const allowedList = fresh ? await getAllowedFilesFromApi(fresh) : await AllowedAppsListDataPromise;
+  if (!fileIsAllowed(absoluteFileUrl, allowedList)) {
     logGenericCoreWarning(
       "File",
-      fileNameWithPath,
-      `is not allowed to be executed. Please add it to whitelist in the app catalog @ ${appConfigUrl}. If you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port of the localhost server.`
+      absoluteFileUrl,
+      `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}. If you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port of the localhost server.`
     );
 
     return false;

@@ -1,5 +1,6 @@
 import {
   Button,
+  DialogProvider,
   FluentProvider,
   Label,
   Link,
@@ -15,10 +16,9 @@ import {
 import { StrictMode } from "react";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
-import { AppList } from "./components/applist";
+import { AppList } from "./components/appcollectionlist";
 import { FilePicker } from "./components/filepicker";
-import { getAllAppCollections, getEnabledAppCollection } from "./services/appCollection";
-import { getPnPSP } from "./services/pnpService";
+
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 
 interface AppProps {
@@ -29,9 +29,7 @@ const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
 export function App(props: AppProps) {
   return (
-    <StrictMode>
-      <FluentProvider theme={webLightTheme}>
-        <Label>You are configuring apps for {cfgWeb}</Label>
+    <FluentProvider theme={webLightTheme}>
         <MessageBar>
           <MessageBarBody>
             <MessageBarTitle>Configuration Context:</MessageBarTitle>
@@ -40,7 +38,6 @@ export function App(props: AppProps) {
         </MessageBar>
         <FilePicker />
         <AppList />
-      </FluentProvider>
-    </StrictMode>
+    </FluentProvider>
   );
 }

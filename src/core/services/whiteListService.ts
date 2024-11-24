@@ -1,17 +1,14 @@
 import { ALLOWEDAPPSLIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfig } from "./coreIdbService";
+import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
+import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 
-const appCatalogUrl = await getAppCatalogUrlCached();
 const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
-
-const webUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
 
 async function ensureAppWhiteListFields() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
-    const fieldsUrl = `${webUrl}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')/fields`;
+    const fieldsUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')/fields`;
     try {
         const req = await fetch(
             fieldsUrl,
@@ -91,7 +88,7 @@ async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string
 async function createAppWhiteList() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')
     try {
-        const req = await fetch(`${webUrl}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')?$select=*`,
+        const req = await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')?$select=*`,
             {
                 method: "GET",
                 headers: {
@@ -104,7 +101,7 @@ async function createAppWhiteList() {
             logGenericCoreInfo("Creating app white list.");
             // Create the list
             const createReq = await fetch(
-                `${webUrl}/_api/web/lists`,
+                `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists`,
                 {
                     method: "POST",
                     headers: {
@@ -142,7 +139,7 @@ async function createAppWhiteList() {
 }
 
 export async function ensureAppWhiteList() {
-    const cachedData = await getExtensionConfig("AppWhiteList");
+    const cachedData = await getExtensionConfigFromDB("AppWhiteList");
     if (cachedData?.Data) {
         return cachedData.Data;
     }

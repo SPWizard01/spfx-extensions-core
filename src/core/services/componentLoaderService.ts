@@ -4,7 +4,7 @@ import {
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import { getContentDigest } from "../../utilities/digest";
-import { isFileAllowedInCurrentWeb } from "./allowedAppsService";
+import { isFileAllowedToRun } from "./allowedAppsService";
 
 import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
 import type {
@@ -15,7 +15,6 @@ import type {
 } from "../../models/cache";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
-import { getAppCatalogUrlCached } from "./appCatalogService";
 import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
@@ -26,7 +25,6 @@ interface AssetPromise {
   promise: Promise<SPFxExtensionAppRegistration[]>;
   manifest: AppFolderManifest;
 }
-const appCatalogUrl = await getAppCatalogUrlCached();
 
 function validateAppCollectionManifest(manifest: any) {
   if (!Array.isArray(manifest)) {
@@ -139,7 +137,7 @@ async function fetchAndCacheTXT(
   return retResult;
 }
 
-async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
+export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
 
   try {
 
@@ -172,15 +170,18 @@ async function parseManifestAndImportEntryPoints(
     "manifest:",
     manifestToParse.appManifest
   );
+  if(!manifestToParse.appManifest.enabled){
+    return returnPromiseArray;
+  }
   for (const entryUrl of manifestToParse.appManifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
 
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
-    const isAllowed = await isFileAllowedInCurrentWeb(fullJSUrl);
-    if (!isAllowed || !manifestToParse.appManifest.enabled) {
-      return returnPromiseArray;
+    const isAllowed = await isFileAllowedToRun(new URL(fullJSUrl));
+    if (!isAllowed) {
+      continue;
     }
     const isScriptLoaded =
       window.__SPFxExtensions.LoadedAppAssets.includes(fullJSUrl);
@@ -210,7 +211,7 @@ export async function fetchAppsTXTFromAllLocations(
   // all apps.txt accross the context (root / site /web)
   const allAppManifests: Promise<ManifestItem>[] = [];
   const rootLocation = await getRootCDNLocation();
-  const rootUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
+  // const rootUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
   allAppManifests.push(
     fetchAndCacheTXT(
       rootLocation,

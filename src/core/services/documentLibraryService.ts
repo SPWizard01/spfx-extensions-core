@@ -4,7 +4,7 @@
 // Request Method:
 // POST
 
-import { EXTENSION_APPS_FOLDER } from "../../utilities/constants";
+import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import { getDigest } from "./digestService";
 
 const existsError = `A list, survey, discussion board, or document library with the specified title already exists in this Web site.`
@@ -22,7 +22,7 @@ export async function createExtensionsDocumentLibrary(webUrl: string) {
             BaseTemplate: 101, 
             ContentTypesEnabled: false, 
             Description: "This folder contains extensions that are loaded by the SPFxExtensions application.", 
-            Title: EXTENSION_APPS_FOLDER,
+            Title: SPFX_EXTENSIONS_FOLDER,
             Hidden: true
          })
     });
@@ -37,7 +37,7 @@ export async function createExtensionsDocumentLibrary(webUrl: string) {
 }
 
 export async function getExtensionsDocumentLibrary(webUrl: string) {
-    const response = await fetch(`${webUrl}/_api/web/lists/GetByTitle('${EXTENSION_APPS_FOLDER}')`, {
+    const response = await fetch(`${webUrl}/_api/web/lists/GetByTitle('${SPFX_EXTENSIONS_FOLDER}')`, {
         method: "GET",
         headers: {
             "Accept": "application/json;odata=nometadata",

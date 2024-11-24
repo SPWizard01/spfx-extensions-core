@@ -1,8 +1,9 @@
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import type { SPFxExtensionAppManifest } from "../../models/appModel";
-import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, EXTENSION_APPS_FOLDER, MANIFEST_NAME } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
+import type { AppCollectionFiles } from "../models/appCollectionFiles";
 import { addAppCollection, ensureAppCollectionNestedPath } from "./appCollection";
 import { ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
@@ -85,7 +86,7 @@ export async function addFiles(sp: SPFI, appName: string, fileContents: FileCont
         const hasFolder = pathIdxBeforeFile > -1;
         const fileNameWithoutFolder = hasFolder ? file.fileName.substring(pathIdxBeforeFile + 1) : file.fileName;
         const subpathBeforeFile = file.fileName.substring(0, pathIdxBeforeFile);
-        const fullPath = `${EXTENSION_APPS_FOLDER}/${appName}${(subpathBeforeFile ? `/${subpathBeforeFile}` : ``)}`;
+        const fullPath = `${SPFX_EXTENSIONS_FOLDER}/${appName}${(subpathBeforeFile ? `/${subpathBeforeFile}` : ``)}`;
         const folderQuery = sp.web.getFolderByServerRelativePath(fullPath);
         const ensuredFilePaths: string[] = [];
         if (hasFolder) {
@@ -116,6 +117,28 @@ export async function addFiles(sp: SPFI, appName: string, fileContents: FileCont
     }
     return result;
 }
+
+export async function getAllAppFiles(sp: SPFI, appName: string) {
+    //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)
+    const webInfo = await sp.web();
+    const files = await sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).items.select("FileLeafRef", "FileDirRef").filter(`FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`)<AppCollectionFiles[]>();
+    const relativeFiles: string[] = [];
+    files.forEach((file) => {
+        const filePath = file.FileDirRef.replace(`${webInfo.ServerRelativeUrl}/${SPFX_EXTENSIONS_FOLDER}/${appName}`, "").replace(/^\//, "./");
+        const fileName = file.FileLeafRef;
+        relativeFiles.push(`${(filePath ? `${filePath}/` : "./")}${fileName}`);
+    });
+    return relativeFiles;
+}
+
+export async function getAllAppJSFiles(sp: SPFI, appName: string) {
+    //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)
+    const allFiles = await getAllAppFiles(sp, appName);
+    return allFiles.filter((file) => /\.js$/.test(file));
+}
+
+//https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200&startswith(FileDirRef,%27/sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp%27)
+//https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)
 
 // export async function addFile(sp: SPFI, appName: string, fileContents: FileContents) {
 //     await addAppCollection(sp, appName);

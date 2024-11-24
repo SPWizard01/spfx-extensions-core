@@ -2,6 +2,7 @@ import { $ } from "bun";
 import { analyzeMetafile, context } from "esbuild";
 import { esbuildHMRPlugin } from "esbuild-hot-reload";
 import pc from "picocolors";
+import { manifestPlugin } from "./src/plugins/esbuild/manifestPlugin";
 await $`rm -rf dist`;
 
 const ctx = await context({
@@ -22,6 +23,7 @@ const ctx = await context({
     metafile: true,
     plugins: [
         esbuildHMRPlugin(33355),
+        manifestPlugin({isESM: true, includeAllOutputJs: true}),
         {
             name: "my-plugin",
             setup(build) {

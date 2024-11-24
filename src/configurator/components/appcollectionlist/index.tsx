@@ -26,6 +26,7 @@ import {
   getEnabledAppCollection,
 } from "../../services/appCollection";
 import { getConfigurationSP } from "../../services/pnpService";
+import { ManifestModal } from "../manifestmodal";
 const sp = getConfigurationSP();
 const allApps = await getAllAppCollections(sp);
 const enabledApps = await getEnabledAppCollection(sp);
@@ -86,6 +87,7 @@ const columns = [
 
 export function AppList() {
   return (
+    <>
     <Table arial-label="Default table" style={{ minWidth: "510px" }}>
       <TableHeader>
         <TableRow>
@@ -101,7 +103,7 @@ export function AppList() {
           <TableRow key={item.appCollection.name}>
             <TableCell>
               <TableCellLayout media={item.appCollection.icon}>
-                <Link>{item.appCollection.name}</Link>
+                <ManifestModal appName={item.appCollection.name} />
               </TableCellLayout>
             </TableCell>
             <TableCell>
@@ -114,5 +116,6 @@ export function AppList() {
         ))}
       </TableBody>
     </Table>
+    </>
   );
 }

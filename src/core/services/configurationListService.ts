@@ -1,22 +1,19 @@
 import type { ConfigurationListData } from "../../models/configurationList";
 import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { getCoreDefaultConfiguration } from "../utility/defaultConfig";
-import { getAppCatalogDigest, getAppCatalogUrlCached } from "./appCatalogService";
-import { addOrUpdateExtensionConfigs, getAllExtensionConfig } from "./coreIdbService";
+import { ConfigurationNames, getCoreDefaultConfiguration } from "../utility/defaultConfig";
+import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
+import { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
-const RUNTIME_CONFIG_ITEMCOUNT = 3;
-const MINIMAL_CONFIG_COUNT = getCoreDefaultConfiguration("").length + RUNTIME_CONFIG_ITEMCOUNT;
-const appCatalogUrl = await getAppCatalogUrlCached();
+const MINIMAL_CONFIG_COUNT = Object.keys(ConfigurationNames).length;
 const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
-const spfxConfigWebUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
 
 
 let configurationListDataPromise: Promise<ConfigurationListData[]> | undefined;
 
 async function ensureConfigurationListDataField() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
-    const fieldsUrl = `${spfxConfigWebUrl}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields`;
+    const fieldsUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields`;
     try {
         const req = await fetch(
             fieldsUrl,
@@ -40,7 +37,7 @@ async function ensureConfigurationListDataField() {
             if (!titleField.EnforceUniqueValues) {
                 // Update the Title field
                 const updateFieldReq = await fetch(
-                    `${spfxConfigWebUrl}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields('${titleField.Id}')`,
+                    `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields('${titleField.Id}')`,
                     {
                         method: "POST",
                         headers: {
@@ -104,14 +101,14 @@ async function ensureConfigurationList() {
     let newList = false;
     try {
         const req = await fetch(
-            `${spfxConfigWebUrl}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')`
+            `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')`
         );
         newList = req.status === 404;
         if (newList) {
             logGenericCoreInfo("Creating configuration list.");
             // Create the list
             const createReq = await fetch(
-                `${spfxConfigWebUrl}/_api/web/lists`,
+                `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists`,
                 {
                     method: "POST",
                     headers: {
@@ -147,8 +144,8 @@ async function ensureConfigurationList() {
 }
 
 
-async function getConfigurationListItems() {
-    const requestUrl = `${spfxConfigWebUrl}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items?$select=Title,Data`;
+async function getConfigurationListItemsFromAPI() {
+    const requestUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items?$select=Title,Data`;
     const config = {
         headers: {
             Accept: "application/json;odata=verbose",
@@ -169,9 +166,9 @@ async function getConfigurationListItems() {
 }
 
 async function createDefaultListItems() {
-    for (const item of getCoreDefaultConfiguration(spfxConfigWebUrl)) {
+    for (const item of getCoreDefaultConfiguration(SPFX_EXTENSIONS_SITE_URL)) {
         const addReq = await fetch(
-            `${spfxConfigWebUrl}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items`, {
+            `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items`, {
             method: "POST",
             headers: {
                 Accept: "application/json;odata=verbose",
@@ -196,7 +193,10 @@ async function createDefaultListItems() {
 
 
 
-export function getConfigurationListData() {
+export function getConfigurationListData(fresh = false) {
+    if(fresh) {
+        return getConfigurationListItemsFromAPI();
+    }
     if (configurationListDataPromise) {
         return configurationListDataPromise;
     }
@@ -206,15 +206,15 @@ export function getConfigurationListData() {
 
 
 async function getConfigurationListDataCached() {
-    let allConfig = await getAllExtensionConfig();
+    let allConfig = await getAllExtensionConfigFromDB();
     if (allConfig.length < MINIMAL_CONFIG_COUNT) {
         const isNewList = await ensureConfigurationList();
         if (isNewList) {
             await createDefaultListItems();
         }
-        const allListData = await getConfigurationListItems();
+        const allListData = await getConfigurationListItemsFromAPI();
         await addOrUpdateExtensionConfigs(allListData, 240);
-        allConfig = await getAllExtensionConfig()
+        allConfig = await getAllExtensionConfigFromDB()
     }
     return allConfig;
 }

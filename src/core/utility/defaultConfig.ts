@@ -1,6 +1,17 @@
 import type { ConfigurationListData } from "../../models/configurationList";
 import { SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 
+export const ConfigurationNames = {
+    Status: "Status",
+    RootCDNLocation: "RootCDNLocation",
+    InterceptHistory: "InterceptHistory",
+    EnableAppWhiteList: "EnableAppWhiteList",
+    AppCatalogUrl: "AppCatalogUrl",
+    AppCatalogWebs: "AppCatalogWebs",
+    ConfiguratorPageData: "ConfiguratorPageData",
+    AppWhiteList: "AppWhiteList",
+} as const;
+
 const CoreDefaultConfiguration: Partial<ConfigurationListData>[] = [
     {
         Title: "Status",
