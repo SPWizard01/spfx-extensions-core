@@ -25,18 +25,18 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
                     isESM: options.isESM,
                     enabledOnAllHubSites: options.enabledOnAllHubSites ?? true
                 }
-                const manifestDir = build.initialOptions.outdir ?? "";
-                const outputManifest = `${(manifestDir ? `${manifestDir}/` : ``)}manifest.txt`;
+                const outputDir = build.initialOptions.outdir ?? "";
+                const manifestLocation = `${(outputDir ? `${outputDir}/` : ``)}manifest.txt`;
                 if (!options.includeAllOutputJs) {
-                    await writeManifestFile(outputManifest, manifestToWrite);
+                    await writeManifestFile(manifestLocation, manifestToWrite);
                     return;
                 }
 
-                const dist = (build.initialOptions.outdir ?? "").replace(/^\.*\//, "");
+                const dist = outputDir.replace(/^\.*\//, "");
 
                 const outputJs = Object.keys(buildResult.metafile.outputs).filter(k => k.toLowerCase().endsWith(".js")).map((key) => key.replace(dist, "."));
                 manifestToWrite.appRelativeEntryPointUrls = outputJs;
-                await writeManifestFile(outputManifest, manifestToWrite);
+                await writeManifestFile(manifestLocation, manifestToWrite);
 
 
             });
@@ -44,6 +44,6 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
     }
 }
 
-async function writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionAppManifest) {
-    await writeFile(outputManifest, JSON.stringify(manifestToWrite));
+async function writeManifestFile(manifestLocation: string, manifestToWrite: SPFxExtensionAppManifest) {
+    await writeFile(manifestLocation, JSON.stringify(manifestToWrite));
 }

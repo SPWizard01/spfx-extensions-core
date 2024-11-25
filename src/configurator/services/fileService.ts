@@ -124,9 +124,11 @@ export async function getAllAppFiles(sp: SPFI, appName: string) {
     const files = await sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).items.select("FileLeafRef", "FileDirRef").filter(`FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`)<AppCollectionFiles[]>();
     const relativeFiles: string[] = [];
     files.forEach((file) => {
-        const filePath = file.FileDirRef.replace(`${webInfo.ServerRelativeUrl}/${SPFX_EXTENSIONS_FOLDER}/${appName}`, "").replace(/^\//, "./");
+        // /sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp > "."
+        // /sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp/someFolder > ./someFolder
+        const filePath = file.FileDirRef.replace(`${webInfo.ServerRelativeUrl}/${SPFX_EXTENSIONS_FOLDER}/${appName}`, ".");
         const fileName = file.FileLeafRef;
-        relativeFiles.push(`${(filePath ? `${filePath}/` : "./")}${fileName}`);
+        relativeFiles.push(`${filePath}/${fileName}`);
     });
     return relativeFiles;
 }
