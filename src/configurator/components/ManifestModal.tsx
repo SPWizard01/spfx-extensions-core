@@ -1,24 +1,21 @@
 import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    DialogTrigger,
-    Link,
-    type DialogOpenChangeData,
-    type DialogOpenChangeEvent,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  DialogTrigger,
+  Link,
+  type DialogOpenChangeData,
+  type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import type { SPFI } from "@pnp/sp";
-import { forwardRef, useState, type ForwardedRef } from "react";
-import { getWebAbsoluteUrl } from "../../../core/services/contextService";
-import { getAllAppFiles, getAllAppJSFiles } from "../../services/fileService";
-import { getPnPSP } from "../../services/pnpService";
-import { getConfiguringWebUrl } from "../../services/webConfiguratorService";
-import { ManifestConfig } from "../appmanifestconfig";
+import { useState } from "react";
+import { configurationWebSP } from "../runtimeStore";
+import { getAllAppJSFiles } from "../services/fileService";
+import { ManifestConfig } from "./ManifestConfig";
 
 interface ManifestModalProps {
   appName: string;
@@ -53,20 +50,22 @@ interface ManifestModalProps {
 //   };
 // });
 
-const queryWeb = getConfiguringWebUrl();
-const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
-const sp = getPnPSP(cfgWeb);
 // const spwebinfo = await sp.web();
 
-
 export function ManifestModal({ appName }: ManifestModalProps) {
-    const [entryPoints, setEntryPoints] = useState<string[]>([]);
-    async function onOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
-        if(data.open) {
-            const allAvailableJS = await getAllAppJSFiles(sp, appName);
-            setEntryPoints(allAvailableJS);
-        }
-    };
+  const [entryPoints, setEntryPoints] = useState<string[]>([]);
+  async function onOpenChange(
+    _event: DialogOpenChangeEvent,
+    data: DialogOpenChangeData
+  ) {
+    if (data.open) {
+      const allAvailableJS = await getAllAppJSFiles(
+        configurationWebSP,
+        appName
+      );
+      setEntryPoints(allAvailableJS);
+    }
+  }
 
   return (
     <Dialog surfaceMotion={null} modalType="alert" onOpenChange={onOpenChange}>

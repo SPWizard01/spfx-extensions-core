@@ -27,16 +27,18 @@
   },
   "scripts": {
     "esbuild": "bun run esbuild.ts",
-    "esserve": "bun run esserve.ts"
+    "esserve": "bun run esserve.ts",
+    "serve": "bun run serve.ts"
   },
   "devDependencies": {
-    "@fluentui/react-components": "^9.56.2",
+    "@fluentui/react-components": "^9.56.3",
     "@fluentui/react-icons": "^2.0.266",
     "@pnp/sp": "^4.7.0",
-    "@types/bun": "latest",
+    "@preact/signals-react": "^2.2.0",
+    "@types/bun": "^1.1.14",
     "@types/react": "^18.3.12",
-    "bun": "^1.1.36",
-    "bun-dev-server": "^0.4.0",
+    "bun": "^1.1.38",
+    "bun-dev-server": "^0.5.0",
     "esbuild": "^0.24.0",
     "esbuild-hot-reload": "^1.0.5",
     "fflate": "^0.8.2",

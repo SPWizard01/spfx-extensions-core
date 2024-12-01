@@ -28,5 +28,5 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "exclude": ["esbuild.ts", "esserve.ts", "dist"]
+  "exclude": ["esbuild.ts", "esserve.ts", "serve.ts", "dist"]
 }

@@ -1,18 +1,26 @@
 import {
-    Dropdown,
-    Label,
-    makeStyles,
-    Option,
-    Switch,
-    type OptionOnSelectData,
-    type SelectionEvents,
+  Dropdown,
+  Label,
+  makeStyles,
+  Option,
+  Switch,
+  type OptionOnSelectData,
+  type SelectionEvents,
 } from "@fluentui/react-components";
-import { isFileAllowedToRun } from "../../../core/services/allowedAppsService";
-import { importEntryPoint } from "../../../core/services/componentLoaderService";
-import { getWebAbsoluteUrl } from "../../../core/services/contextService";
-import { SPFX_EXTENSIONS_FOLDER } from "../../../utilities/constants";
-import { getConfiguringWebUrl } from "../../services/webConfiguratorService";
-import { AppDefinitionConfiguration } from "../appdefinitionlist";
+import { effect, signal } from "@preact/signals-react";
+import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
+import { importEntryPoint } from "../../core/services/componentLoaderService";
+import { getWebAbsoluteUrl } from "../../core/services/contextService";
+import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import { selectedAppWebs } from "../runtimeStore";
+import { getConfiguringWebUrl } from "../services/webConfiguratorService";
+import { getAllWebInfos } from "../services/webInfoService";
+import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
+
+effect(() => {
+  console.log(selectedAppWebs.value)
+})
+
 const useCustomStyles = makeStyles({
   stackWrapper: {
     // display: "flex",
@@ -51,6 +59,7 @@ export function ManifestConfig({ entryPoints, appName }: ManifestConfigProps) {
       //importEntryPoint(`${fullUrl}`,true);
     }
   }
+
   return (
     <div className={customStyles.stackWrapper}>
       <div className={customStyles.stack}>
@@ -67,7 +76,7 @@ export function ManifestConfig({ entryPoints, appName }: ManifestConfigProps) {
           ))}
         </Dropdown>
       </div>
-      <AppDefinitionConfiguration />
+      <AppDefinitionConfiguration appName={appName} />
       <div className={customStyles.stack}>
         <Label>Is ESM: </Label>
         <Switch defaultChecked={false} />

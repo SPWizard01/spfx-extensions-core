@@ -5,15 +5,14 @@ import type {
   SPFxExtensionAppRegistration,
 } from "../models/appModel";
 import type { SPFxExtensionAppUtils } from "../models/appUtils";
-import type { ConfigurationListData } from "../models/configurationList";
 import type {
   SPFxExtensionAppContextInjection,
   SPOnlineContextInjection,
 } from "../models/context";
 import type {
+  SPFxExtensionAppEventListener,
   SPFxExtensionAppEvents,
   SPFxExtensionAppInstanceEventListener,
-  SPFxExtensionAppEventListener,
 } from "../models/events";
 import type { SPFxExtensionImportCallback } from "../models/importLoader";
 

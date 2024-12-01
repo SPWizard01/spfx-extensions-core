@@ -13,11 +13,10 @@ import {
   Switch,
   webLightTheme,
 } from "@fluentui/react-components";
-import { StrictMode } from "react";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
-import { AppList } from "./components/appcollectionlist";
-import { FilePicker } from "./components/filepicker";
+import { AppList } from "./components/AppList";
+import { FilePicker } from "./components/FilePicker";
 
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 

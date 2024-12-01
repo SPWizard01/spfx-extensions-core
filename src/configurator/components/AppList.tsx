@@ -20,25 +20,20 @@ import {
   PeopleRegular,
   VideoRegular,
 } from "@fluentui/react-icons";
-import { DEBUG_KEYS } from "../../../utilities/debug";
-import {
-  getAllAppCollections,
-  getEnabledAppCollection,
-} from "../../services/appCollection";
-import { getConfigurationSP } from "../../services/pnpService";
-import { ManifestModal } from "../manifestmodal";
-const sp = getConfigurationSP();
-const allApps = await getAllAppCollections(sp);
-const enabledApps = await getEnabledAppCollection(sp);
+import { DEBUG_KEYS } from "../../utilities/debug";
+import { configurationWebAppCollection, configurationWebEnabledAppCollections, configurationWebSP } from "../runtimeStore";
+import { ManifestModal } from "./ManifestModal";
 
-const apps = allApps.map((app) => ({
+const apps = configurationWebAppCollection.map((app) => ({
   appCollection: {
     name: app,
     icon: <FolderRegular />,
   },
-  enabled: enabledApps.data.includes(app),
+  enabled: configurationWebEnabledAppCollections.data.includes(app),
   inDebug: Number(localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}_${app}`)) > 0,
 }));
+
+
 
 const items = [
   {
