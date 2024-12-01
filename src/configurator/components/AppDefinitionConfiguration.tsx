@@ -7,6 +7,8 @@ import {
   useSignalEffect,
 } from "@preact/signals-react";
 import { useSignal, useSignals } from "@preact/signals-react/runtime";
+import type { SPFxExtensionAppManifest } from "../../models/appModel";
+import { EMPTY_APP_MANIFEST } from "../../utilities/constants";
 import type { SelectedAppWebs } from "../models/appCollection";
 import { selectedAppWebs, selectedWebAvailableWebs } from "../runtimeStore";
 interface AppDefinitionConfigurationProps {
@@ -16,7 +18,9 @@ interface AppDefinitionConfigurationProps {
 function update(currentApp: SelectedAppWebs) {
   console.log(currentApp);
   const apps = selectedAppWebs.value;
-  let foundApp = apps.findIndex((w) => w.appName === currentApp.appName);
+  let foundApp = apps.findIndex(
+    (w) => w.appCollectionName === currentApp.appCollectionName
+  );
   if (foundApp > -1) {
     apps.splice(foundApp, 1);
   }
@@ -28,25 +32,36 @@ export function AppDefinitionConfiguration({
 }: AppDefinitionConfigurationProps) {
   //https://www.npmjs.com/package/@preact/signals-react#hooks
   useSignals();
-  const currentApp = useSignal<SelectedAppWebs>(
-    selectedAppWebs.value.find((w) => w.appName === appName) ?? {
-      appName,
-      webs: [],
-    }
-  );
+  const currentApp = useComputed<SelectedAppWebs>(() => {
+    return (
+      selectedAppWebs.value.find((w) => w.appCollectionName === appName) ?? {
+        appCollectionName: appName,
+        manifest: EMPTY_APP_MANIFEST,
+      }
+    );
+  });
 
   return (
     <Dropdown
       multiselect={true}
       value={`${
-        currentApp.value.webs.some((w) => w === "*")
+        currentApp.value.manifest.enabledApps.some((w) => w.webId === "*")
           ? "All"
-          : `${currentApp.value.webs.length} selected`
+          : `${currentApp.value.manifest.enabledApps.length} selected`
       }`}
       onOptionSelect={(ev, data) => {
         if (!currentApp) return;
-        currentApp.value = { ...currentApp.value, webs: data.selectedOptions };
-        update(currentApp.value);
+        const newApp: SelectedAppWebs = {
+          ...currentApp.value,
+          manifest: {
+            ...currentApp.value.manifest,
+            enabledApps: data.selectedOptions.map((w) => ({
+              webId: w,
+              enabledAppIds: [],
+            })),
+          },
+        };
+        update(newApp);
       }}
     >
       <Option key={"All"} value="*">

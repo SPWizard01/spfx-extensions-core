@@ -1,4 +1,6 @@
+import type { SPFxExtensionAppManifest } from "../../models/appModel";
+
 export interface SelectedAppWebs {
-    appName: string;
-    webs: string[];
+    appCollectionName: string;
+    manifest: SPFxExtensionAppManifest;
 }
