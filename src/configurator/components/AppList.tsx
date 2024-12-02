@@ -1,116 +1,99 @@
 import {
-  Avatar,
-  Link,
-  type PresenceBadgeStatus,
+  Checkbox,
+  createTableColumn,
+  DataGrid,
+  DataGridBody,
+  DataGridCell,
+  DataGridHeader,
+  DataGridHeaderCell,
+  DataGridRow,
   Switch,
-  Table,
-  TableBody,
-  TableCell,
   TableCellLayout,
-  TableHeader,
-  TableHeaderCell,
-  TableRow,
-} from "@fluentui/react-components";
+  type TableColumnDefinition,
+} from '@fluentui/react-components';
+import { FolderRegular } from '@fluentui/react-icons';
+import { DEBUG_KEYS } from '../../utilities/debug';
 import {
-  DocumentPdfRegular,
-  DocumentRegular,
-  EditRegular,
-  FolderRegular,
-  OpenRegular,
-  PeopleRegular,
-  VideoRegular,
-} from "@fluentui/react-icons";
-import { DEBUG_KEYS } from "../../utilities/debug";
-import { configurationWebAppCollection, configurationWebEnabledAppCollections, configurationWebSP } from "../runtimeStore";
-import { ManifestModal } from "./ManifestModal";
+  configurationWebAppCollection,
+  configurationWebEnabledAppCollections,
+} from '../runtimeStore';
+import { ManifestModal } from './ManifestModal';
 
-const apps = configurationWebAppCollection.map((app) => ({
-  appCollection: {
-    name: app,
-    icon: <FolderRegular />,
-  },
+interface AppsItem {
+  name: string;
+  enabled: boolean;
+  inDebug: boolean;
+}
+
+const apps = configurationWebAppCollection.map<AppsItem>((app) => ({
+  name: app,
   enabled: configurationWebEnabledAppCollections.data.includes(app),
   inDebug: Number(localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}_${app}`)) > 0,
 }));
 
+const columns: TableColumnDefinition<AppsItem>[] = [
+  createTableColumn<AppsItem>({
+    columnId: 'appCollection',
+    renderHeaderCell: () => {
+      return 'App Collection Name';
+    },
+    renderCell: (item) => {
+      return (
+        <TableCellLayout media={<FolderRegular />}>
+          <ManifestModal appName={item.name} />
+        </TableCellLayout>
+      );
+    },
+  }),
 
+  createTableColumn<AppsItem>({
+    columnId: 'enabled',
+    renderHeaderCell: () => {
+      return 'Enabled';
+    },
+    renderCell: (item) => {
+      return (
+        <TableCellLayout>
+          <Switch defaultChecked={item.enabled} />
+        </TableCellLayout>
+      );
+    },
+  }),
 
-const items = [
-  {
-    file: { label: "Meeting notes", icon: <DocumentRegular /> },
-    author: { label: "Max Mustermann", status: "available" },
-    lastUpdated: { label: "7h ago", timestamp: 1 },
-    lastUpdate: {
-      label: "You edited this",
-      icon: <EditRegular />,
+  createTableColumn<AppsItem>({
+    columnId: 'inDebug',
+    renderHeaderCell: () => {
+      return 'In debug';
     },
-  },
-  {
-    file: { label: "Thursday presentation", icon: <FolderRegular /> },
-    author: { label: "Erika Mustermann", status: "busy" },
-    lastUpdated: { label: "Yesterday at 1:45 PM", timestamp: 2 },
-    lastUpdate: {
-      label: "You recently opened this",
-      icon: <OpenRegular />,
+    renderCell: (item) => {
+      return (
+        <TableCellLayout>
+          <Checkbox disabled defaultChecked={item.inDebug} />
+        </TableCellLayout>
+      );
     },
-  },
-  {
-    file: { label: "Training recording", icon: <VideoRegular /> },
-    author: { label: "John Doe", status: "away" },
-    lastUpdated: { label: "Yesterday at 1:45 PM", timestamp: 2 },
-    lastUpdate: {
-      label: "You recently opened this",
-      icon: <OpenRegular />,
-    },
-  },
-  {
-    file: { label: "Purchase order", icon: <DocumentPdfRegular /> },
-    author: { label: "Jane Doe", status: "offline" },
-    lastUpdated: { label: "Tue at 9:30 AM", timestamp: 3 },
-    lastUpdate: {
-      label: "You shared this in a Teams chat",
-      icon: <PeopleRegular />,
-    },
-  },
-];
-
-const columns = [
-  { columnKey: "appCollection", label: "App Collection Name" },
-  { columnKey: "enabled", label: "Enabled" },
-  { columnKey: "inDebug", label: "In Debug" },
+  }),
 ];
 
 export function AppList() {
   return (
-    <>
-    <Table arial-label="Default table" style={{ minWidth: "510px" }}>
-      <TableHeader>
-        <TableRow>
-          {columns.map((column) => (
-            <TableHeaderCell key={column.columnKey}>
-              {column.label}
-            </TableHeaderCell>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {apps.map((item) => (
-          <TableRow key={item.appCollection.name}>
-            <TableCell>
-              <TableCellLayout media={item.appCollection.icon}>
-                <ManifestModal appName={item.appCollection.name} />
-              </TableCellLayout>
-            </TableCell>
-            <TableCell>
-              <Switch defaultChecked={item.enabled} />
-            </TableCell>
-            <TableCell>
-              <TableCellLayout>{item.inDebug ? "Yes" : "No"}</TableCellLayout>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-    </>
+    <DataGrid items={apps} columns={columns} style={{ minWidth: '550px' }}>
+      <DataGridHeader>
+        <DataGridRow>
+          {({ renderHeaderCell }) => (
+            <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+          )}
+        </DataGridRow>
+      </DataGridHeader>
+      <DataGridBody<AppsItem>>
+        {({ item, rowId }) => (
+          <DataGridRow<AppsItem> key={rowId}>
+            {({ renderCell }) => (
+              <DataGridCell>{renderCell(item)}</DataGridCell>
+            )}
+          </DataGridRow>
+        )}
+      </DataGridBody>
+    </DataGrid>
   );
 }
