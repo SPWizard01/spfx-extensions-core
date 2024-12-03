@@ -29,4 +29,5 @@ startBunDevServer({
         keyFile: "./serve_key.pem",
     },
     reloadOnChange: true,
+    watchDelay: 2000,
 })
