@@ -1,4 +1,4 @@
-import { Dropdown, Option, Table } from "@fluentui/react-components";
+import { Dropdown, Option, Table, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
 import {
   batch,
   computed,
@@ -49,7 +49,7 @@ export function AppDefinitionConfiguration({
           ? "All"
           : `${currentApp.value.manifest.enabledApps.length} selected`
       }`}
-      onOptionSelect={(ev, data) => {
+      onOptionSelect={(ev: SelectionEvents, data: OptionOnSelectData) => {
         if (!currentApp) return;
         const newApp: SelectedAppWebs = {
           ...currentApp.value,
