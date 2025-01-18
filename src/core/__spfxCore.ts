@@ -8,6 +8,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
   description: "Allows configuring custom apps",
   isWebPartApp: false,
   hideAppSelectorWhenAppLoaded: true,
+  hideConfiguratorButton: true,
   name: "SPFx Extensions Configurator",
   async onInstanceRequested(newInstance) {
     const coreIsInDebug = import.meta.url.indexOf("localhost") > -1;

@@ -151,6 +151,12 @@ export interface SPFxExtensionAppDefinition {
    * Hide app selection dropdown in property pane when app is loaded
    */
   hideAppSelectorWhenAppLoaded?: boolean;
+
+  /**
+   * If set to true, the "Open Configurator" button will be hidden in the property pane
+   */
+  hideConfiguratorButton?: boolean;
+  
   /**
    * Internal registry of all the instances of this app
    */

@@ -26,6 +26,7 @@ export function ensureApp(appId: string) {
       description: APP_LOADING,
       isWebPartApp: false,
       hideAppSelectorWhenAppLoaded: false,
+      hideConfiguratorButton: false,
       instances: [],
     };
     window.__SPFxExtensions.Apps.push(foundApp);
@@ -55,6 +56,7 @@ export function registerAppService() {
       app.isWebPartApp = appdef.isWebPartApp;
       app.hideAppSelectorWhenAppLoaded =
         appdef.hideAppSelectorWhenAppLoaded ?? false;
+      app.hideConfiguratorButton = appdef.hideConfiguratorButton ?? false;
       app.icon = appdef.icon;
       app.onInstanceRequested = appdef.onInstanceRequested;
       app.instances.forEach((i) => {

@@ -96,7 +96,6 @@ async function fetchAndCacheTXT(
       return cachedManifest;
     }
   }
-
   try {
     logGenericCoreDebug(`Fetching manifest from`, fetchLocation);
     const mnfReq = await fetch(fetchLocation);
@@ -140,7 +139,6 @@ async function fetchAndCacheTXT(
 export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
 
   try {
-
     const appRegistrations = await import(fullJSUrl);
     if (!isESM) {
       logGenericCoreWarning(`Non ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`, fullJSUrl);
@@ -170,6 +168,7 @@ async function parseManifestAndImportEntryPoints(
     "manifest:",
     manifestToParse.appManifest
   );
+  console.log(manifestToParse.appManifest);
   if(!manifestToParse.appManifest.enabled){
     return returnPromiseArray;
   }

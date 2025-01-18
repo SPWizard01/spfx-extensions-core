@@ -1,5 +1,6 @@
 import { registerAppInstanceService } from "./appInstanceService";
 import { registerAppService } from "./appService";
+import { cleanCacheOnUpgrade } from "./browserCache";
 import { loadModernApps } from "./componentLoaderService";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
 import { getCoreConfig, initializeCoreConfiguration, } from "./coreConfigService";
@@ -47,6 +48,7 @@ async function initGlobalInternal() {
  * CRITICAL!!!! DO NOT CHANGE!!!
  */
 export async function initCoreServices() {
+  await cleanCacheOnUpgrade();
   await initGlobal();
 
   const siteUrl = getSiteAbsoluteUrl();

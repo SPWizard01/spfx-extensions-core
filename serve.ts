@@ -28,6 +28,7 @@ startBunDevServer({
         certFile: "./serve_cert.pem",
         keyFile: "./serve_key.pem",
     },
+    logRequests: true,
     reloadOnChange: true,
     watchDelay: 2000,
 })

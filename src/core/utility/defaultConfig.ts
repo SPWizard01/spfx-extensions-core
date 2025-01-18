@@ -10,6 +10,7 @@ export const ConfigurationNames = {
     AppCatalogWebs: "AppCatalogWebs",
     ConfiguratorPageData: "ConfiguratorPageData",
     AppWhiteList: "AppWhiteList",
+    Version: BUILD_DATE,
 } as const;
 
 const CoreDefaultConfiguration: Partial<ConfigurationListData>[] = [
