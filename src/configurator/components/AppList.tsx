@@ -1,5 +1,5 @@
 import {
-  Checkbox,
+  Button,
   createTableColumn,
   DataGrid,
   DataGridBody,
@@ -7,35 +7,45 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
-  Switch,
   TableCellLayout,
   type TableColumnDefinition,
-} from '@fluentui/react-components';
-import { FolderRegular } from '@fluentui/react-icons';
-import { DEBUG_KEYS } from '../../utilities/debug';
+} from "@fluentui/react-components";
+import { FolderRegular } from "@fluentui/react-icons";
+import { useSignals } from "@preact/signals-react/runtime";
+import { useEffect, useState } from "react";
+import { DEBUG_KEYS } from "../../utilities/debug";
+import type { AppsItem } from "../models/appsItem";
+import { allAppItems, configurationWebSP, enabledAppCollections } from "../runtimeStore";
 import {
-  configurationWebAppCollection,
-  configurationWebEnabledAppCollections,
-} from '../runtimeStore';
-import { ManifestModal } from './ManifestModal';
+  getAllAppCollections,
+  getEnabledAppCollection,
+  updateAppCollection,
+} from "../services/appCollection";
+import { AppEnabled } from "./AppEnabled";
+import { DebugPopup } from "./DebugPopup";
+import { ManifestModal } from "./ManifestModal";
 
-interface AppsItem {
-  name: string;
-  enabled: boolean;
-  inDebug: boolean;
+async function updateApp(app: AppsItem, enabled: boolean) {
+  const dataOnServer = await getEnabledAppCollection(configurationWebSP);
+  const isEnabledOnServer = dataOnServer.data.includes(app.name);
+  if (enabled === isEnabledOnServer) {
+    return;
+  }
+  const apps = [...dataOnServer.data];
+  if (enabled) {
+    apps.push(app.name);
+  } else {
+    apps.splice(apps.indexOf(app.name), 1);
+  }
+  await updateAppCollection(configurationWebSP, apps);
+  enabledAppCollections.value = apps;
 }
-
-const apps = configurationWebAppCollection.map<AppsItem>((app) => ({
-  name: app,
-  enabled: configurationWebEnabledAppCollections.data.includes(app),
-  inDebug: Number(localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}_${app}`)) > 0,
-}));
 
 const columns: TableColumnDefinition<AppsItem>[] = [
   createTableColumn<AppsItem>({
-    columnId: 'appCollection',
+    columnId: "appCollection",
     renderHeaderCell: () => {
-      return 'App Collection Name';
+      return "App Collection Name";
     },
     renderCell: (item) => {
       return (
@@ -47,53 +57,54 @@ const columns: TableColumnDefinition<AppsItem>[] = [
   }),
 
   createTableColumn<AppsItem>({
-    columnId: 'enabled',
+    columnId: "enabled",
     renderHeaderCell: () => {
-      return 'Enabled';
+      return "Enabled";
     },
     renderCell: (item) => {
-      return (
-        <TableCellLayout>
-          <Switch defaultChecked={item.enabled} />
-        </TableCellLayout>
-      );
+      return <AppEnabled app={item} onChange={updateApp} />;
     },
   }),
 
   createTableColumn<AppsItem>({
-    columnId: 'inDebug',
+    columnId: "inDebug",
     renderHeaderCell: () => {
-      return 'In debug';
+      return "In debug";
     },
     renderCell: (item) => {
-      return (
-        <TableCellLayout>
-          <Checkbox disabled defaultChecked={item.inDebug} />
-        </TableCellLayout>
-      );
+      return <DebugPopup app={item} />;
     },
   }),
 ];
+interface ApplistProps {}
+export function AppList({}: ApplistProps) {
+  // const apps: AppsItem[] = [];
+  useSignals();
 
-export function AppList() {
   return (
-    <DataGrid items={apps} columns={columns} style={{ minWidth: '550px' }}>
-      <DataGridHeader>
-        <DataGridRow>
-          {({ renderHeaderCell }) => (
-            <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-          )}
-        </DataGridRow>
-      </DataGridHeader>
-      <DataGridBody<AppsItem>>
-        {({ item, rowId }) => (
-          <DataGridRow<AppsItem> key={rowId}>
-            {({ renderCell }) => (
-              <DataGridCell>{renderCell(item)}</DataGridCell>
+    <>
+      <DataGrid
+        items={allAppItems.value}
+        columns={columns}
+        style={{ minWidth: "550px" }}
+      >
+        <DataGridHeader>
+          <DataGridRow>
+            {({ renderHeaderCell }) => (
+              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
             )}
           </DataGridRow>
-        )}
-      </DataGridBody>
-    </DataGrid>
+        </DataGridHeader>
+        <DataGridBody<AppsItem>>
+          {({ item, rowId }) => (
+            <DataGridRow<AppsItem> key={rowId}>
+              {({ renderCell }) => (
+                <DataGridCell>{renderCell(item)}</DataGridCell>
+              )}
+            </DataGridRow>
+          )}
+        </DataGridBody>
+      </DataGrid>
+    </>
   );
 }

@@ -8,8 +8,6 @@ import {
 } from "@fluentui/react-components";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
-import { AppList } from "./components/AppList";
-import { FilePicker } from "./components/FilePicker";
 
 import { Index } from "./components";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";

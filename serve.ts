@@ -31,4 +31,4 @@ startBunDevServer({
     logRequests: true,
     reloadOnChange: true,
     watchDelay: 2000,
-})
+}, import.meta)

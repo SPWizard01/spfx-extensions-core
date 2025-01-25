@@ -1,10 +1,11 @@
 import { $ } from "bun";
 import { analyzeMetafile, build } from "esbuild";
+import { coreEntryPoints, pluginEntryPoints } from "./entrypoints";
 import { manifestPlugin } from "./src/plugins/esbuild/manifestPlugin";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
 const result = await build({
-    entryPoints: ["./src/index.ts", "./src/configurator/__spfxCoreConfigurator.ts", "./src/core/__spfxCore.ts", "./src/services/spContextService.ts", "./src/services/appLauncher.ts", "./src/core/coreClassicWrapper.ts", "./src/core/coreClassicCustomAction.ts", "./src/utilities/display.ts"],
+    entryPoints: coreEntryPoints,
     sourcemap: "linked",
     outdir: "./dist",
     platform: "browser",
@@ -29,7 +30,7 @@ const result = await build({
 })
 
 const pluginResult = await build({
-    entryPoints: ["./src/plugins/esbuild/index.ts", "./src/plugins/bun/index.ts", "./src/plugins/webpack/index.ts"],
+    entryPoints: pluginEntryPoints,
     sourcemap: "linked",
     outdir: "./dist/plugins",
     platform: "node",

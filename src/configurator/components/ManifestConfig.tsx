@@ -16,6 +16,7 @@ import { selectedAppWebs } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { getAllWebInfos } from "../services/webInfoService";
 import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
+import { FilePicker } from "./FilePicker";
 
 effect(() => {
   console.log(selectedAppWebs.value)
@@ -89,6 +90,7 @@ export function ManifestConfig({ entryPoints, appName }: ManifestConfigProps) {
         <Label>Enabled: </Label>
         <Switch defaultChecked={false} />
       </div>
+      <FilePicker />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { DEBUG_KEYS } from "./utilities/debug";
+import { DEBUG_KEYS } from "../utilities/debug";
 
 /**
  * Points to core location, the holy grail that makes everything working.
@@ -7,20 +7,21 @@ import { DEBUG_KEYS } from "./utilities/debug";
  *
  * Default URL: ```/sites/appcatalog/CDN/SPFxExtensionAppsCore/core.js```
  */
-export async function getRootCoreLocation() {
+async function getRootCoreLocation() {
   const devPort = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE));
+  const jsName = "__spfxCore.js";
   if (devPort > 0) {
-    return `https://localhost:${devPort}/__spfxCore.js`;
+    return `https://localhost:${devPort}/${jsName}`;
   }
-return ""
+  // return ""
   // // this part is intercepted by SPFx Webpack and converted later on
-  // const webpackCoreUrl = await import(/* webpackChunkName: "spfx-extension-core-location" */"__spfxCore.js");
-  // if (!webpackCoreUrl.default) {
-  //   const msg = "Unable to resolve SPFx Core location";
-  //   console.error(msg, webpackCoreUrl);
-  //   throw new Error(msg);
-  // }
-  // return webpackCoreUrl.default;
+  const webpackCoreUrl = await import(/* webpackChunkName: "spfx-extension-core-location" */ jsName);
+  if (!webpackCoreUrl.default) {
+    const msg = "Unable to resolve SPFx Core location";
+    console.error(msg, webpackCoreUrl);
+    throw new Error(msg);
+  }
+  return webpackCoreUrl.default;
 }
 
 /**

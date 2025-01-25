@@ -31,13 +31,13 @@
     "serve": "bun run serve.ts"
   },
   "devDependencies": {
-    "@fluentui/react-components": "^9.57.0",
+    "@fluentui/react-components": "^9.58.0",
     "@fluentui/react-icons": "^2.0.271",
     "@pnp/sp": "^4.9.0",
     "@preact/signals-react": "^3.0.1",
-    "@types/bun": "^1.1.17",
-    "@types/react": "^19.0.7",
-    "bun-dev-server": "^0.6.0",
+    "@types/bun": "^1.2.0",
+    "@types/react": "^19.0.8",
+    "bun-dev-server": "^0.8.0",
     "esbuild": "^0.24.2",
     "esbuild-hot-reload": "^1.0.6",
     "fflate": "^0.8.2",

@@ -21,7 +21,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
   },
 }
 
-export async function start() {
+async function start() {
   const buildDate = BUILD_DATE;
   logGenericCoreInfo(`Initializing Core Services Built:`, buildDate);
   initCoreServices().then(() => {
