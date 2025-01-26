@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
-  Link,
   makeStyles,
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
@@ -16,11 +15,9 @@ import {
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import { configurationWebSP } from "../runtimeStore";
-import { getAllAppJSFiles } from "../services/fileService";
-import { ManifestConfig } from "./ManifestConfig";
+import { addAppCollection } from "../services/appCollection";
 
-interface AddAppProps {
-}
+interface AddAppProps {}
 
 const useStyles = makeStyles({
   addBtn: {
@@ -31,20 +28,30 @@ const useStyles = makeStyles({
   },
 });
 
-export function AddApp({ }: AddAppProps) {
-  const [entryPoints, setEntryPoints] = useState<string[]>([]);
+export function AddApp({}: AddAppProps) {
   const styles = useStyles();
-  async function onOpenChange(
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  async function dialogOpenChange(
     _event: DialogOpenChangeEvent,
     data: DialogOpenChangeData
   ) {
-    if (data.open) {
-    }
+    setOpen(data.open);
+  }
+
+  async function addApp() {
+    if(!inputValue) return;
+    await addAppCollection(configurationWebSP, inputValue);
   }
 
   return (
-    <Dialog surfaceMotion={null} modalType="alert" onOpenChange={onOpenChange}>
-      <DialogTrigger disableButtonEnhancement>
+    <Dialog
+      open={open}
+      surfaceMotion={null}
+      modalType="alert"
+      onOpenChange={dialogOpenChange}
+    >
+      <DialogTrigger action="open">
         <Button className={styles.addBtn} appearance="primary">
           Add an app
         </Button>
@@ -53,7 +60,7 @@ export function AddApp({ }: AddAppProps) {
         <DialogBody>
           <DialogTitle
             action={
-              <DialogTrigger action="close">
+              <DialogTrigger disableButtonEnhancement action="close">
                 <Button
                   appearance="subtle"
                   aria-label="close"
@@ -65,13 +72,25 @@ export function AddApp({ }: AddAppProps) {
             Add new application.
           </DialogTitle>
           <DialogContent>
-            <Input />
+            <Input
+              value={inputValue}
+              onChange={(_, d) => {
+                setInputValue(d.value);
+              }}
+            />
           </DialogContent>
           <DialogActions>
-            <DialogTrigger disableButtonEnhancement>
+            <DialogTrigger disableButtonEnhancement action="close">
               <Button appearance="secondary">Close</Button>
             </DialogTrigger>
-            <Button appearance="primary">Do Something</Button>
+            <Button
+              appearance="primary"
+              onClick={() => {
+                addApp();
+              }}
+            >
+              Add
+            </Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>

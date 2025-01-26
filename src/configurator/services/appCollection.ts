@@ -2,20 +2,22 @@ import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import { APPCOLLECTION_MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
+import { allAppCollections } from "../runtimeStore";
 import { ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 
 const excludedFolders = ["Forms"];
 
-export async function addAppCollection(sp: SPFI, appName: string) {
+export async function addAppCollection(sp: SPFI, collectionName: string) {
     await ensureSPFxExtensionsFolder(sp);
     const rootFolderQuery = sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).rootFolder;
     const exists = await getAllAppCollections(sp);
-    if (!exists.some((f) => f === appName)) {
-        await rootFolderQuery.folders.addUsingPath(appName);
-        exists.push(appName);
+    if (!exists.some((f) => f === collectionName)) {
+        await rootFolderQuery.folders.addUsingPath(collectionName);
+        exists.push(collectionName);
+        allAppCollections.value = exists;
     }
-    return exists.find((f) => f === appName)!;
+    return exists.find((f) => f === collectionName)!;
 }
 
 export async function getAllAppCollections(sp: SPFI) {
