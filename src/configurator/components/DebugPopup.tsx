@@ -8,11 +8,11 @@ import {
   TableCellLayout,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import { DEBUG_KEYS } from "../../utilities/debug";
-import type { AppsItem } from "../models/appsItem";
+import { DEBUG_KEYS, isAppInDebug } from "../../utilities/debug";
+import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 
 interface DebugPopupProps {
-  app: AppsItem;
+  app: AppCollectionConfigurationItem;
 }
 
 export function DebugPopup({ app }: DebugPopupProps) {
@@ -25,7 +25,7 @@ export function DebugPopup({ app }: DebugPopupProps) {
       <Popover positioning={"after"} open={popoverOpen}>
         <PopoverTrigger disableButtonEnhancement>
           <Checkbox
-            checked={app.isInDebug()}
+            checked={isAppInDebug(app.name)}
             onChange={() => {
               setOpen(!popoverOpen);
             }}

@@ -6,7 +6,8 @@ import {
 import { getContentDigest } from "../../utilities/digest";
 import { isFileAllowedToRun } from "./allowedAppsService";
 
-import type { SPFxExtensionAppManifest, SPFxExtensionAppRegistration } from "../../models/appModel";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type {
   AppCollectionManifest,
   AppFolderManifest,
@@ -14,7 +15,7 @@ import type {
   ManifestLocation,
 } from "../../models/cache";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
-import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import { DEBUG_KEYS, isAppInDebug, isInDebug } from "../../utilities/debug";
 import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
@@ -80,6 +81,7 @@ function validateManifest(manifest: any, isAppCollection: boolean) {
  */
 async function fetchAndCacheTXT(
   url: string,
+  name: string,
   type: ManifestLocation,
   isAppCollection: boolean,
   isHubFetch: boolean,
@@ -122,6 +124,7 @@ async function fetchAndCacheTXT(
     JSON.stringify(isAppCollection ? appCollection : appManifest)
   );
   const baseResult = {
+    name,
     url: fetchLocation,
     type,
     hash,
@@ -168,8 +171,7 @@ async function parseManifestAndImportEntryPoints(
     "manifest:",
     manifestToParse.appManifest
   );
-  console.log(manifestToParse.appManifest);
-  if(!manifestToParse.appManifest.enabled){
+  if (!manifestToParse.appManifest.enabled) {
     return returnPromiseArray;
   }
   for (const entryUrl of manifestToParse.appManifest.appRelativeEntryPointUrls) {
@@ -178,21 +180,29 @@ async function parseManifestAndImportEntryPoints(
 
 
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
-    const isAllowed = await isFileAllowedToRun(new URL(fullJSUrl));
+    const jsUrl = new URL(fullJSUrl);
+    if (manifestToParse.appManifest.enableCaching) {
+      const cacheDuration = manifestToParse.appManifest.cacheDuration ?? 60;
+      const cacheString = isAppInDebug(manifestToParse.name) ? (new Date()).getTime() : (new Date()).setMinutes(cacheDuration, 0, 0)
+      jsUrl.searchParams.set("v", `${cacheString}`);
+    }
+    const isAllowed = await isFileAllowedToRun(jsUrl);
     if (!isAllowed) {
       continue;
     }
+    const plainUrl = `${jsUrl.origin}${jsUrl.pathname}`;
+    const urlWithCache = `${jsUrl}`;
     const isScriptLoaded =
-      window.__SPFxExtensions.LoadedAppAssets.includes(fullJSUrl);
+      window.__SPFxExtensions.LoadedAppAssets.includes(plainUrl);
     if (!isScriptLoaded) {
-      window.__SPFxExtensions.LoadedAppAssets.push(fullJSUrl);
+      window.__SPFxExtensions.LoadedAppAssets.push(plainUrl);
       returnPromiseArray.push({
-        url: fullJSUrl,
-        promise: importEntryPoint(fullJSUrl, manifestToParse.appManifest.isESM),
+        url: urlWithCache,
+        promise: importEntryPoint(urlWithCache, manifestToParse.appManifest.isESM),
         manifest: manifestToParse
       });
     } else {
-      logGenericCoreInfo(`EntryPoint already loaded:`, fullJSUrl);
+      logGenericCoreInfo(`EntryPoint already loaded:`, urlWithCache);
     }
 
   }
@@ -214,6 +224,7 @@ export async function fetchAppsTXTFromAllLocations(
   allAppManifests.push(
     fetchAndCacheTXT(
       rootLocation,
+      "apps",
       // rootUrl,
       "root",
       true,
@@ -227,6 +238,7 @@ export async function fetchAppsTXTFromAllLocations(
   allAppManifests.push(
     fetchAndCacheTXT(
       `${normalizedSiteUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+      "apps",
       // siteUrl,
       "site",
       true,
@@ -240,6 +252,7 @@ export async function fetchAppsTXTFromAllLocations(
     allAppManifests.push(
       fetchAndCacheTXT(
         `${normalizedHubUrl}${APPCOLLECTION_MANIFEST_NAME}`,
+        "apps",
         // hubUrl,
         "site",
         true,
@@ -257,6 +270,7 @@ export async function fetchAppsTXTFromAllLocations(
     allAppManifests.push(
       fetchAndCacheTXT(
         fullWebUrl,
+        "apps",
         // webUrl,
         "web",
         true,
@@ -307,6 +321,7 @@ function loadAppFolderManifestTXT(
       const manifestLocation = GetAppManifestLocation(baseUrl, appFolderName);
       manifestPromises.push(fetchAndCacheTXT(
         manifestLocation,
+        appFolderName,
         appCollectionManifest.type,
         false,
         appCollectionManifest.isHubFetch ?? false,

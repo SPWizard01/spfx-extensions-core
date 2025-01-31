@@ -12,13 +12,17 @@ import {
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Dismiss24Regular } from "@fluentui/react-icons";
+import { useComputed } from "@preact/signals-react";
 import { useState } from "react";
-import { configurationWebSP } from "../runtimeStore";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { configurationWebSP, getAppItem } from "../runtimeStore";
+import { updateAppManifest } from "../services/appManifest";
 import { getAllAppJSFiles } from "../services/fileService";
 import { ManifestConfig } from "./ManifestConfig";
 
 interface ManifestModalProps {
-  appName: string;
+  app: AppCollectionConfigurationItem;
   //   ref: ForwardedRef<HTMLDivElement>;
 }
 // export const ManifestModal = forwardRef<HTMLDivElement, ManifestModalProps>(
@@ -52,8 +56,8 @@ interface ManifestModalProps {
 
 // const spwebinfo = await sp.web();
 
-export function ManifestModal({ appName }: ManifestModalProps) {
-  const [entryPoints, setEntryPoints] = useState<string[]>([]);
+export function ManifestModal({ app }: ManifestModalProps) {
+  const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
   async function onOpenChange(
     _event: DialogOpenChangeEvent,
     data: DialogOpenChangeData
@@ -61,16 +65,20 @@ export function ManifestModal({ appName }: ManifestModalProps) {
     if (data.open) {
       const allAvailableJS = await getAllAppJSFiles(
         configurationWebSP,
-        appName
+        app.name
       );
-      setEntryPoints(allAvailableJS);
+      setAllJSFiles(allAvailableJS);
     }
+  }
+
+  async function saveManifest() {
+    await updateAppManifest(configurationWebSP, app.name, app.manifest);
   }
 
   return (
     <Dialog surfaceMotion={null} modalType="alert" onOpenChange={onOpenChange}>
       <DialogTrigger disableButtonEnhancement>
-        <Link>{appName}</Link>
+        <Link>{app.name}</Link>
       </DialogTrigger>
       <DialogSurface>
         <DialogBody>
@@ -85,16 +93,16 @@ export function ManifestModal({ appName }: ManifestModalProps) {
               </DialogTrigger>
             }
           >
-            Configuration of {appName}
+            Configuration of {app.name}
           </DialogTitle>
           <DialogContent>
-            <ManifestConfig entryPoints={entryPoints} appName={appName} />
+            <ManifestConfig app={app} allJSFiles={allJSFiles} />
           </DialogContent>
           <DialogActions>
             <DialogTrigger disableButtonEnhancement>
               <Button appearance="secondary">Close</Button>
             </DialogTrigger>
-            <Button appearance="primary">Do Something</Button>
+            <Button appearance="primary" onClick={saveManifest}>Do Something</Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>

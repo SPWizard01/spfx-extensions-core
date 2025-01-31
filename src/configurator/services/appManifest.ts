@@ -1,6 +1,6 @@
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import type { SPFxExtensionAppManifest } from "../../models/appModel";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 import { EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { addAppCollection } from "./appCollection";

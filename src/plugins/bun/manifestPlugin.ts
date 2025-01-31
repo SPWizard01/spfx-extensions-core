@@ -1,6 +1,6 @@
 import type { BuildOutput } from "bun";
 // import { pathToFileURL, write } from "bun";
-import type { SPFxExtensionAppManifest } from "../../models/appModel";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;

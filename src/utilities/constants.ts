@@ -1,4 +1,4 @@
-import type { SPFxExtensionAppManifest } from "../models/appModel";
+import type { SPFxExtensionAppManifest } from "../models/appCollectionManifest";
 
 export const CONFIGURATOR_APP_ID = "45e75137-13c5-4bb2-a2b3-8ab6382682ee";
 export const CONFIGURATOR_APP_INSTANCEID = "f3ab710f-2c08-422e-a7ad-5d93eb51e7a3";

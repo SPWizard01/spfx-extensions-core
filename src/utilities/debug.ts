@@ -19,4 +19,8 @@ export function isFileInDebug(fullUrl: URL) {
   return fullUrl.hostname.toLowerCase() === "localhost";
 }
 
+export function isAppInDebug(appName: string) {
+  return Number(localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}${appName}`)) > 0;
+}
+
 export const isInDebug = inDebug();

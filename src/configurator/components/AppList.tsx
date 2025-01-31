@@ -14,35 +14,45 @@ import { FolderRegular } from "@fluentui/react-icons";
 import { useSignals } from "@preact/signals-react/runtime";
 import { useEffect, useState } from "react";
 import { DEBUG_KEYS } from "../../utilities/debug";
-import type { AppsItem } from "../models/appsItem";
-import { allAppItems, configurationWebSP, enabledAppCollections } from "../runtimeStore";
+import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { allAppItems, configurationWebSP } from "../runtimeStore";
 import {
   getAllAppCollections,
   getEnabledAppCollection,
   updateAppCollection,
 } from "../services/appCollection";
-import { AppEnabled } from "./AppEnabled";
+import { AppCollectionActivated } from "./AppCollectionActivated";
 import { DebugPopup } from "./DebugPopup";
 import { ManifestModal } from "./ManifestModal";
 
-async function updateApp(app: AppsItem, enabled: boolean) {
+async function updateApp(
+  app: AppCollectionConfigurationItem,
+  enabled: boolean
+) {
   const dataOnServer = await getEnabledAppCollection(configurationWebSP);
   const isEnabledOnServer = dataOnServer.data.includes(app.name);
-  if (enabled === isEnabledOnServer) {
-    return;
+  if (enabled !== isEnabledOnServer) {
+    const apps = [...dataOnServer.data];
+    if (enabled) {
+      apps.push(app.name);
+    } else {
+      apps.splice(apps.indexOf(app.name), 1);
+    }
+    await updateAppCollection(configurationWebSP, apps);
   }
-  const apps = [...dataOnServer.data];
-  if (enabled) {
-    apps.push(app.name);
+  app.activated = enabled;
+  const allApps = [...allAppItems.value];
+  const itemIdx = allApps.findIndex((w) => w.name === app.name);
+  if (itemIdx > -1) {
+    allApps.splice(itemIdx, 1, app);
   } else {
-    apps.splice(apps.indexOf(app.name), 1);
+    allApps.push(app);
   }
-  await updateAppCollection(configurationWebSP, apps);
-  enabledAppCollections.value = apps;
+  allAppItems.value = [...allApps];
 }
 
-const columns: TableColumnDefinition<AppsItem>[] = [
-  createTableColumn<AppsItem>({
+const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
+  createTableColumn<AppCollectionConfigurationItem>({
     columnId: "appCollection",
     renderHeaderCell: () => {
       return "App Collection Name";
@@ -50,23 +60,23 @@ const columns: TableColumnDefinition<AppsItem>[] = [
     renderCell: (item) => {
       return (
         <TableCellLayout media={<FolderRegular />}>
-          <ManifestModal appName={item.name} />
+          <ManifestModal app={item} />
         </TableCellLayout>
       );
     },
   }),
 
-  createTableColumn<AppsItem>({
-    columnId: "enabled",
+  createTableColumn<AppCollectionConfigurationItem>({
+    columnId: "activated",
     renderHeaderCell: () => {
-      return "Enabled";
+      return "Activated";
     },
     renderCell: (item) => {
-      return <AppEnabled app={item} onChange={updateApp} />;
+      return <AppCollectionActivated app={item} onChange={updateApp} />;
     },
   }),
 
-  createTableColumn<AppsItem>({
+  createTableColumn<AppCollectionConfigurationItem>({
     columnId: "inDebug",
     renderHeaderCell: () => {
       return "In debug";
@@ -95,9 +105,9 @@ export function AppList({}: ApplistProps) {
             )}
           </DataGridRow>
         </DataGridHeader>
-        <DataGridBody<AppsItem>>
+        <DataGridBody<AppCollectionConfigurationItem>>
           {({ item, rowId }) => (
-            <DataGridRow<AppsItem> key={rowId}>
+            <DataGridRow<AppCollectionConfigurationItem> key={rowId}>
               {({ renderCell }) => (
                 <DataGridCell>{renderCell(item)}</DataGridCell>
               )}

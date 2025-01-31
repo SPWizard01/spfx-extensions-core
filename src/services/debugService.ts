@@ -3,7 +3,7 @@
  */
 
 import { logGenericCoreDebug } from "../core/services/loggingService";
-import type { SPFxExtensionAppManifest } from "../models/appModel";
+import type { SPFxExtensionAppManifest } from "../models/appCollectionManifest";
 import { DEBUG_KEYS } from "../utilities/debug";
 
 /**

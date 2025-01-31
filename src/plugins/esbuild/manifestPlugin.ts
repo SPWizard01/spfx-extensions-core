@@ -1,6 +1,6 @@
 import type { Plugin, PluginBuild } from "esbuild";
 import { writeFile } from "fs/promises";
-import type { SPFxExtensionAppManifest } from "../../models/appModel";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxESBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;

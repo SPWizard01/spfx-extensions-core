@@ -1,23 +1,25 @@
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import { APPCOLLECTION_MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
-import { allAppCollections } from "../runtimeStore";
+import { allAppItems } from "../runtimeStore";
 import { ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
+import { getAllAppItems } from "./renderedAppCollection";
 
 const excludedFolders = ["Forms"];
 
 export async function addAppCollection(sp: SPFI, collectionName: string) {
     await ensureSPFxExtensionsFolder(sp);
     const rootFolderQuery = sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).rootFolder;
-    const exists = await getAllAppCollections(sp);
-    if (!exists.some((f) => f === collectionName)) {
+    const allAppCollectionsData = await getAllAppCollections(sp);
+    const enabledAppsData = await getEnabledAppCollection(sp);
+    if (!allAppCollectionsData.some((f) => f === collectionName)) {
         await rootFolderQuery.folders.addUsingPath(collectionName);
-        exists.push(collectionName);
-        allAppCollections.value = exists;
+        allAppCollectionsData.push(collectionName);
     }
-    return exists.find((f) => f === collectionName)!;
+    allAppItems.value = await getAllAppItems(sp, allAppCollectionsData, enabledAppsData.data);
+    return allAppItems.value.find((f) => f.name === collectionName)!;
 }
 
 export async function getAllAppCollections(sp: SPFI) {
@@ -26,6 +28,8 @@ export async function getAllAppCollections(sp: SPFI) {
     const apps = await rootFolderQuery.folders();
     return apps.filter((f) => !excludedFolders.includes(f.Name)).map((f) => f.Name);
 }
+
+
 export async function updateAppCollection(sp: SPFI, appCollection: string[]) {
     await getEnabledAppCollection(sp);
     const webUrl = getWebUrlFromSP(sp);

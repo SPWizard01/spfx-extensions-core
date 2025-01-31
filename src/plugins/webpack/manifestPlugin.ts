@@ -1,6 +1,6 @@
 import { writeFileSync } from "fs";
 import type { Compiler, WebpackPluginInstance } from "webpack";
-import type { SPFxExtensionAppManifest } from "../../models/appModel";
+import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxWebpackManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
