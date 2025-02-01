@@ -14,6 +14,7 @@ import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { updateApp } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { getAllWebInfos } from "../services/webInfoService";
 import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
@@ -80,20 +81,51 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
       </div>
       <div className={customStyles.stack}>
         <Label>Is ESM: </Label>
-        <Switch defaultChecked={false} />
+        <Switch
+          defaultChecked={app.manifest.isESM}
+          onChange={(_, d) => {
+            app.manifest.isESM = d.checked;
+            updateApp(app);
+          }}
+        />
       </div>
       <div className={customStyles.stack}>
         <Label>Enabled on all Hub sites: </Label>
-        <Switch defaultChecked={false} />
+        <Switch
+          defaultChecked={app.manifest.enabledOnAllHubSites}
+          onChange={(_, d) => {
+            app.manifest.enabledOnAllHubSites = d.checked;
+            updateApp(app);
+          }}
+        />
       </div>
       <div className={customStyles.stack}>
         <Label>Enabled: </Label>
-        <Switch defaultChecked={false} />
+        <Switch defaultChecked={app.manifest.enabled} />
       </div>
       <div className={customStyles.stack}>
         <Label>Use Caching: </Label>
-        <Switch defaultChecked={false} />
-        <Input placeholder="Cache duration" type="number" defaultValue="60" />
+        <Switch
+          defaultChecked={app.manifest.enableCaching}
+          onChange={(_, d) => {
+            app.manifest.enableCaching = d.checked;
+            updateApp(app);
+          }}
+        />
+        <Input
+          placeholder="Cache duration"
+          type="number"
+          defaultValue={`${app.manifest.cacheDuration ?? 60}`}
+          onChange={(ev, data) => {
+            app.manifest.cacheDuration = Number(data.value) ?? 60;
+            updateApp(app);
+          }}
+        />
+        {app.manifest.enableCaching ? (
+          <Label size="small">
+            Cache string: {new Date().setMinutes(app.manifest.cacheDuration ?? 60, 0, 0)}
+          </Label>
+        ) : null}
       </div>
       <FilePicker />
     </div>

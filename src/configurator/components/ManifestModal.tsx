@@ -102,7 +102,7 @@ export function ManifestModal({ app }: ManifestModalProps) {
             <DialogTrigger disableButtonEnhancement>
               <Button appearance="secondary">Close</Button>
             </DialogTrigger>
-            <Button appearance="primary" onClick={saveManifest}>Do Something</Button>
+            <Button appearance="primary" onClick={saveManifest}>Save</Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>

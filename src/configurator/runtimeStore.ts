@@ -31,6 +31,20 @@ export function getEmptyAppItem(appName: string) {
 export function getAppItem(appName: string) {
     return allAppItems.value.find((w) => w.name === appName) ?? getEmptyAppItem(appName);
 }
+
+export function updateApp(updatedApp: AppCollectionConfigurationItem) {
+    const apps = JSON.parse(
+        JSON.stringify(allAppItems.value)
+    ) as AppCollectionConfigurationItem[];
+    let foundApp = apps.findIndex((w) => w.name === updatedApp.name);
+    if (foundApp > -1) {
+        apps.splice(foundApp, 1, updatedApp);
+    } else {
+        apps.push(updatedApp);
+    }
+    allAppItems.value = apps;
+}
+
 // export const allAppItems = computed<AppsItem[]>(() => {
 //     return allAppCollections.value.map<AppsItem>((app) => ({
 //         name: app,
