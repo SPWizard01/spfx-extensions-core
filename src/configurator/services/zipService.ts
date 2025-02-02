@@ -35,13 +35,13 @@ export async function getZipManifestContents(data: File): Promise<ApiCallResult<
     Object.keys(unzippedFiles).forEach((key: string) => {
         fileNames.push(key);
     });
+    console.log(fileNames);
     // dist/somdir/manifest.txt
-    const manifestFile = fileNames.find((fileName) => fileName.toLowerCase().endsWith(MANIFEST_NAME));
+    let manifestFile = fileNames.find((fileName) => fileName.toLowerCase().endsWith(MANIFEST_NAME));
 
     if (!manifestFile) {
-        result.error = "No manifest file found in the zip";
-        result.isError = true;
-        return result;
+        result.warnings.push("No manifest file found in the zip.");
+        manifestFile = ""
     }
     const basePathIdx = manifestFile.lastIndexOf("/");
     let basePath = "";

@@ -1,4 +1,5 @@
 import {
+  Badge,
   Link,
   makeStyles,
   MessageBar,
@@ -7,6 +8,10 @@ import {
 } from "@fluentui/react-components";
 import { useSignals } from "@preact/signals-react/runtime";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
+import {
+  configurationWebBelongsToHub,
+  configurationWebIsRootHub,
+} from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AddApp } from "./AddApp";
 import { AppList } from "./AppList";
@@ -28,6 +33,7 @@ const useStyles = makeStyles({
 export function Index() {
   const styles = useStyles();
   useSignals();
+
   return (
     <div>
       <div className={styles.container}>
@@ -39,6 +45,18 @@ export function Index() {
               <Link target="_blank" href={cfgWeb}>
                 {cfgWeb}
               </Link>
+              {configurationWebIsRootHub && (
+                <>
+                  {" "}
+                  <Badge>Hub Site</Badge>
+                </>
+              )}
+              {configurationWebBelongsToHub && (
+                <>
+                  {" "}
+                  <Badge color="important">Hub child</Badge>
+                </>
+              )}
             </Text>
           </MessageBar>
         )}

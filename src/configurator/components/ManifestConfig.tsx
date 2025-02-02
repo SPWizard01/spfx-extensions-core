@@ -8,13 +8,14 @@ import {
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
-import { useSignalEffect } from "@preact/signals-react";
+import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { useState } from "react";
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import {
+  configurationWebIsRootHub,
   configurationWebSP,
   selectedAppItem,
   updateSelectedApp,
@@ -51,6 +52,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
   });
   const customStyles = useCustomStyles();
   const app = selectedAppItem.value;
+  console.log(app);
   async function onOptionSelect(
     event: SelectionEvents,
     data: OptionOnSelectData
@@ -99,7 +101,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
       <div className={customStyles.stack}>
         <Label>Is ESM: </Label>
         <Switch
-          defaultChecked={app.manifest.isESM}
+          checked={app.manifest.isESM}
           onChange={(_, d) => {
             app.manifest.isESM = d.checked;
             updateSelectedApp(app);
@@ -109,7 +111,8 @@ export function ManifestConfig({}: ManifestConfigProps) {
       <div className={customStyles.stack}>
         <Label>Enabled on all Hub sites: </Label>
         <Switch
-          defaultChecked={app.manifest.enabledOnAllHubSites}
+          checked={app.manifest.enabledOnAllHubSites}
+          disabled={!configurationWebIsRootHub}
           onChange={(_, d) => {
             app.manifest.enabledOnAllHubSites = d.checked;
             updateSelectedApp(app);
@@ -119,7 +122,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
       <div className={customStyles.stack}>
         <Label>Enabled: </Label>
         <Switch
-          defaultChecked={app.manifest.enabled}
+          checked={app.manifest.enabled}
           onChange={(_, d) => {
             app.manifest.enabled = d.checked;
             updateSelectedApp(app);
@@ -129,7 +132,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
       <div className={customStyles.stack}>
         <Label>Use Caching: </Label>
         <Switch
-          defaultChecked={app.manifest.enableCaching}
+          checked={app.manifest.enableCaching}
           onChange={(_, d) => {
             app.manifest.enableCaching = d.checked;
             updateSelectedApp(app);
@@ -138,7 +141,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
         <Input
           placeholder="Cache duration"
           type="number"
-          defaultValue={`${app.manifest.cacheDuration ?? 60}`}
+          value={`${app.manifest.cacheDuration ?? 60}`}
           onChange={(ev, data) => {
             app.manifest.cacheDuration = Number(data.value) ?? 60;
             updateSelectedApp(app);

@@ -1,11 +1,9 @@
 import type { SPFI } from "@pnp/sp";
-import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
-import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import { logGenericCoreError } from "../../core/services/loggingService";
+import { MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { AppCollectionFiles } from "../models/appCollectionFiles";
 import { addAppCollection, ensureAppCollectionNestedPath } from "./appCollection";
-import { ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 
 
@@ -49,7 +47,6 @@ export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<Fil
         if (path) {
             const leafs = path.split("/").filter((leaf) => leaf.length > 0);
             const baseLeafs = basePath.split("/").filter((leaf) => leaf.length > 0);
-            console.log(fileName, leafs, baseLeafs);
             leafs.forEach((leaf) => {
                 if (baseLeafs.includes(leaf)) {
                     leafPath += `${leaf}/`;
@@ -71,8 +68,7 @@ export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<Fil
     }
     return result;
 }
-
-export async function addFiles(sp: SPFI, appName: string, fileContents: FileContents[]) {
+export async function* addFiles(sp: SPFI, appName: string, fileContents: FileContents[]) {
     await addAppCollection(sp, appName);
     const webUrl = getWebUrlFromSP(sp);
     const result: ApiCallResult<string[]> = {
@@ -81,6 +77,7 @@ export async function addFiles(sp: SPFI, appName: string, fileContents: FileCont
         isError: false,
         warnings: [],
     }
+    const ensuredFilePaths: string[] = [];
     for (const file of fileContents) {
         const pathIdxBeforeFile = file.fileName.lastIndexOf("/");
         const hasFolder = pathIdxBeforeFile > -1;
@@ -88,7 +85,6 @@ export async function addFiles(sp: SPFI, appName: string, fileContents: FileCont
         const subpathBeforeFile = file.fileName.substring(0, pathIdxBeforeFile);
         const fullPath = `${SPFX_EXTENSIONS_FOLDER}/${appName}${(subpathBeforeFile ? `/${subpathBeforeFile}` : ``)}`;
         const folderQuery = sp.web.getFolderByServerRelativePath(fullPath);
-        const ensuredFilePaths: string[] = [];
         if (hasFolder) {
             if (!ensuredFilePaths.includes(subpathBeforeFile)) {
                 try {
@@ -104,16 +100,21 @@ export async function addFiles(sp: SPFI, appName: string, fileContents: FileCont
         }
         try {
             await folderQuery.files.addUsingPath(fileNameWithoutFolder, new Blob([file.content]), { Overwrite: true });
-            result.data.push(`${fileNameWithoutFolder} uploaded successfully`);
+            const msg = `${fileNameWithoutFolder} uploaded successfully`;
+            result.data.push(msg);
+            yield { data: msg, success: true, fileName: file.fileName };
         }
         catch (error) {
             const msg = `Error while uploading ${fileNameWithoutFolder} in ${fullPath} folder in ${webUrl}`;
             logGenericCoreError(msg, error);
-            result.error = msg;
-            result.isError = true;
-            return result;
+            result.warnings.push(msg);
+            yield { data: msg, success: false, fileName: file.fileName };
         }
 
+    }
+    if (result.data.length === 0 && result.warnings.length > 0) {
+        result.error = "All files failed to upload.";
+        result.isError = true;
     }
     return result;
 }

@@ -1,5 +1,5 @@
 import { computed, signal } from "@preact/signals-react";
-import { getWebAbsoluteUrl } from "../core/services/contextService";
+import { EMPTY_GUID, getWebAbsoluteUrl } from "../core/services/contextService";
 import { logGenericCoreInfo } from "../core/services/loggingService";
 import { EMPTY_APP_MANIFEST } from "../utilities/constants";
 import { isAppInDebug } from "../utilities/debug";
@@ -13,9 +13,16 @@ const queryWeb = getConfiguringWebUrl();
 
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
+export const configurationSiteInfo = await configurationWebSP.site()
+export const configurationWebInfo = await configurationWebSP.web();
+export const configurationSiteRootWeb = await configurationWebSP.site.rootWeb();
+export const configurationWebIsRootHub = configurationSiteInfo.IsHubSite && configurationSiteRootWeb.Id === configurationWebInfo.Id;
+export const configurationWebBelongsToHub = !configurationSiteInfo.IsHubSite && configurationSiteInfo.HubSiteId !== EMPTY_GUID
+
+
 export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
 export const selectedWebAvailableWebs = await getAllWebInfos(configurationWebSP);
-
+console.log(configurationWebInfo, configurationSiteRootWeb, configurationSiteInfo);
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getEnabledAppCollection(configurationWebSP);
 

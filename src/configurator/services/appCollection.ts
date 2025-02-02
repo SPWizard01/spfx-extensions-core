@@ -86,7 +86,7 @@ export async function ensureAppCollectionNestedPath(sp: SPFI, appName: string, n
     if (nestedPath.some(n => n.indexOf("/") > -1)) {
         throw new Error("Nested path cannot contain /");
     }
-    await addAppCollection(sp, appName);
+    // await addAppCollection(sp, appName);
     const webUrl = getWebUrlFromSP(sp);
     let baseFolder = sp.web.getFolderByServerRelativePath(`${SPFX_EXTENSIONS_FOLDER}/${appName}`);
     let processingPath = "";

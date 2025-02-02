@@ -61,7 +61,7 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
         <TableCellLayout media={<FolderRegular />}>
           <Link
             onClick={() => {
-              selectedAppItem.value = item;
+              selectedAppItem.value = JSON.parse(JSON.stringify(item));
             }}
           >
             {item.name}
