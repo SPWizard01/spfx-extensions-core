@@ -7,6 +7,7 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
+  Link,
   TableCellLayout,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
@@ -15,7 +16,12 @@ import { useSignals } from "@preact/signals-react/runtime";
 import { useEffect, useState } from "react";
 import { DEBUG_KEYS } from "../../utilities/debug";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import { allAppItems, configurationWebSP } from "../runtimeStore";
+import {
+  allAppItems,
+  configurationWebSP,
+  selectedAppItem,
+  updateApp,
+} from "../runtimeStore";
 import {
   getAllAppCollections,
   getEnabledAppCollection,
@@ -25,7 +31,7 @@ import { AppCollectionActivated } from "./AppCollectionActivated";
 import { DebugPopup } from "./DebugPopup";
 import { ManifestModal } from "./ManifestModal";
 
-async function updateApp(
+async function updateCollection(
   app: AppCollectionConfigurationItem,
   enabled: boolean
 ) {
@@ -41,14 +47,7 @@ async function updateApp(
     await updateAppCollection(configurationWebSP, apps);
   }
   app.activated = enabled;
-  const allApps = [...allAppItems.value];
-  const itemIdx = allApps.findIndex((w) => w.name === app.name);
-  if (itemIdx > -1) {
-    allApps.splice(itemIdx, 1, app);
-  } else {
-    allApps.push(app);
-  }
-  allAppItems.value = [...allApps];
+  updateApp(app);
 }
 
 const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
@@ -60,7 +59,13 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
     renderCell: (item) => {
       return (
         <TableCellLayout media={<FolderRegular />}>
-          <ManifestModal app={item} />
+          <Link
+            onClick={() => {
+              selectedAppItem.value = item;
+            }}
+          >
+            {item.name}
+          </Link>
         </TableCellLayout>
       );
     },
@@ -72,7 +77,7 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
       return "Activated";
     },
     renderCell: (item) => {
-      return <AppCollectionActivated app={item} onChange={updateApp} />;
+      return <AppCollectionActivated app={item} onChange={updateCollection} />;
     },
   }),
 
@@ -89,7 +94,7 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
 interface ApplistProps {}
 export function AppList({}: ApplistProps) {
   // const apps: AppsItem[] = [];
-  useSignals();
+
 
   return (
     <>
@@ -115,6 +120,7 @@ export function AppList({}: ApplistProps) {
           )}
         </DataGridBody>
       </DataGrid>
+
     </>
   );
 }

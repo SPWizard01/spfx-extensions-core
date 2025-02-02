@@ -8,15 +8,19 @@ import {
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
-import { effect, signal } from "@preact/signals-react";
+import { useSignalEffect } from "@preact/signals-react";
+import { useState } from "react";
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import { updateApp } from "../runtimeStore";
+import {
+  configurationWebSP,
+  selectedAppItem,
+  updateSelectedApp,
+} from "../runtimeStore";
+import { getAllAppJSFiles } from "../services/fileService";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
-import { getAllWebInfos } from "../services/webInfoService";
 import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
 import { FilePicker } from "./FilePicker";
 
@@ -38,19 +42,22 @@ const useCustomStyles = makeStyles({
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
-interface ManifestConfigProps {
-  allJSFiles: string[];
-  app: AppCollectionConfigurationItem;
-}
-export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
+interface ManifestConfigProps {}
+export function ManifestConfig({}: ManifestConfigProps) {
+  const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
+  useSignalEffect(() => {
+    if (!selectedAppItem.value) return;
+    getJsFiles();
+  });
   const customStyles = useCustomStyles();
+  const app = selectedAppItem.value;
   async function onOptionSelect(
     event: SelectionEvents,
     data: OptionOnSelectData
   ) {
     for (const element of data.selectedOptions) {
       const fullUrl = new URL(
-        `${cfgWeb}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${element}`
+        `${cfgWeb}/${SPFX_EXTENSIONS_FOLDER}/${app!.name}/${element}`
       );
       console.log(`Check: ${fullUrl}`);
       isFileAllowedToRun(fullUrl, true);
@@ -58,6 +65,16 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
       //importEntryPoint(`${fullUrl}`,true);
     }
   }
+
+  async function getJsFiles() {
+    if (!selectedAppItem.value) return;
+    const allAvailableJS = await getAllAppJSFiles(
+      configurationWebSP,
+      selectedAppItem.value.name
+    );
+    setAllJSFiles(allAvailableJS);
+  }
+  if (!app) return null;
   return (
     <div className={customStyles.stackWrapper}>
       <div className={customStyles.stack}>
@@ -85,7 +102,7 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
           defaultChecked={app.manifest.isESM}
           onChange={(_, d) => {
             app.manifest.isESM = d.checked;
-            updateApp(app);
+            updateSelectedApp(app);
           }}
         />
       </div>
@@ -95,13 +112,19 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
           defaultChecked={app.manifest.enabledOnAllHubSites}
           onChange={(_, d) => {
             app.manifest.enabledOnAllHubSites = d.checked;
-            updateApp(app);
+            updateSelectedApp(app);
           }}
         />
       </div>
       <div className={customStyles.stack}>
         <Label>Enabled: </Label>
-        <Switch defaultChecked={app.manifest.enabled} />
+        <Switch
+          defaultChecked={app.manifest.enabled}
+          onChange={(_, d) => {
+            app.manifest.enabled = d.checked;
+            updateSelectedApp(app);
+          }}
+        />
       </div>
       <div className={customStyles.stack}>
         <Label>Use Caching: </Label>
@@ -109,7 +132,7 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
           defaultChecked={app.manifest.enableCaching}
           onChange={(_, d) => {
             app.manifest.enableCaching = d.checked;
-            updateApp(app);
+            updateSelectedApp(app);
           }}
         />
         <Input
@@ -118,12 +141,13 @@ export function ManifestConfig({ allJSFiles, app }: ManifestConfigProps) {
           defaultValue={`${app.manifest.cacheDuration ?? 60}`}
           onChange={(ev, data) => {
             app.manifest.cacheDuration = Number(data.value) ?? 60;
-            updateApp(app);
+            updateSelectedApp(app);
           }}
         />
         {app.manifest.enableCaching ? (
           <Label size="small">
-            Cache string: {new Date().setMinutes(app.manifest.cacheDuration ?? 60, 0, 0)}
+            Cache string:{" "}
+            {new Date().setMinutes(app.manifest.cacheDuration ?? 60, 0, 0)}
           </Label>
         ) : null}
       </div>

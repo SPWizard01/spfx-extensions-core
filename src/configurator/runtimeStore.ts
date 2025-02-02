@@ -1,5 +1,6 @@
 import { computed, signal } from "@preact/signals-react";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
+import { logGenericCoreInfo } from "../core/services/loggingService";
 import { EMPTY_APP_MANIFEST } from "../utilities/constants";
 import { isAppInDebug } from "../utilities/debug";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
@@ -21,6 +22,8 @@ const enabledAppsData = await getEnabledAppCollection(configurationWebSP);
 // export const selectedManifest = signal<SPFxExtensionAppManifest>(EMPTY_APP_MANIFEST);
 const allApiAppItems = await getAllAppItems(configurationWebSP, allAppCollectionsData, enabledAppsData.data);
 export const allAppItems = signal<AppCollectionConfigurationItem[]>(allApiAppItems);
+export const selectedAppItem = signal<AppCollectionConfigurationItem>();
+
 export function getEmptyAppItem(appName: string) {
     return {
         name: appName,
@@ -43,6 +46,14 @@ export function updateApp(updatedApp: AppCollectionConfigurationItem) {
         apps.push(updatedApp);
     }
     allAppItems.value = apps;
+}
+
+export function updateSelectedApp(updatedApp: AppCollectionConfigurationItem, withAppUpdate = false) {
+    const newApp = JSON.parse(JSON.stringify(updatedApp));
+    selectedAppItem.value = newApp;
+    if (withAppUpdate) {
+        updateApp(newApp);
+    }
 }
 
 // export const allAppItems = computed<AppsItem[]>(() => {

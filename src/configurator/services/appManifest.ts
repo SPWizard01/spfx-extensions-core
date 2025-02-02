@@ -39,13 +39,13 @@ export async function getAppManifest(sp: SPFI, appName: string) {
 
 export async function updateAppManifest(sp: SPFI, appName: string, manifest: SPFxExtensionAppManifest) {
     await getAppManifest(sp, appName);
-    const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     try {
         await manifestQuery.setContent(JSON.stringify(manifest));
         return true;
     }
     catch (error) {
+        const webUrl = getWebUrlFromSP(sp);
         logGenericCoreError(`Error while updating ${MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER}/${appName} folder in ${webUrl}`, error);
         return false;
     }

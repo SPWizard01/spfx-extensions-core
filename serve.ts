@@ -1,10 +1,10 @@
-import { bunHotReloadPlugin, startBunDevServer } from "bun-dev-server";
+import { startBunDevServer } from "bun-dev-server";
 
 startBunDevServer({
     buildConfig: {
         entrypoints: ["./src/core/__spfxCore.ts", "./src/configurator/__spfxCoreConfigurator.ts"],
         naming: {
-            entry: "[name].[ext]",
+            entry: "[name].[ext]"
         },
         sourcemap: "linked",
         outdir: "./dist",
@@ -15,7 +15,7 @@ startBunDevServer({
         },
 
         plugins: [
-            bunHotReloadPlugin({ port: 33355, secure: true }),
+            //bunHotReloadPlugin({ port: 33355, secure: true }),
         ]
     },
     port: 33355,

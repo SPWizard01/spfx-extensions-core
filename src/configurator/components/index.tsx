@@ -1,18 +1,16 @@
 import {
-  Button,
   Link,
   makeStyles,
   MessageBar,
-  Spinner,
   Text,
   Title2,
 } from "@fluentui/react-components";
-import { Suspense } from "react";
+import { useSignals } from "@preact/signals-react/runtime";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AddApp } from "./AddApp";
 import { AppList } from "./AppList";
-import { FilePicker } from "./FilePicker";
+import { ManifestModal } from "./ManifestModal";
 
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
@@ -24,11 +22,12 @@ const useStyles = makeStyles({
     padding: "0 32px",
     gap: "20px",
     marginTop: "20px",
-  }
+  },
 });
 
 export function Index() {
   const styles = useStyles();
+  useSignals();
   return (
     <div>
       <div className={styles.container}>
@@ -46,6 +45,7 @@ export function Index() {
         <AppList />
       </div>
       <AddApp />
+      <ManifestModal />
     </div>
   );
 }

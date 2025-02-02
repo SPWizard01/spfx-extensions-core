@@ -2,20 +2,13 @@ import {
   Dropdown,
   Label,
   Option,
-  OptionGroup,
-  Table,
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
 
 import { useEffect, useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import {
-  allAppItems,
-  getAppItem,
-  selectedWebAvailableWebs,
-  updateApp,
-} from "../runtimeStore";
+import { selectedWebAvailableWebs, updateSelectedApp } from "../runtimeStore";
 import { getAppDefinitions } from "../services/appDefinitionImport";
 interface AppDefinitionConfigurationProps {
   app: AppCollectionConfigurationItem;
@@ -42,6 +35,18 @@ export function AppDefinitionConfiguration({
   const [Alldefs, setAllDefs] = useState<AppIdName[]>([]);
   const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
   const [selectedWeb, setSelectedWeb] = useState<string>("");
+
+  function getSelectedAppValue() {
+    const selectedWebIdApps =
+      app.manifest.enabledApps.find((a) => a.webId === selectedWeb)
+        ?.enabledAppIds ?? [];
+
+    const values = selectedWebIdApps.map((a) => {
+      return Alldefs.find((d) => d.id === a)?.name ?? a;
+    });
+    return values.join(", ");
+  }
+
   async function downloadData() {
     const a = await getAppDefinitions(app);
     const allWebIds: WebIdAppIdMap[] = [
@@ -97,17 +102,24 @@ export function AppDefinitionConfiguration({
           app.manifest.enabledApps.find((a) => a.webId === selectedWeb)
             ?.enabledAppIds ?? []
         }
+        value={getSelectedAppValue()}
         onOptionSelect={(ev: SelectionEvents, data: OptionOnSelectData) => {
-          const arrayEntry = app.manifest.enabledApps.find((a) => a.webId === selectedWeb);
+          const arrayEntry = app.manifest.enabledApps.find(
+            (a) => a.webId === selectedWeb
+          );
+          const selected = data.selectedOptions.map((o) => o);
+          if (selected.includes("*")) {
+            selected.splice(0, selected.length, "*");
+          }
           if (arrayEntry) {
-            arrayEntry.enabledAppIds = data.selectedOptions.map((o) => o);
+            arrayEntry.enabledAppIds = selected;
           } else {
             app.manifest.enabledApps.push({
               webId: selectedWeb,
-              enabledAppIds: data.selectedOptions.map((o) => o),
+              enabledAppIds: selected,
             });
           }
-          updateApp(app);
+          updateSelectedApp(app);
         }}
       >
         {Alldefs.map((d) => (
