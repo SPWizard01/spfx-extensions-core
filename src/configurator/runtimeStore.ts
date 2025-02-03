@@ -30,6 +30,7 @@ const enabledAppsData = await getEnabledAppCollection(configurationWebSP);
 const allApiAppItems = await getAllAppItems(configurationWebSP, allAppCollectionsData, enabledAppsData.data);
 export const allAppItems = signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
+export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 
 export function getEmptyAppItem(appName: string) {
     return {

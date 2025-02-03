@@ -7,11 +7,13 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
+  Label,
   Link,
+  Spinner,
   TableCellLayout,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
-import { FolderRegular } from "@fluentui/react-icons";
+import { Delete20Regular, FolderRegular } from "@fluentui/react-icons";
 import { useSignals } from "@preact/signals-react/runtime";
 import { useEffect, useState } from "react";
 import { DEBUG_KEYS } from "../../utilities/debug";
@@ -19,14 +21,17 @@ import type { AppCollectionConfigurationItem } from "../models/appCollectionConf
 import {
   allAppItems,
   configurationWebSP,
+  deletingAppItem,
   selectedAppItem,
   updateApp,
 } from "../runtimeStore";
 import {
   getAllAppCollections,
   getEnabledAppCollection,
+  removeAppCollection,
   updateAppCollection,
 } from "../services/appCollection";
+import { useRowStack } from "../styles/stack";
 import { AppCollectionActivated } from "./AppCollectionActivated";
 import { DebugPopup } from "./DebugPopup";
 import { ManifestModal } from "./ManifestModal";
@@ -48,6 +53,15 @@ async function updateCollection(
   }
   app.activated = enabled;
   updateApp(app);
+}
+
+async function deleteCollection(app: AppCollectionConfigurationItem) {
+  try {
+    await removeAppCollection(configurationWebSP, app.name);
+    allAppItems.value = allAppItems.value.filter((f) => f.name !== app.name);
+  } finally {
+    deletingAppItem.value = undefined;
+  }
 }
 
 const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
@@ -90,11 +104,34 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
       return <DebugPopup app={item} />;
     },
   }),
+  createTableColumn<AppCollectionConfigurationItem>({
+    columnId: "deleteAppColl",
+    renderHeaderCell: () => {
+      return "";
+    },
+    renderCell: (item) => {
+      return (
+        <Link
+          disabled={deletingAppItem?.value?.name !== undefined}
+          onClick={() => {
+            deletingAppItem.value = JSON.parse(JSON.stringify(item));
+            //deleteCollection(item);
+          }}
+        >
+          <div style={{ display: "flex" }}>
+            <Delete20Regular />
+            {deletingAppItem?.value?.name === item.name && (
+              <Spinner size="extra-small" />
+            )}
+          </div>
+        </Link>
+      );
+    },
+  }),
 ];
 interface ApplistProps {}
 export function AppList({}: ApplistProps) {
   // const apps: AppsItem[] = [];
-
 
   return (
     <>
@@ -120,7 +157,6 @@ export function AppList({}: ApplistProps) {
           )}
         </DataGridBody>
       </DataGrid>
-
     </>
   );
 }

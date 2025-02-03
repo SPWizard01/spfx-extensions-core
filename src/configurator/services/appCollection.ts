@@ -1,9 +1,10 @@
-import type { SPFI } from "@pnp/sp";
+import { HttpRequestError } from "@pnp/queryable/behaviors/parsers";
+import { type SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { allAppItems } from "../runtimeStore";
-import { ensureSPFxExtensionsFolder } from "./folderService";
+import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 import { getAllAppItems } from "./renderedAppCollection";
 
@@ -20,6 +21,25 @@ export async function addAppCollection(sp: SPFI, collectionName: string) {
     }
     allAppItems.value = await getAllAppItems(sp, allAppCollectionsData, enabledAppsData.data);
     return allAppItems.value.find((f) => f.name === collectionName)!;
+}
+
+export async function removeAppCollection(sp: SPFI, collectionName: string) {
+    const extList = sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER);
+    
+    const rootFolderQuery = extList.rootFolder;
+    try {
+        const folder = await rootFolderQuery.folders.getByUrl(collectionName)();
+        await deleteRootFolderRecursively(sp, collectionName);
+    }
+    catch (error) {
+        // if (error instanceof HttpRequestError) {
+        //     if (error.status === 404) {
+        //         return true;
+        //     }
+        // }
+        logGenericCoreError(`Error while removing ${collectionName} from ${SPFX_EXTENSIONS_FOLDER} folder in ${getWebUrlFromSP(sp)}`, error);
+    }
+    return false;
 }
 
 export async function getAllAppCollections(sp: SPFI) {
