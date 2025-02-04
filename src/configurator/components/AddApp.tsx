@@ -12,24 +12,14 @@ import {
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
-import { Dismiss24Regular } from "@fluentui/react-icons";
+import { Add24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import { configurationWebSP } from "../runtimeStore";
 import { addAppCollection } from "../services/appCollection";
 
 interface AddAppProps {}
 
-const useStyles = makeStyles({
-  addBtn: {
-    gap: "20px",
-    marginTop: "20px",
-    marginLeft: "32px",
-    //padding: "20px",
-  },
-});
-
 export function AddApp({}: AddAppProps) {
-  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   async function dialogOpenChange(
@@ -40,7 +30,7 @@ export function AddApp({}: AddAppProps) {
   }
 
   async function addApp() {
-    if(!inputValue) return;
+    if (!inputValue) return;
     await addAppCollection(configurationWebSP, inputValue);
   }
 
@@ -52,8 +42,8 @@ export function AddApp({}: AddAppProps) {
       onOpenChange={dialogOpenChange}
     >
       <DialogTrigger action="open">
-        <Button className={styles.addBtn} appearance="primary">
-          Add an app
+        <Button appearance="primary" icon={<Add24Regular />}>
+          Create application
         </Button>
       </DialogTrigger>
       <DialogSurface>
@@ -69,11 +59,13 @@ export function AddApp({}: AddAppProps) {
               </DialogTrigger>
             }
           >
-            Add new application.
+            Create new application
           </DialogTitle>
-          <DialogContent>
+          <DialogContent style={{ padding: "16px 0" }}>
             <Input
               value={inputValue}
+              style={{ width: "100%" }}
+              placeholder="Enter application name"
               onChange={(_, d) => {
                 setInputValue(d.value);
               }}
@@ -89,7 +81,7 @@ export function AddApp({}: AddAppProps) {
                 addApp();
               }}
             >
-              Add
+              Create
             </Button>
           </DialogActions>
         </DialogBody>
