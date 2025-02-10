@@ -51,20 +51,22 @@ export function Index() {
 
   return (
     <div className={styles.container}>
-      <Title2>{queryWeb ? "Web" : "Global"} application list for</Title2>
+      <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
       {queryWeb && (
         <div className={styles.webDetails}>
           {configurationWebIsRootHub && (
-            <Badge size="extra-large">Hub root</Badge>
+            <Badge size="extra-large" color="success">
+              Hub root site
+            </Badge>
           )}
           {configurationWebBelongsToHub && (
-            <Badge size="extra-large" color="important">
-              Hub child
+            <Badge size="extra-large" color="warning">
+              Hub child site
             </Badge>
           )}
           {!configurationWebIsRootHub && !configurationWebBelongsToHub && (
             <Badge size="extra-large" color="danger">
-              Non hub
+              Non hub site
             </Badge>
           )}
           <Link target="_blank" href={cfgWeb}>
