@@ -31,7 +31,6 @@ async function initClassicCore() {
 
     const ctxInfo = await getCompatiblePageContextAsync();
     window.__SPFxExtensions.Utils = {
-      context: ctxInfo,
       displayMode: getClassicDisplayMode(),
       environmentType: "ClassicSharePoint",
       ConfiguratorUrl: "",
@@ -41,8 +40,6 @@ async function initClassicCore() {
       appManifestPromises: [],
       spAppInitializationPromise,
       spAppInitializationPromiseResolver,
-      originalPushState: window.history.pushState,
-      originalReplaceState: window.history.replaceState,
       initedThroughModern: false,
       fluentIconsInitialized: false,
     };

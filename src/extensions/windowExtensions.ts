@@ -5,10 +5,7 @@ import type {
   SPFxExtensionAppRegistration,
 } from "../models/appModel";
 import type { SPFxExtensionAppUtils } from "../models/appUtils";
-import type {
-  SPFxExtensionAppContextInjection,
-  SPOnlineContextInjection,
-} from "../models/context";
+import type { ContextChangeEventDetails, HistoryEventDetails } from "../models/customEvents";
 import type {
   SPFxExtensionAppEventListener,
   SPFxExtensionAppEvents,
@@ -26,8 +23,13 @@ interface ModuleLoaderPromiseResult {
 }
 
 declare global {
-  interface This {
-    //asd: string[];
+  interface WindowEventMap {
+    historyPush: CustomEvent<HistoryEventDetails>;
+    historyReplace: CustomEvent<HistoryEventDetails>;
+    historyBack: CustomEvent<HistoryEventDetails>;
+    historyForward: CustomEvent<HistoryEventDetails>;
+    historyGo: CustomEvent<HistoryEventDetails>;
+    contextChange: CustomEvent<ContextChangeEventDetails>;
   }
   // interface ImportMeta {
   //   resolve: (url: string) => string;
@@ -97,9 +99,6 @@ declare global {
         list: SPFxExtensionAppInstanceEventListener
       ): void;
 
-      // MIGHT NOT BE NEEDED
-      SPContextInjection: SPFxExtensionAppContextInjection | undefined;
-      OnlineInjector: SPOnlineContextInjection | undefined;
       ReloadSources?: string[];
     };
   }

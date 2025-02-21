@@ -1,5 +1,4 @@
 import type { CompatibleDisplayMode, CompatibleEnvironmentType } from "./environment";
-import type { SPFxExtensionHistoryUtils } from "./history";
 
 export interface SPFxExtensionUtilsPlaceHolderProvider {
   /**
@@ -12,11 +11,7 @@ export interface SPFxExtensionUtilsPlaceHolderProvider {
   eventObserver: any;
 }
 
-export interface SPFxExtensionAppUtils extends SPFxExtensionHistoryUtils {
-  /**
-   * PageContext instance from SPFx
-   */
-  context: any;
+export interface SPFxExtensionAppUtils {
   environmentType: CompatibleEnvironmentType;
   initedThroughModern: boolean;
   /**

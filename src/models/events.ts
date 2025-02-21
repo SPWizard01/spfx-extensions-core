@@ -6,6 +6,7 @@ import type {
   SPFxExtensionAppDefinition,
   SPFxExtensionAppInstance,
 } from "./appModel";
+import type { ContextChangeEventDetails } from "./customEvents";
 import type { CompatibleDisplayMode } from "./environment";
 
 /**
@@ -19,6 +20,7 @@ export type SPFxExtensionAppInstanceEvents = {
   onConfigurationClose: undefined;
   onConfigurationChange: SPFxExtensionAppConfig;
   onDisplayModeChange: CompatibleDisplayMode;
+  onContextChange: ContextChangeEventDetails;
 };
 
 export type SPFxExtensionAppInstanceEventListener = {

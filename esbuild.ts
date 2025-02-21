@@ -57,4 +57,12 @@ console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
         size: `${Math.floor(result.metafile.outputs[key].bytes / 1024)}KB`,
     }
 }));
+
+console.table(Object.getOwnPropertyNames(pluginResult.metafile.outputs).map((key) => {
+    return {
+        name: key,
+        size: `${Math.floor(pluginResult.metafile.outputs[key].bytes / 1024)}KB`,
+    }
+}));
+
 await $`tsc`

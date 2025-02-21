@@ -1,23 +1,43 @@
+import type { HistoryEventDetails } from "../../models/customEvents";
+
+interface NewStateDetails {
+  newState?: any,
+  newUrl?: string | URL
+  delta?: number
+}
+const originalPushState = window.history.pushState;
+const originalReplaceState = window.history.replaceState;
+const originalHistoryBack = window.history.back;
+const originalHistoryForward = window.history.forward;
+const originalHistoryGo = window.history.go;
+
+function getCurrentState() {
+  const currentState = window.history.state;
+  const previousUrl = window.location.href;
+  return { currentState, previousUrl };
+}
+
+function dispatchEvent(eventName: string, newState: NewStateDetails) {
+  const detail: HistoryEventDetails = {
+    ...getCurrentState(),
+    ...newState,
+  };
+  const evt = new CustomEvent<HistoryEventDetails>(eventName, { detail });
+  window.dispatchEvent(evt);
+}
+
 function interceptHistoryPushState() {
   function _pushState(
     this: any,
-    data: any,
+    newState: any,
     unused: string,
-    url?: string | URL
+    newUrl?: string | URL
   ) {
-    const _defaultPushState =
-      window.__SPFxExtensions.Utils.originalPushState;
-    updateEditMode(url);
+    updateEditMode(newUrl);
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
-    _defaultPushState?.apply(this, [data, unused, url]);
-    var listeners =
-      window.__SPFxExtensions.Utils.historyEventListeners?.filter(
-        (l) => l.eventType === "onHistoryPush"
-      ) || [];
-    listeners.forEach((l) => {
-      l.callBack(data, unused, url);
-    });
+    originalPushState.call(this, newState, unused, newUrl);
+    dispatchEvent("historyPush", { newState, newUrl });
   }
   window.history.pushState = _pushState;
 }
@@ -25,92 +45,59 @@ function interceptHistoryPushState() {
 function interceptHistoryReplaceState() {
   function _replaceState(
     this: any,
-    data: any,
+    newState: any,
     unused: string,
-    url?: string | URL
+    newUrl?: string | URL
   ) {
-    const _defaultReplaceState =
-      window.__SPFxExtensions.Utils.originalReplaceState;
-    updateEditMode(url);
+    updateEditMode(newUrl);
 
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
-    _defaultReplaceState?.apply(this, [data, unused, url]);
-    var listeners =
-      window.__SPFxExtensions.Utils.historyEventListeners?.filter(
-        (l) => l.eventType === "onHistoryReplace"
-      ) || [];
-    listeners.forEach((l) => {
-      l.callBack(data, unused, url);
-    });
+    originalReplaceState.call(this, newState, unused, newUrl);
+    dispatchEvent("historyReplace", { newState, newUrl });
   }
   window.history.replaceState = _replaceState;
 }
 
 function interceptHistoryBack() {
   function _goBack(this: any) {
-    const _defaultFunction =
-      window.__SPFxExtensions.Utils.originalHistoryBack;
 
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
-    _defaultFunction?.apply(this);
+    originalHistoryBack.call(this);
     updateEditMode(window.location.href);
-    var listeners =
-      window.__SPFxExtensions.Utils.historyEventListeners?.filter(
-        (l) => l.eventType === "onHistoryBack"
-      ) || [];
-    listeners.forEach((l) => {
-      l.callBack();
-    });
+    dispatchEvent("historyBack", {});
   }
   window.history.back = _goBack;
 }
 
 function interceptHistoryForward() {
   function _goForward(this: any) {
-    const _defaultFunction =
-      window.__SPFxExtensions.Utils.originalHistoryForward;
 
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
-    _defaultFunction?.apply(this);
+    originalHistoryForward.call(this);
     updateEditMode(window.location.href);
-    var listeners =
-      window.__SPFxExtensions.Utils.historyEventListeners?.filter(
-        (l) => l.eventType === "onHistoryForward"
-      ) || [];
-    listeners.forEach((l) => {
-      l.callBack();
-    });
+    dispatchEvent("historyForward", {});
   }
   window.history.forward = _goForward;
 }
 
 function interceptHistoryGo() {
   function _go(this: any, delta: number | undefined) {
-    const _defaultFunction =
-      window.__SPFxExtensions.Utils.originalHistoryGo;
-
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
-    _defaultFunction?.apply(this, [delta]);
+    originalHistoryGo.call(this, delta);
     updateEditMode(window.location.href);
-    var listeners =
-      window.__SPFxExtensions.Utils.historyEventListeners?.filter(
-        (l) => l.eventType === "onHistoryGo"
-      ) || [];
-    listeners.forEach((l) => {
-      l.callBack(delta);
-    });
+    dispatchEvent("historyGo", { delta });
   }
   window.history.go = _go;
 }
 
-function updateEditMode(url: string | URL | undefined) {
+function updateEditMode(url: string | URL | undefined | null) {
   let isEditMode = false;
 
-  if (typeof url === "undefined") {
+  if (!url) {
     isEditMode = window.location.href.indexOf("Mode=Edit") !== -1;
   } else if (typeof url === "string") {
     isEditMode = url.indexOf("Mode=Edit") !== -1;
@@ -122,60 +109,13 @@ function updateEditMode(url: string | URL | undefined) {
     : "Read";
 }
 
-function removeHistoryListener(id: string) {
-  if (!window.__SPFxExtensions.Utils.historyEventListeners) {
-    return;
-  }
 
-  const elId =
-    window.__SPFxExtensions.Utils.historyEventListeners.findIndex(
-      (l) => l.id === id
-    );
-
-  if (elId > -1) {
-    window.__SPFxExtensions.Utils.historyEventListeners?.splice(
-      elId,
-      1
-    );
-  }
-}
-
+let historyInterceptionInited = false;
 export function initHistoryInterception() {
-  if (window.__SPFxExtensions.Utils.historyInterceptionInited) {
+  if (historyInterceptionInited) {
     return;
   }
-  window.__SPFxExtensions.Utils.historyInterceptionInited = true;
-
-  window.__SPFxExtensions.Utils.originalPushState =
-    window.history.pushState;
-  window.__SPFxExtensions.Utils.originalReplaceState =
-    window.history.replaceState;
-  window.__SPFxExtensions.Utils.originalHistoryBack =
-    window.history.back;
-  window.__SPFxExtensions.Utils.originalHistoryForward =
-    window.history.forward;
-  window.__SPFxExtensions.Utils.originalHistoryGo =
-    window.history.go;
-
-  window.__SPFxExtensions.Utils.historyEventListeners = [];
-  window.__SPFxExtensions.Utils.removeHistoryEventListener =
-    removeHistoryListener;
-  window.__SPFxExtensions.Utils.addHistoryEventListener = (
-    eventType,
-    callBack
-  ) => {
-    const listenerId = window.crypto.randomUUID();
-    window.__SPFxExtensions.Utils.historyEventListeners?.push({
-      id: listenerId,
-      eventType,
-      callBack,
-    });
-    return () => {
-      window.__SPFxExtensions.Utils.removeHistoryEventListener?.(
-        listenerId
-      );
-    };
-  };
+  historyInterceptionInited = true;
 
   interceptHistoryReplaceState();
   interceptHistoryPushState();
