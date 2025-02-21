@@ -5,7 +5,7 @@ interface AppEnabledProps {
   app: AppCollectionConfigurationItem;
   onChange?: (appItem: AppCollectionConfigurationItem, enabled: boolean) => void;
 }
-export function AppCollectionActivated({ app, onChange }: AppEnabledProps) {
+export function AppCollectionActivator({ app, onChange }: AppEnabledProps) {
   return (
     <TableCellLayout>
       <Switch

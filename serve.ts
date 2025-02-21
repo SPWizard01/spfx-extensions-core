@@ -1,3 +1,4 @@
+import { file } from "bun";
 import { startBunDevServer } from "bun-dev-server";
 
 startBunDevServer({
@@ -21,14 +22,14 @@ startBunDevServer({
     port: 33355,
     watchDir: "./src",
     enableTSC: true,
-    hotReload: "plugin",
     writeManifest: false,
     cleanServePath: true,
     tls: {
-        certFile: "./serve_cert.pem",
-        keyFile: "./serve_key.pem",
+        cert: file("./serve_cert.pem"),
+        key: file("./serve_key.pem"),
     },
     logRequests: true,
+    hotReload: "plugin",
     reloadOnChange: true,
     watchDelay: 2000,
 }, import.meta)

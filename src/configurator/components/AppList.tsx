@@ -32,7 +32,7 @@ import {
   updateAppCollection,
 } from "../services/appCollection";
 import { useRowStack } from "../styles/stack";
-import { AppCollectionActivated } from "./AppCollectionActivated";
+import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
 import { ManifestModal } from "./ManifestModal";
@@ -83,7 +83,7 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
       return "Activated";
     },
     renderCell: (item) => {
-      return <AppCollectionActivated app={item} onChange={updateCollection} />;
+      return <AppCollectionActivator app={item} onChange={updateCollection} />;
     },
   }),
 
