@@ -11,16 +11,26 @@ import { getAllAppItems } from "./renderedAppCollection";
 const excludedFolders = ["Forms"];
 
 export async function addAppCollection(sp: SPFI, collectionName: string) {
-    await ensureSPFxExtensionsFolder(sp);
-    const rootFolderQuery = sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).rootFolder;
-    const allAppCollectionsData = await getAllAppCollections(sp);
-    const enabledAppsData = await getEnabledAppCollection(sp);
-    if (!allAppCollectionsData.some((f) => f === collectionName)) {
+    try {
+      await ensureSPFxExtensionsFolder(sp);
+      const rootFolderQuery = sp.web.lists.getByTitle(
+        SPFX_EXTENSIONS_FOLDER
+      ).rootFolder;
+      const allAppCollectionsData = await getAllAppCollections(sp);
+      const enabledAppsData = await getEnabledAppCollection(sp);
+      if (!allAppCollectionsData.some((f) => f === collectionName)) {
         await rootFolderQuery.folders.addUsingPath(collectionName);
         allAppCollectionsData.push(collectionName);
+      }
+      allAppItems.value = await getAllAppItems(
+        sp,
+        allAppCollectionsData,
+        enabledAppsData.data
+      );
+      return allAppItems.value.find((f) => f.name === collectionName)!;
+    } catch (error: any) {
+      return error?.message;
     }
-    allAppItems.value = await getAllAppItems(sp, allAppCollectionsData, enabledAppsData.data);
-    return allAppItems.value.find((f) => f.name === collectionName)!;
 }
 
 export async function removeAppCollection(sp: SPFI, collectionName: string) {

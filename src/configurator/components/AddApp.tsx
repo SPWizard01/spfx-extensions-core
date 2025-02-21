@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Button,
   Dialog,
   DialogActions,
@@ -8,28 +9,27 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
+  Link,
   makeStyles,
+  Spinner,
+  Toast,
+  ToastBody,
+  Toaster,
+  ToastFooter,
+  ToastTitle,
+  useId,
+  useToastController,
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
-import { Dismiss24Regular } from "@fluentui/react-icons";
+import { Add24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
+import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../runtimeStore";
 import { addAppCollection } from "../services/appCollection";
-
 interface AddAppProps {}
 
-const useStyles = makeStyles({
-  addBtn: {
-    gap: "20px",
-    marginTop: "20px",
-    marginLeft: "32px",
-    //padding: "20px",
-  },
-});
-
 export function AddApp({}: AddAppProps) {
-  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   async function dialogOpenChange(
@@ -39,61 +39,111 @@ export function AddApp({}: AddAppProps) {
     setOpen(data.open);
   }
 
+  const toasterId = useId("toaster");
+  const { dispatchToast, updateToast } = useToastController(toasterId);
+
+  const notify = (intent: "progress") => {
+    switch (intent) {
+      case "progress":
+        dispatchToast(
+          <Toast>
+            <ToastTitle media={<Spinner size="tiny" />}>Creating...</ToastTitle>
+          </Toast>,
+          {
+            toastId: toasterId,
+            timeout: -1,
+          }
+        );
+        break;
+    }
+  };
+
   async function addApp() {
-    if(!inputValue) return;
-    await addAppCollection(configurationWebSP, inputValue);
+    if (!inputValue) return;
+    notify("progress");
+    const addedApp = await addAppCollection(configurationWebSP, inputValue);
+
+    if (addedApp && (addedApp as AppCollectionConfigurationItem).name) {
+      updateToast({
+        content: (
+          <Toast>
+            <ToastTitle>Application created.</ToastTitle>
+          </Toast>
+        ),
+        intent: "success",
+        toastId: toasterId,
+        timeout: 2000,
+      });
+      setOpen(false);
+      return;
+    }
+    updateToast({
+      content: (
+        <Toast>
+          <ToastTitle>Error occured. Please check console.</ToastTitle>
+        </Toast>
+      ),
+      intent: "error",
+      toastId: toasterId,
+      timeout: 2000,
+    });
   }
 
   return (
-    <Dialog
-      open={open}
-      surfaceMotion={null}
-      modalType="alert"
-      onOpenChange={dialogOpenChange}
-    >
-      <DialogTrigger action="open">
-        <Button className={styles.addBtn} appearance="primary">
-          Add an app
-        </Button>
-      </DialogTrigger>
-      <DialogSurface>
-        <DialogBody>
-          <DialogTitle
-            action={
-              <DialogTrigger disableButtonEnhancement action="close">
-                <Button
-                  appearance="subtle"
-                  aria-label="close"
-                  icon={<Dismiss24Regular />}
-                />
-              </DialogTrigger>
-            }
-          >
-            Add new application.
-          </DialogTitle>
-          <DialogContent>
-            <Input
-              value={inputValue}
-              onChange={(_, d) => {
-                setInputValue(d.value);
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <DialogTrigger disableButtonEnhancement action="close">
-              <Button appearance="secondary">Close</Button>
-            </DialogTrigger>
-            <Button
-              appearance="primary"
-              onClick={() => {
-                addApp();
-              }}
+    <>
+      <Dialog
+        open={open}
+        surfaceMotion={null}
+        modalType="alert"
+        onOpenChange={dialogOpenChange}
+      >
+        <DialogTrigger action="open">
+          <Button appearance="primary" icon={<Add24Regular />}>
+            Create application
+          </Button>
+        </DialogTrigger>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle
+              action={
+                <DialogTrigger disableButtonEnhancement action="close">
+                  <Button
+                    appearance="subtle"
+                    aria-label="close"
+                    icon={<Dismiss24Regular />}
+                  />
+                </DialogTrigger>
+              }
             >
-              Add
-            </Button>
-          </DialogActions>
-        </DialogBody>
-      </DialogSurface>
-    </Dialog>
+              Create new application
+            </DialogTitle>
+            <DialogContent style={{ padding: "16px 0" }}>
+              <Input
+                value={inputValue}
+                style={{ width: "100%" }}
+                placeholder="Enter application name"
+                onChange={(_, d) => {
+                  setInputValue(d.value);
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement action="close">
+                <Button appearance="secondary">Close</Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                onClick={() => {
+                  addApp();
+                }}
+              >
+                Create
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+      <Toaster toasterId={toasterId} />
+    </>
   );
 }
