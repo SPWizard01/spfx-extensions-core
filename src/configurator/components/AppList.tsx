@@ -34,6 +34,7 @@ import {
 import { useRowStack } from "../styles/stack";
 import { AppCollectionActivated } from "./AppCollectionActivated";
 import { DebugPopup } from "./DebugPopup";
+import { DeleteApp } from "./DeleteApp";
 import { ManifestModal } from "./ManifestModal";
 
 async function updateCollection(
@@ -53,15 +54,6 @@ async function updateCollection(
   }
   app.activated = enabled;
   updateApp(app);
-}
-
-async function deleteCollection(app: AppCollectionConfigurationItem) {
-  try {
-    await removeAppCollection(configurationWebSP, app.name);
-    allAppItems.value = allAppItems.value.filter((f) => f.name !== app.name);
-  } finally {
-    deletingAppItem.value = undefined;
-  }
 }
 
 const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
@@ -110,22 +102,7 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
       return "";
     },
     renderCell: (item) => {
-      return (
-        <Link
-          disabled={deletingAppItem?.value?.name !== undefined}
-          onClick={() => {
-            deletingAppItem.value = JSON.parse(JSON.stringify(item));
-            //deleteCollection(item);
-          }}
-        >
-          <div style={{ display: "flex" }}>
-            <Delete20Regular />
-            {deletingAppItem?.value?.name === item.name && (
-              <Spinner size="extra-small" />
-            )}
-          </div>
-        </Link>
-      );
+      return <DeleteApp item={item} />;
     },
   }),
 ];
