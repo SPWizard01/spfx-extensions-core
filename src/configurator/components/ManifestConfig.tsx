@@ -8,10 +8,19 @@ import {
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
-import { useComputed, useSignalEffect } from "@preact/signals-react";
+import {
+  effect,
+  signal,
+  useComputed,
+  useSignal,
+  useSignalEffect,
+} from "@preact/signals-react";
 import { useState } from "react";
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
-import { GetCacheStringForAsset } from "../../core/services/browserCache";
+import {
+  GetCacheStringForAsset,
+  GetCacheStringHashForAssetAsync,
+} from "../../core/services/browserCache";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
@@ -46,14 +55,20 @@ const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
 interface ManifestConfigProps {}
 export function ManifestConfig({}: ManifestConfigProps) {
+  const app = selectedAppItem.value;
   const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
+  const selectedAppHash = useSignal("Not calculated");
   useSignalEffect(() => {
     if (!selectedAppItem.value) return;
+    if (selectedAppItem.value.manifest.enableCaching) {
+      GetCacheStringHashForAssetAsync(
+        selectedAppItem.value.manifest.cacheStart ?? new Date().getTime(),
+        selectedAppItem.value.manifest.cacheDuration ?? 60
+      ).then((hash) => (selectedAppHash.value = hash));
+    }
     getJsFiles();
   });
   const customStyles = useCustomStyles();
-  const app = selectedAppItem.value;
-  console.log(app);
   async function onOptionSelect(
     event: SelectionEvents,
     data: OptionOnSelectData
@@ -150,13 +165,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
           }}
         />
         {app.manifest.enableCaching ? (
-          <Label size="small">
-            Cache string:{" "}
-            {GetCacheStringForAsset(
-              app.manifest.cacheStart ?? new Date().getTime(),
-              app.manifest.cacheDuration ?? 60
-            )}
-          </Label>
+          <Label size="small">Cache string: {selectedAppHash.value}</Label>
         ) : null}
       </div>
       <FilePicker />

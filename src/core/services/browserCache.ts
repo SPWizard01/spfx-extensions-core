@@ -1,6 +1,6 @@
+import { getContentDigest } from "../../utilities/digest";
 import { getCoreConfig } from "./coreConfigService";
 import { addOrUpdateExtensionConfig } from "./coreIdbService";
-
 export async function cleanCacheOnUpgrade() {
     let coreConfig = await getCoreConfig();
     const keyParts = [
@@ -39,4 +39,10 @@ export function GetCacheStringForAsset(start: number, cacheTimeMinutes: number) 
         cacheDate.setMinutes(cacheDate.getMinutes() + cacheTimeMinutes);
     }
     return `${cacheDate.getTime()}`;
+}
+
+export async function GetCacheStringHashForAssetAsync(start: number, cacheTimeMinutes: number) {
+    const cachedTime = GetCacheStringForAsset(start, cacheTimeMinutes);
+    const cacheDateStr = await getContentDigest(cachedTime, 13);
+    return cacheDateStr;
 }
