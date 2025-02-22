@@ -11,6 +11,7 @@ import {
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { useState } from "react";
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
+import { GetCacheStringForAsset } from "../../core/services/browserCache";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
@@ -143,6 +144,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
           type="number"
           value={`${app.manifest.cacheDuration ?? 60}`}
           onChange={(ev, data) => {
+            app.manifest.cacheStart = new Date().getTime();
             app.manifest.cacheDuration = Number(data.value) ?? 60;
             updateSelectedApp(app);
           }}
@@ -150,7 +152,10 @@ export function ManifestConfig({}: ManifestConfigProps) {
         {app.manifest.enableCaching ? (
           <Label size="small">
             Cache string:{" "}
-            {new Date().setMinutes(app.manifest.cacheDuration ?? 60, 0, 0)}
+            {GetCacheStringForAsset(
+              app.manifest.cacheStart ?? new Date().getTime(),
+              app.manifest.cacheDuration ?? 60
+            )}
           </Label>
         ) : null}
       </div>

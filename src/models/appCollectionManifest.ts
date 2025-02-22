@@ -36,6 +36,7 @@ export interface SPFxExtensionAppManifest {
      */
     isESM: boolean;
     enableCaching?: boolean;
+    cacheStart?: number;
     /**
      * Minutes to cache every entry point
      */

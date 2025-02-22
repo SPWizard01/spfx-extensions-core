@@ -16,6 +16,7 @@ import type {
 } from "../../models/cache";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { DEBUG_KEYS, isAppInDebug, isInDebug } from "../../utilities/debug";
+import { GetCacheStringForAsset } from "./browserCache";
 import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
@@ -182,6 +183,8 @@ async function parseManifestAndImportEntryPoints(
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
     const jsUrl = new URL(fullJSUrl);
     if (manifestToParse.appManifest.enableCaching) {
+
+      GetCacheStringForAsset((new Date()).getTime(), 60);
       const cacheDuration = manifestToParse.appManifest.cacheDuration ?? 60;
       const cacheString = isAppInDebug(manifestToParse.name) ? (new Date()).getTime() : (new Date()).setMinutes(cacheDuration, 0, 0)
       jsUrl.searchParams.set("v", `${cacheString}`);

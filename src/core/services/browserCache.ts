@@ -31,3 +31,12 @@ export async function cleanCacheOnUpgrade() {
         }
     }
 }
+
+export function GetCacheStringForAsset(start: number, cacheTimeMinutes: number) {
+    const cacheDate = new Date(start);
+    const now = new Date();
+    while (cacheDate < now) {
+        cacheDate.setMinutes(cacheDate.getMinutes() + cacheTimeMinutes);
+    }
+    return `${cacheDate.getTime()}`;
+}
