@@ -1,16 +1,18 @@
+import type { ContextChangeEventDetails } from "../../models/customEvents";
+
 let contextServiceInitialized = false;
 export function initializeContextEventService() {
     if (window.moduleLoaderPromise && !contextServiceInitialized) {
         contextServiceInitialized = true;
         window.moduleLoaderPromise.then((ctx) => {
             const originalInitialize = ctx.context.pageContext.initialize;
-            ctx.context.pageContext.initialize = function (this: any, partialNewContext: any, legacyContext: typeof window._spPageContextInfo) {
-                originalInitialize.call(this, partialNewContext, legacyContext);
-                const detail = {
-                    partialNewContext,
+            ctx.context.pageContext.initialize = function (initializationData, legacyContext) {
+                originalInitialize.call(this, initializationData, legacyContext);
+                const detail: ContextChangeEventDetails = {
+                    initializationData,
                     legacyContext
                 };
-                const event = new CustomEvent("contextChange", {
+                const event = new CustomEvent<ContextChangeEventDetails>("contextChange", {
                     detail
                 });
                 window.dispatchEvent(event);

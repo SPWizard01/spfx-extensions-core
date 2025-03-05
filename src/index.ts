@@ -12,5 +12,6 @@ export * from "./models/environment";
 export * from "./models/events";
 export * from "./models/hubData";
 export * from "./models/importLoader";
+export * from "./models/spoContextInitializationData";
 export * from "./models/teamsModels";
 

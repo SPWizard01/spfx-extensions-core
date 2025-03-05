@@ -8,12 +8,12 @@
   },
   "devDependencies": {
     "@fluentui/react-components": "^9.60.0",
-    "@fluentui/react-icons": "^2.0.274",
+    "@fluentui/react-icons": "^2.0.279",
     "@pnp/sp": "^4.10.0",
     "@preact/signals-react": "^3.0.1",
-    "@types/bun": "^1.2.2",
+    "@types/bun": "^1.2.4",
     "@types/react": "^19.0.10",
-    "bun-dev-server": "^0.9.4",
+    "bun-dev-server": "^0.9.6",
     "esbuild": "^0.25.0",
     "esbuild-hot-reload": "^1.0.6",
     "fflate": "^0.8.2",
@@ -21,11 +21,12 @@
     "picocolors": "^1.1.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-dropzone": "^14.3.5",
+    "react-dropzone": "^14.3.8",
     "webpack": "^5.98.0"
   },
   "peerDependencies": {
-    "typescript": "^5.7.3"
+    "@types/sharepoint": "^2016.1.14",
+    "typescript": "^5.8.2"
   },
   "exports": {
     ".": "./dist/index.js",

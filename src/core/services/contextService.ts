@@ -12,7 +12,7 @@ export function getWebAbsoluteUrl() {
 }
 
 export function getSiteId() {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.site.id.toString() : contextInfo.context.site.replace("{", "").replace("}", "");
+    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.site.id.toString() : contextInfo.context.siteId.replace("{", "").replace("}", "");
 }
 
 export function getSiteAbsoluteUrl() {

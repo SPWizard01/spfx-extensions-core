@@ -12,17 +12,24 @@ import type {
   SPFxExtensionAppInstanceEventListener,
 } from "../models/events";
 import type { SPFxExtensionImportCallback } from "../models/importLoader";
+import type { SPOPageContext } from "../models/spoContextInitializationData";
+
+
 
 interface ModuleLoaderPromiseResult {
   context: {
+
     /**
      * PageContext from SPFx
      */
-    pageContext: any;
+    pageContext: SPOPageContext;
   };
 }
 
 declare global {
+  interface _spPageContextInfo {
+    hubSiteId: string;
+  }
   interface WindowEventMap {
     historyPush: CustomEvent<HistoryEventDetails>;
     historyReplace: CustomEvent<HistoryEventDetails>;
@@ -35,7 +42,7 @@ declare global {
   //   resolve: (url: string) => string;
   // }
   interface Window {
-    _spPageContextInfo?: any;
+    // _spPageContextInfo?: any;
     _spBodyOnLoadFunctions?: any;
     _spBodyOnLoadCalled?: boolean;
     /**
