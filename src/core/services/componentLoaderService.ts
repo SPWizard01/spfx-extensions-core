@@ -1,6 +1,5 @@
 import {
   EMPTY_APP_MANIFEST,
-  SPFX_EXTENSIONS_DATA_SITE,
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import { getContentDigest } from "../../utilities/digest";

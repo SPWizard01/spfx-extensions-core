@@ -1,5 +1,4 @@
 import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
-import { getCompatiblePageContextAsync } from "../services/spContextService";
 import { getClassicDisplayMode } from "../utilities/display";
 import { loadCoreForSPFxOrClassicWrapper } from "./classicLoader";
 import { logGenericCoreError } from "./services/loggingService";
@@ -13,13 +12,9 @@ async function initClassicCore() {
     return window.__SPFxExtensions.__CorePromise;
   }
   if (!window.__SPFxExtensions.Utils) {
-    let resolver: (obj: SPFxExtensionUtilsPlaceHolderProvider) => void;
 
-    const promise = new Promise<SPFxExtensionUtilsPlaceHolderProvider>(
-      (resolve) => {
-        resolver = resolve;
-      }
-    );
+
+    const { promise, resolve } = Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
 
     let spAppInitializationPromiseResolver = () => {
       // This does nothing. Comment to avoid eslint error
@@ -29,13 +24,12 @@ async function initClassicCore() {
       spAppInitializationPromiseResolver = resolve;
     });
 
-    const ctxInfo = await getCompatiblePageContextAsync();
     window.__SPFxExtensions.Utils = {
       displayMode: getClassicDisplayMode(),
       environmentType: "ClassicSharePoint",
       ConfiguratorUrl: "",
       placeHolderProviderPromise: promise,
-      placeHolderResolver: resolver!,
+      placeHolderResolver: resolve,
       placeHolderResolved: false,
       appManifestPromises: [],
       spAppInitializationPromise,

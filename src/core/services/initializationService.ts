@@ -1,5 +1,5 @@
+import { registerAppService } from "./appDefinitionService";
 import { registerAppInstanceService } from "./appInstanceService";
-import { registerAppService } from "./appService";
 import { cleanCacheOnUpgrade } from "./browserCache";
 import { loadModernApps } from "./componentLoaderService";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";

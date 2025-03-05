@@ -1,5 +1,4 @@
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
-import { launchSPFxExtensionApp } from "../services/appLauncher";
 import { CONFIGURATOR_APP_ID } from "../utilities/constants";
 import { initCoreServices } from "./services/initializationService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo } from "./services/loggingService";
@@ -17,7 +16,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
     }
     const configuratorUrl = coreIsInDebug ? import.meta.resolve(`./__spfxCoreConfigurator.js?v=${Date.now()}`) : window.__SPFxExtensions.__ConfiguratorUrl;
     const module = await import(configuratorUrl)
-    launchSPFxExtensionApp(module, newInstance);
+    return module.launch(newInstance);
   },
 }
 

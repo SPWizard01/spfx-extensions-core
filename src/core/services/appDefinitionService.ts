@@ -1,5 +1,6 @@
-import type { SPFxExtensionAppDefinition } from "../../models/appModel";
+import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
+import { loadAppInstances } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
@@ -34,43 +35,38 @@ export function ensureApp(appId: string) {
   return foundApp;
 }
 
+
 export function registerAppService() {
   if (!window.__SPFxExtensions.Apps) {
     window.__SPFxExtensions.Apps = [];
   }
 
   if (!window.__SPFxExtensions.RegisterApp) {
-    window.__SPFxExtensions.RegisterApp = async (appdef) => {
-      const app = ensureApp(appdef.id);
-      const isNew = app.name === APP_LOADING && app.description === APP_LOADING;
+    window.__SPFxExtensions.RegisterApp = async (newAppDefinition) => {
+      const appDefinition = ensureApp(newAppDefinition.id);
+      const isNew = appDefinition.name === APP_LOADING && appDefinition.description === APP_LOADING;
       if (!isNew) {
         logGenericCoreError(
           "App",
-          app,
+          appDefinition,
           "is being re-registered. This is not allowed."
         );
         return null;
       }
-      app.name = appdef.name;
-      app.description = appdef.description;
-      app.isWebPartApp = appdef.isWebPartApp;
-      app.hideAppSelectorWhenAppLoaded =
-        appdef.hideAppSelectorWhenAppLoaded ?? false;
-      app.hideConfiguratorButton = appdef.hideConfiguratorButton ?? false;
-      app.icon = appdef.icon;
-      app.onInstanceRequested = appdef.onInstanceRequested;
-      app.instances.forEach((i) => {
-        try {
-          app.onInstanceRequested?.(i).catch((e) => {
-            logInstanceRequestedError(app, e);
-          });
-        } catch (e) {
-          logInstanceRequestedError(app, e);
-        }
+      appDefinition.name = newAppDefinition.name;
+      appDefinition.description = newAppDefinition.description;
+      appDefinition.isWebPartApp = newAppDefinition.isWebPartApp;
+      appDefinition.hideAppSelectorWhenAppLoaded =
+        newAppDefinition.hideAppSelectorWhenAppLoaded ?? false;
+      appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
+      appDefinition.icon = newAppDefinition.icon;
+      appDefinition.onInstanceRequested = newAppDefinition.onInstanceRequested;
+      appDefinition.instances.forEach((appInstance) => {
+        loadAppInstances(appDefinition, appInstance);
       });
-      executeAppAddedEvents(app);
+      executeAppAddedEvents(appDefinition);
 
-      return app;
+      return appDefinition;
     };
   }
 }

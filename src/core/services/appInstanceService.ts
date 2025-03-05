@@ -7,24 +7,15 @@ import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
-import { ensureApp } from "./appService";
+import { ensureApp } from "./appDefinitionService";
+import { loadAppInstances as loadAppInstance, unmountAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
 
 const emptyDummy = () => {
   throw "This should not happen";
 };
 
-function unmountAppInstance(
-  appDef: SPFxExtensionAppDefinition,
-  appInstance: SPFxExtensionAppInstance
-) {
-  appInstance.executeListeners("onConfigurationClose", undefined);
-  appInstance.allEventListeners.splice(0, appInstance.allEventListeners.length);
-  const idx = appDef.instances.findIndex((i) => i.key === appInstance.key);
-  if (idx > -1) {
-    appDef.instances.splice(idx, 1);
-  }
-}
+
 
 function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   const removeInstanceEventListener = (
@@ -75,7 +66,7 @@ function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   appInstance.executeListeners = executeInstanceListeners;
 }
 
-function executeAppInstanceListeners(
+function executeInstanceAddedListeners(
   appDefinition: SPFxExtensionAppDefinition,
   appInstance: SPFxExtensionAppInstance
 ) {
@@ -99,13 +90,7 @@ function executeAppInstanceListeners(
 export function createAppInstance(
   runTimeConfig: SPFxExtensionAppRuntimeConfig
 ) {
-  // these will be replaced later on
-
-  let loadPromiseResolve: (value?: any) => void;
-
-  const loadPromise = new Promise<void>((resolve) => {
-    loadPromiseResolve = resolve;
-  });
+  const { promise: instanceLoadPromise, resolve: instanceLoadPromiseResolver } = Promise.withResolvers<void>()
 
   const appInstance: SPFxExtensionAppInstance = {
     key: window.crypto.randomUUID(),
@@ -120,11 +105,9 @@ export function createAppInstance(
     allEventListeners: [],
     addEventListener: emptyDummy,
     executeListeners: emptyDummy,
-    whenLoad: loadPromise,
-    whenLoadResolve: emptyDummy,
+    instanceLoadPromise,
+    instanceLoadPromiseResolver,
   };
-
-  appInstance.whenLoadResolve = loadPromiseResolve!;
 
   registerEventHandlers(appInstance);
   return appInstance;
@@ -141,22 +124,14 @@ export function registerAppInstanceService() {
       logGenericCoreDebug(`Creating app instance for app`, appId);
       const appInstance = createAppInstance(runTimeConfig);
       foundApp.instances.push(appInstance);
-      appInstance.unmount = () => {
-        unmountAppInstance(foundApp, appInstance);
-      };
 
-      executeAppInstanceListeners(foundApp, appInstance);
+      executeInstanceAddedListeners(foundApp, appInstance);
       //this will only be available once the app registration passes, ensureApp does not create this property
-      try {
-        foundApp.onInstanceRequested?.(appInstance).catch((e) => {
-          logInstanceRequestedError(foundApp, e);
-        });
-      }
-      catch (e) {
-        logInstanceRequestedError(foundApp, e);
-      }
+      loadAppInstance(foundApp, appInstance);
 
       return appInstance;
     };
   }
 }
+
+

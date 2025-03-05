@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -37,8 +37,7 @@
     "./utils/display": "./dist/utilities/display.js",
     "./plugins/bun": "./dist/plugins/bun/index.js",
     "./plugins/esbuild": "./dist/plugins/esbuild/index.js",
-    "./plugins/webpack": "./dist/plugins/webpack/index.js",
-    "./package.json": "./package.json"
+    "./plugins/webpack": "./dist/plugins/webpack/index.js"
   },
   "access": "public",
   "description": "Core Library used by SPFxExtensions",

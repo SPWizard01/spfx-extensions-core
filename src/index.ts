@@ -14,4 +14,6 @@ export * from "./models/hubData";
 export * from "./models/importLoader";
 export * from "./models/spoContextInitializationData";
 export * from "./models/teamsModels";
+export * from "./services/spContextService";
+export * from "./utilities/display";
 

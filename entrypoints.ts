@@ -4,9 +4,6 @@ export const coreEntryPoints = [
     "./src/core/__spfxCore.ts",
     // "./src/core/coreClassicWrapper.ts",
     // "./src/core/coreClassicCustomAction.ts",
-    "./src/services/spContextService.ts",
-    "./src/services/appLauncher.ts",
-    "./src/utilities/display.ts"
 ]
 
 export const pluginEntryPoints = [

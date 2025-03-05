@@ -11,27 +11,6 @@ import type {
  */
 export type SPFxExtensionAppCleanup = () => void;
 
-/**
- * A method that starts your application and returns a cleanup method
- */
-export type SPFxExtensionAppEntryPoint = (
-  instance: SPFxExtensionAppInstance
-) => SPFxExtensionAppCleanup | Promise<SPFxExtensionAppCleanup>;
-
-export type SPFxExtensionAppLaunch = (
-  appEntryPoint: SPFxExtensionAppEntryPoint
-) => void;
-
-/**
- * Describes a ESM Module that should expose a method that accepts an instance to be launched
- */
-export interface SPFxExtensionAppModule {
-  /**
-   * Should return a method that will be called once the app instance is unmounted
-   */
-  launch: SPFxExtensionAppEntryPoint;
-}
-
 export interface SPFxExtensionAppInstance {
   key: string;
   isLoaded: boolean;
@@ -79,11 +58,11 @@ export interface SPFxExtensionAppInstance {
   /**
    * this ensures that webpart config change events are only called on the instance when its loaded
    */
-  whenLoad: Promise<void>;
+  instanceLoadPromise: Promise<void>;
   /**
    * this should only be called by the core when instance is loaded and the promise is used by spfx
    */
-  whenLoadResolve(value?: any): void;
+  instanceLoadPromiseResolver(value?: any): void;
 }
 
 export interface SPFxExtensionAppIcon {
@@ -134,7 +113,7 @@ export interface SPFxExtensionAppDefinition {
    *
    * This method is also called by the SPFx and Core solutions.
    */
-  onInstanceRequested?(newInstance: SPFxExtensionAppInstance): Promise<void>;
+  onInstanceRequested?(newInstance: SPFxExtensionAppInstance): Promise<SPFxExtensionAppCleanup>;
 }
 
 export type SPFxExtensionAppRegistration = Omit<SPFxExtensionAppDefinition, "instances">;
