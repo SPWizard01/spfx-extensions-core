@@ -1,5 +1,4 @@
-import { type BuildOutput, CryptoHasher } from "bun";
-// import { pathToFileURL, write } from "bun";
+import type { BuildOutput } from "bun";
 import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
@@ -22,7 +21,7 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
         cacheString: options.cacheString ?? "",
     }
     if (options.generateCacheString) {
-        const hash = CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")
+        const hash = Bun.CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")
         manifestToWrite.cacheString = hash
     }
 

@@ -4,7 +4,7 @@ await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
 const result = await build({
     entrypoints: coreEntryPoints,
-    sourcemap: "linked",
+    sourcemap: "none",
     outdir: "./dist",
     target: "browser",
     format: "esm",
@@ -13,19 +13,20 @@ const result = await build({
     },
     drop: ["console.debug", "console.log"],
     minify: prod,
+    splitting: false,
 })
 const pluginResult = await build({
     entrypoints: pluginEntryPoints,
-    sourcemap: "linked",
+    sourcemap: "none",
     outdir: "./dist/plugins",
     target: "node",
     format: "esm",
     minify: false,
+    splitting: false
 })
 
 // 
 
-await $`tsc --noEmit -p ./tsconfig.json`
 function printOutput(result: BuildOutput) {
     console.table(result.outputs.map((bldArt) => {
         return {
@@ -37,3 +38,4 @@ function printOutput(result: BuildOutput) {
 
 printOutput(result);
 printOutput(pluginResult);
+await $`tsc -p ./tsconfig.json`
