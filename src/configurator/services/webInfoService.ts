@@ -1,4 +1,5 @@
-import type { IWebInfo, SPFI } from "@pnp/sp/presets/all";
+import type { SPFI } from "@pnp/sp";
+import type { IWebInfo } from "@pnp/sp/webs";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import { getPnPSP } from "./pnpService";
 

@@ -1,11 +1,4 @@
-import {
-  Badge,
-  Link,
-  makeStyles,
-  MessageBar,
-  Text,
-  Title2,
-} from "@fluentui/react-components";
+import { Badge, Link, makeStyles, Title2 } from "@fluentui/react-components";
 import { useSignals } from "@preact/signals-react/runtime";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
@@ -46,9 +39,8 @@ const useStyles = makeStyles({
 });
 
 export function Index() {
-  const styles = useStyles();
   useSignals();
-
+  const styles = useStyles();
   return (
     <div className={styles.container}>
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>

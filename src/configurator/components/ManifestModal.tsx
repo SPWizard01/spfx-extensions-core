@@ -7,15 +7,10 @@ import {
   DialogSurface,
   DialogTitle,
   DialogTrigger,
-  Link,
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { useComputed } from "@preact/signals-react";
-import { useState } from "react";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import {
   configurationWebSP,
   selectedAppItem,

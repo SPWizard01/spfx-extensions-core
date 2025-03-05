@@ -1,5 +1,4 @@
 import {
-  Button,
   createTableColumn,
   DataGrid,
   DataGridBody,
@@ -7,35 +6,25 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
-  Label,
   Link,
-  Spinner,
   TableCellLayout,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
-import { Delete20Regular, FolderRegular } from "@fluentui/react-icons";
-import { useSignals } from "@preact/signals-react/runtime";
-import { useEffect, useState } from "react";
-import { DEBUG_KEYS } from "../../utilities/debug";
+import { FolderRegular } from "@fluentui/react-icons";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import {
   allAppItems,
   configurationWebSP,
-  deletingAppItem,
   selectedAppItem,
   updateApp,
 } from "../runtimeStore";
 import {
-  getAllAppCollections,
   getEnabledAppCollection,
-  removeAppCollection,
   updateAppCollection,
 } from "../services/appCollection";
-import { useRowStack } from "../styles/stack";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
-import { ManifestModal } from "./ManifestModal";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,

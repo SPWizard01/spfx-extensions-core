@@ -1,4 +1,3 @@
-import { HttpRequestError } from "@pnp/queryable/behaviors/parsers";
 import { type SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
@@ -12,30 +11,30 @@ const excludedFolders = ["Forms"];
 
 export async function addAppCollection(sp: SPFI, collectionName: string) {
     try {
-      await ensureSPFxExtensionsFolder(sp);
-      const rootFolderQuery = sp.web.lists.getByTitle(
-        SPFX_EXTENSIONS_FOLDER
-      ).rootFolder;
-      const allAppCollectionsData = await getAllAppCollections(sp);
-      const enabledAppsData = await getEnabledAppCollection(sp);
-      if (!allAppCollectionsData.some((f) => f === collectionName)) {
-        await rootFolderQuery.folders.addUsingPath(collectionName);
-        allAppCollectionsData.push(collectionName);
-      }
-      allAppItems.value = await getAllAppItems(
-        sp,
-        allAppCollectionsData,
-        enabledAppsData.data
-      );
-      return allAppItems.value.find((f) => f.name === collectionName)!;
+        await ensureSPFxExtensionsFolder(sp);
+        const rootFolderQuery = sp.web.lists.getByTitle(
+            SPFX_EXTENSIONS_FOLDER
+        ).rootFolder;
+        const allAppCollectionsData = await getAllAppCollections(sp);
+        const enabledAppsData = await getEnabledAppCollection(sp);
+        if (!allAppCollectionsData.some((f) => f === collectionName)) {
+            await rootFolderQuery.folders.addUsingPath(collectionName);
+            allAppCollectionsData.push(collectionName);
+        }
+        allAppItems.value = await getAllAppItems(
+            sp,
+            allAppCollectionsData,
+            enabledAppsData.data
+        );
+        return allAppItems.value.find((f) => f.name === collectionName)!;
     } catch (error: any) {
-      return error?.message;
+        return error?.message;
     }
 }
 
 export async function removeAppCollection(sp: SPFI, collectionName: string) {
     const extList = sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER);
-    
+
     const rootFolderQuery = extList.rootFolder;
     try {
         const folder = await rootFolderQuery.folders.getByUrl(collectionName)();

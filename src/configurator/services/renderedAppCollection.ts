@@ -1,4 +1,4 @@
-import type { SPFI } from "@pnp/sp/presets/all";
+import type { SPFI } from "@pnp/sp";
 import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 import { MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";

@@ -9,20 +9,10 @@ import {
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
-import {
-  effect,
-  signal,
-  useComputed,
-  useSignal,
-  useSignalEffect,
-} from "@preact/signals-react";
+import { useSignalEffect } from "@preact/signals-react";
 import { useState } from "react";
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
-import {
-  GetCacheStringForAsset,
-  GetCacheStringHashForAssetAsync,
-  GetRandomCacheStringAsync,
-} from "../../core/services/browserCache";
+import { GetRandomCacheStringAsync } from "../../core/services/browserCache";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";

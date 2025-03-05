@@ -3,7 +3,7 @@ import { logGenericCoreError } from "../../core/services/loggingService";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import { configrationWebUrl, configurationWebSP } from "../runtimeStore";
+import { configrationWebUrl } from "../runtimeStore";
 
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     const allApps = [
