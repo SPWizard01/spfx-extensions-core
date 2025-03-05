@@ -1,10 +1,11 @@
-import type { BuildOutput } from "bun";
+import { type BuildOutput, CryptoHasher } from "bun";
 // import { pathToFileURL, write } from "bun";
 import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
     outdir: string;
+    generateCacheString?: boolean;
 }
 export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptions, buildOutput: BuildOutput) {
     if (!options.includeAllOutputJs && (!options.appRelativeEntryPointUrls || options.appRelativeEntryPointUrls.length === 0)) {
@@ -16,7 +17,13 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
         enabled: options.enabled ?? true,
         enabledApps: options.enabledApps ?? [{ enabledAppIds: ["*"], webId: "*" }],
         isESM: options.isESM,
-        enabledOnAllHubSites: options.enabledOnAllHubSites ?? true
+        enabledOnAllHubSites: options.enabledOnAllHubSites ?? true,
+        enableCaching: options.enableCaching ?? false,
+        cacheString: options.cacheString ?? "",
+    }
+    if (options.generateCacheString) {
+        const hash = CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")
+        manifestToWrite.cacheString = hash
     }
 
     const entryPoints = buildOutput.outputs.filter(o => o.kind === "entry-point");
@@ -35,7 +42,7 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
         const epUrl = Bun.pathToFileURL(ep.path);
         const relativePath = epUrl.href.replace(`${basePathUrl.href}/`, "");
         // const nameNoJs = relativePath.replace(".js", "");
-        const hashedImport = `${relativePath}`.replace(dist,"");
+        const hashedImport = `${relativePath}`.replace(dist, "");
         epTable.push(hashedImport);
     }
     manifestToWrite.appRelativeEntryPointUrls = epTable;

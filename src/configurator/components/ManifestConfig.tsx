@@ -1,4 +1,5 @@
 import {
+  Button,
   Dropdown,
   Input,
   Label,
@@ -20,6 +21,7 @@ import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import {
   GetCacheStringForAsset,
   GetCacheStringHashForAssetAsync,
+  GetRandomCacheStringAsync,
 } from "../../core/services/browserCache";
 import { importEntryPoint } from "../../core/services/componentLoaderService";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
@@ -57,15 +59,8 @@ interface ManifestConfigProps {}
 export function ManifestConfig({}: ManifestConfigProps) {
   const app = selectedAppItem.value;
   const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
-  const selectedAppHash = useSignal("Not calculated");
   useSignalEffect(() => {
     if (!selectedAppItem.value) return;
-    if (selectedAppItem.value.manifest.enableCaching) {
-      GetCacheStringHashForAssetAsync(
-        selectedAppItem.value.manifest.cacheStart ?? new Date().getTime(),
-        selectedAppItem.value.manifest.cacheDuration ?? 60
-      ).then((hash) => (selectedAppHash.value = hash));
-    }
     getJsFiles();
   });
   const customStyles = useCustomStyles();
@@ -155,17 +150,27 @@ export function ManifestConfig({}: ManifestConfigProps) {
           }}
         />
         <Input
-          placeholder="Cache duration"
-          type="number"
-          value={`${app.manifest.cacheDuration ?? 60}`}
-          onChange={(ev, data) => {
-            app.manifest.cacheStart = new Date().getTime();
-            app.manifest.cacheDuration = Number(data.value) ?? 60;
+          placeholder="Cache string"
+          disabled={!app.manifest.enableCaching}
+          type="text"
+          value={app.manifest.cacheString ?? ""}
+          onChange={(_ev, data) => {
+            app.manifest.cacheString = data.value;
             updateSelectedApp(app);
           }}
         />
+        <Button
+          size="small"
+          disabled={!app.manifest.enableCaching}
+          onClick={async () => {
+            app.manifest.cacheString = await GetRandomCacheStringAsync();
+            updateSelectedApp(app);
+          }}
+        >
+          Generate
+        </Button>
         {app.manifest.enableCaching ? (
-          <Label size="small">Cache string: {selectedAppHash.value}</Label>
+          <Label size="small">Cache string: {app.manifest.cacheString}</Label>
         ) : null}
       </div>
       <FilePicker />

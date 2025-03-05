@@ -35,10 +35,6 @@ export interface SPFxExtensionAppManifest {
      * If set to true, the app will be loaded as ESM module and the app owner is responsible for providing a default export in the entry point as `SPFxExtensionAppRegistration[]`.
      */
     isESM: boolean;
+    cacheString?: string;
     enableCaching?: boolean;
-    cacheStart?: number;
-    /**
-     * Minutes to cache every entry point
-     */
-    cacheDuration?: number;
 }

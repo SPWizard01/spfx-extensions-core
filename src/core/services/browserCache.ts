@@ -46,3 +46,8 @@ export async function GetCacheStringHashForAssetAsync(start: number, cacheTimeMi
     const cacheDateStr = await getContentDigest(cachedTime, 13);
     return cacheDateStr;
 }
+
+export function GetRandomCacheStringAsync() {
+    
+    return getContentDigest(`${new Date().getTime()}`, 13);
+}

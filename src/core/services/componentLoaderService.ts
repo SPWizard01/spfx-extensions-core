@@ -176,19 +176,17 @@ async function parseManifestAndImportEntryPoints(
     return returnPromiseArray;
   }
   for (const entryUrl of manifestToParse.appManifest.appRelativeEntryPointUrls) {
-    const ep = entryUrl.replace(/\.\.\/?/g, "");
+    const ep = entryUrl.replace(/\.\.\/?/g, "asdasd");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
 
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
     const jsUrl = new URL(fullJSUrl);
-    if (manifestToParse.appManifest.enableCaching) {
-
-      GetCacheStringForAsset((new Date()).getTime(), 60);
-      const cacheDuration = manifestToParse.appManifest.cacheDuration ?? 60;
-      const cacheString = isAppInDebug(manifestToParse.name) ? (new Date()).getTime() : (new Date()).setMinutes(cacheDuration, 0, 0)
+    if (manifestToParse.appManifest.cacheString && manifestToParse.appManifest.enableCaching) {
+      const cacheString = isAppInDebug(manifestToParse.name) ? `${(new Date()).getTime()}` : manifestToParse.appManifest.cacheString
       jsUrl.searchParams.set("v", `${cacheString}`);
     }
+    // if()
     const isAllowed = await isFileAllowedToRun(jsUrl);
     if (!isAllowed) {
       continue;

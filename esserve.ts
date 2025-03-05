@@ -23,7 +23,7 @@ const ctx = await context({
     metafile: true,
     plugins: [
         esbuildHMRPlugin(33355),
-        manifestPlugin({isESM: true, includeAllOutputJs: true}),
+        manifestPlugin({ isESM: true, includeAllOutputJs: true, generateCacheString: true }),
         {
             name: "my-plugin",
             setup(build) {
@@ -43,7 +43,7 @@ const ctx = await context({
                         }));
                         console.log("Performing TSC check");
                         const tsc = (await $`tsc`.nothrow().quiet());
-                        if(tsc.exitCode === 0) {
+                        if (tsc.exitCode === 0) {
                             console.log(pc.bgGreen("✔ [SUCCESS]"), "TSC check passed");
                         } else {
                             console.log(pc.bgRed("✘ [ERROR]"), `\r\n${tsc.stdout.toString()}`);

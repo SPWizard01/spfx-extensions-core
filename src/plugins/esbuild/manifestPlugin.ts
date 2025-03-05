@@ -1,9 +1,11 @@
+import { hash } from "crypto";
 import type { Plugin, PluginBuild } from "esbuild";
 import { writeFile } from "fs/promises";
 import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 interface SPFxESBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
+    generateCacheString?: boolean;
 }
 export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugin {
     return {
@@ -23,7 +25,13 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
                     enabled: options.enabled ?? true,
                     enabledApps: options.enabledApps ?? [{ enabledAppIds: ["*"], webId: "*" }],
                     isESM: options.isESM,
-                    enabledOnAllHubSites: options.enabledOnAllHubSites ?? true
+                    enabledOnAllHubSites: options.enabledOnAllHubSites ?? true,
+                    enableCaching: options.enableCaching ?? false,
+                    cacheString: options.cacheString ?? "",
+                }
+                if (options.generateCacheString) {
+                    const hashedString = hash("sha1", `${new Date().getTime()}`, "hex")
+                    manifestToWrite.cacheString = hashedString
                 }
                 const outputDir = build.initialOptions.outdir ?? "";
                 const manifestLocation = `${(outputDir ? `${outputDir}/` : ``)}manifest.txt`;

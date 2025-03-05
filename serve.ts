@@ -1,6 +1,6 @@
 import { file } from "bun";
 import { startBunDevServer } from "bun-dev-server";
-
+import { bunManifestWriter } from "./src/plugins/bun/manifestPlugin";
 startBunDevServer({
     buildConfig: {
         entrypoints: ["./src/core/__spfxCore.ts", "./src/configurator/__spfxCoreConfigurator.ts"],
@@ -32,4 +32,12 @@ startBunDevServer({
     hotReload: "plugin",
     reloadOnChange: true,
     watchDelay: 2000,
+    afterBuild(output, env) {
+        bunManifestWriter({
+            outdir: "./dist",
+            isESM: true,
+            includeAllOutputJs: true,
+            generateCacheString: true
+        }, output);
+    },
 }, import.meta)
