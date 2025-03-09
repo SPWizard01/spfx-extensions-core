@@ -8,8 +8,8 @@ import type {
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
 import { ensureApp } from "./appDefinitionService";
-import { loadAppInstances as loadAppInstance, unmountAppInstance } from "./appServices";
-import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
+import { loadAppInstances as loadAppInstance } from "./appServices";
+import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 const emptyDummy = () => {
   throw "This should not happen";

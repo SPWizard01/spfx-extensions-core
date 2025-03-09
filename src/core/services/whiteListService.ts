@@ -21,7 +21,6 @@ async function ensureAppWhiteListFields() {
         if (req.status === 200) {
             const data = await req.json();
             const fields = data.d.results;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fieldNames = fields.map((f: any) => f.InternalName) as string[];
             if (!fieldNames.some((internalName) => internalName === "EntryPointUrl")) {
                 await ensureMultiLineField(fieldsUrl, "EntryPointUrl", "Full URL to the Entrypoint JS file, if * is specified all entries will be allowed.", true);
@@ -32,6 +31,7 @@ async function ensureAppWhiteListFields() {
         logGenericCoreError("Error while ensuring list fields.", err);
     }
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function ensureTextField(fieldsUrl: string, fieldInternalName: string, required: boolean, digestValue: string) {
     const addFieldReq = await fetch(
         fieldsUrl,

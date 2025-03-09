@@ -8,6 +8,7 @@ const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
 const CORE_MANIFEST_CHECK_INTERVAL = 60000;
 let manifestWatch = 0;
 let fistTimeChecked = false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getRandomArbitrary(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min);
 }
@@ -48,7 +49,7 @@ export async function performManifestCheck(
         return;
       }
     }
-  } catch (e) {
+  } catch (_e) {
     localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   }
   try {

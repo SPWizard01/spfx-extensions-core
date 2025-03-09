@@ -67,7 +67,7 @@ export function FilePicker() {
       <div className={row.stackItem}>
         <Dropzone
           useFsAccessApi={false}
-          onDropAccepted={(files, event) => {
+          onDropAccepted={(files, _event) => {
             if (files.length === 1 && files[0].name.endsWith(".zip")) {
               getZipManifestContents(files[0]).then((result) => {
                 const fl: UploadStatus[] = result.data.map((file) => {

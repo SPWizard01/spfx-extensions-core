@@ -23,11 +23,11 @@ export function debuggingEnabled() {
   return false;
 }
 
-export function addESBuildDebugging(debugKey: string, prodPublicPath: string) {
+export function addESBuildDebugging(debugKey?: string, prodPublicPath?: string) {
   if (!debugKey) {
     throw "Debug key cannot be empty";
   }
-  if (typeof prodPublicPath == undefined || typeof prodPublicPath == null) {
+  if (!prodPublicPath) {
     throw "Prod public path cannot be undefined or null";
   }
   const key = `${DEBUG_KEYS.SPFXEXT}${debugKey}`;

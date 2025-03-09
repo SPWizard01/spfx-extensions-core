@@ -17,17 +17,16 @@ import {
   updateSelectedApp,
 } from "../runtimeStore";
 import { updateAppManifest } from "../services/appManifest";
-import { getAllAppJSFiles } from "../services/fileService";
 import { ManifestConfig } from "./ManifestConfig";
 
-interface ManifestModalProps {}
 
-export function ManifestModal({}: ManifestModalProps) {
+export function ManifestModal() {
   async function onOpenChange(
     _event: DialogOpenChangeEvent,
     data: DialogOpenChangeData
   ) {
     if (data.open) {
+      console.log("Dialog opened");
     }
   }
 

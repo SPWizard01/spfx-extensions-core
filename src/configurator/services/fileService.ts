@@ -1,3 +1,4 @@
+import { Caching } from "@pnp/queryable";
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import { MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
@@ -121,7 +122,7 @@ export async function* addFiles(sp: SPFI, appName: string, fileContents: FileCon
 
 export async function getAllAppFiles(sp: SPFI, appName: string) {
     //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)
-    const webInfo = await sp.web();
+    const webInfo = await sp.web.using(Caching())();
     const files = await sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).items.select("FileLeafRef", "FileDirRef").filter(`FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`)<AppCollectionFiles[]>();
     const relativeFiles: string[] = [];
     files.forEach((file) => {

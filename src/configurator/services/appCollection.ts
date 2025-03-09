@@ -1,6 +1,6 @@
 import { type SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import { APPCOLLECTION_MANIFEST_NAME, EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { allAppItems } from "../runtimeStore";
 import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
@@ -37,7 +37,7 @@ export async function removeAppCollection(sp: SPFI, collectionName: string) {
 
     const rootFolderQuery = extList.rootFolder;
     try {
-        const folder = await rootFolderQuery.folders.getByUrl(collectionName)();
+        const _folder = await rootFolderQuery.folders.getByUrl(collectionName)();
         await deleteRootFolderRecursively(sp, collectionName);
     }
     catch (error) {

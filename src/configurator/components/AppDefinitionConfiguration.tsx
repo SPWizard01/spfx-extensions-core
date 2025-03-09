@@ -6,12 +6,17 @@ import {
   type SelectionEvents,
 } from "@fluentui/react-components";
 
-import { useEffect, useState } from "react";
+import { useSignalEffect } from "@preact/signals-react";
+import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import { selectedWebAvailableWebs, updateSelectedApp } from "../runtimeStore";
+import {
+  selectedAppItem,
+  selectedWebAvailableWebs,
+  updateSelectedApp,
+} from "../runtimeStore";
 import { getAppDefinitions } from "../services/appDefinitionImport";
 interface AppDefinitionConfigurationProps {
-  app: AppCollectionConfigurationItem;
+  app?: AppCollectionConfigurationItem;
 }
 
 interface AppIdName {
@@ -29,16 +34,15 @@ interface WebIdAppIdMap extends WebIdName {
   enabledApps: string[];
 }
 
-export function AppDefinitionConfiguration({
-  app,
-}: AppDefinitionConfigurationProps) {
+export function AppDefinitionConfiguration(_props: AppDefinitionConfigurationProps) {
+  const app = selectedAppItem.value;
   const [Alldefs, setAllDefs] = useState<AppIdName[]>([]);
   const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
   const [selectedWeb, setSelectedWeb] = useState<string>("");
 
   function getSelectedAppValue() {
     const selectedWebIdApps =
-      app.manifest.enabledApps.find((a) => a.webId === selectedWeb)
+      app?.manifest.enabledApps.find((a) => a.webId === selectedWeb)
         ?.enabledAppIds ?? [];
 
     const values = selectedWebIdApps.map((a) => {
@@ -47,8 +51,8 @@ export function AppDefinitionConfiguration({
     return values.join(", ");
   }
 
-  async function downloadData() {
-    const a = await getAppDefinitions(app);
+  async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
+    const allAppDefinitions = await getAppDefinitions(downloadDataApp);
     const allWebIds: WebIdAppIdMap[] = [
       { Id: "*", Name: "All", Url: "*", enabledApps: [] },
     ];
@@ -61,7 +65,7 @@ export function AppDefinitionConfiguration({
         enabledApps: [],
       }))
     );
-    app.manifest.enabledApps.forEach((w) => {
+    downloadDataApp.manifest.enabledApps.forEach((w) => {
       const web = allWebIds.find((w1) => w1.Id === w.webId);
       if (web) {
         web.enabledApps = w.enabledAppIds;
@@ -75,17 +79,19 @@ export function AppDefinitionConfiguration({
       }
     });
     setWebIdMap(allWebIds);
-    setAllDefs(a);
+    setAllDefs(allAppDefinitions);
   }
-  useEffect(() => {
-    downloadData();
-  }, []);
+  useSignalEffect(() => {
+    if (!app) return;
+    downloadData(app);
+  });
+  if (!app) return null;
   return (
     <>
       <Label>Enabled On Webs: </Label>
       <Dropdown
         multiselect={false}
-        onOptionSelect={(ev: SelectionEvents, data: OptionOnSelectData) => {
+        onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
           setSelectedWeb(data.optionValue ?? "");
         }}
       >
@@ -103,7 +109,7 @@ export function AppDefinitionConfiguration({
             ?.enabledAppIds ?? []
         }
         value={getSelectedAppValue()}
-        onOptionSelect={(ev: SelectionEvents, data: OptionOnSelectData) => {
+        onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
           const arrayEntry = app.manifest.enabledApps.find(
             (a) => a.webId === selectedWeb
           );

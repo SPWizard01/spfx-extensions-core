@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { analyzeMetafile, context } from "esbuild";
+import { context } from "esbuild";
 import { esbuildHMRPlugin } from "esbuild-hot-reload";
 import pc from "picocolors";
 import { manifestPlugin } from "./src/plugins/esbuild/manifestPlugin";
@@ -57,8 +57,8 @@ const ctx = await context({
 })
 
 await ctx.watch()
-ctx.rebuild
-const a = await ctx.serve({
+// ctx.rebuild
+const _a = await ctx.serve({
     servedir: "./dist",
     certfile: "./serve_cert.pem",
     keyfile: "./serve_key.pem",

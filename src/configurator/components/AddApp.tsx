@@ -22,9 +22,8 @@ import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../runtimeStore";
 import { addAppCollection } from "../services/appCollection";
-interface AddAppProps {}
 
-export function AddApp({}: AddAppProps) {
+export function AddApp() {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   async function dialogOpenChange(

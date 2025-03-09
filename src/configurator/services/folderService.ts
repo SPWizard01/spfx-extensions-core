@@ -1,7 +1,7 @@
 import type { SPFI } from "@pnp/sp";
 import type { IFolder } from "@pnp/sp/folders";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
-import { configurationWebInfo, configurationWebSP } from "../runtimeStore";
+import { configurationWebInfo } from "../runtimeStore";
 const listDescription = "This folder contains extensions that are loaded by the SPFxExtensions application.";
 
 export function ensureSPFxExtensionsFolder(sp: SPFI) {

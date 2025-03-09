@@ -1,5 +1,5 @@
 import type { ConfigurationListData } from "../../models/configurationList";
-import { APPCOLLECTION_MANIFEST_NAME, CONFIGURATOR_PAGE_URL, SPFX_EXTENSIONS_DATA_SITE, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
+import { APPCOLLECTION_MANIFEST_NAME, CONFIGURATOR_PAGE_URL, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getConfigurationListData } from "./configurationListService";
 import { ensureSPFxWeb } from "./configurationWebService";

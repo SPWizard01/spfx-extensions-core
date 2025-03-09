@@ -11,11 +11,7 @@ import {
 } from "@fluentui/react-components";
 import { useSignalEffect } from "@preact/signals-react";
 import { useState } from "react";
-import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { GetRandomCacheStringAsync } from "../../core/services/browserCache";
-import { importEntryPoint } from "../../core/services/componentLoaderService";
-import { getWebAbsoluteUrl } from "../../core/services/contextService";
-import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import {
   configurationWebIsRootHub,
   configurationWebSP,
@@ -23,7 +19,6 @@ import {
   updateSelectedApp,
 } from "../runtimeStore";
 import { getAllAppJSFiles } from "../services/fileService";
-import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
 import { FilePicker } from "./FilePicker";
 
@@ -42,11 +37,8 @@ const useCustomStyles = makeStyles({
     alignContent: "baseline",
   },
 });
-const queryWeb = getConfiguringWebUrl();
-const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
-interface ManifestConfigProps {}
-export function ManifestConfig({}: ManifestConfigProps) {
+export function ManifestConfig() {
   const app = selectedAppItem.value;
   const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
   useSignalEffect(() => {
@@ -55,18 +47,22 @@ export function ManifestConfig({}: ManifestConfigProps) {
   });
   const customStyles = useCustomStyles();
   async function onOptionSelect(
-    event: SelectionEvents,
+    _event: SelectionEvents,
     data: OptionOnSelectData
   ) {
-    for (const element of data.selectedOptions) {
-      const fullUrl = new URL(
-        `${cfgWeb}/${SPFX_EXTENSIONS_FOLDER}/${app!.name}/${element}`
-      );
-      console.log(`Check: ${fullUrl}`);
-      isFileAllowedToRun(fullUrl, true);
-      //if file is allowed to run then import it and set appdefinitions exported by that file to state so we can configure them.
-      //importEntryPoint(`${fullUrl}`,true);
-    }
+    app!.manifest.appRelativeEntryPointUrls = data.selectedOptions;
+    updateSelectedApp(app!);
+    // for (const element of data.selectedOptions) {
+    //   console.log(`Selected: ${element}`);
+
+    //   const fullUrl = new URL(
+    //     `${cfgWeb}/${SPFX_EXTENSIONS_FOLDER}/${app!.name}/${element}`
+    //   );
+    //   console.log(`Check: ${fullUrl}`);
+    //   isFileAllowedToRun(fullUrl, true);
+    //   //if file is allowed to run then import it and set appdefinitions exported by that file to state so we can configure them.
+    //   //importEntryPoint(`${fullUrl}`,true);
+    // }
   }
 
   async function getJsFiles() {
@@ -97,7 +93,7 @@ export function ManifestConfig({}: ManifestConfigProps) {
         </Dropdown>
       </div>
       <div className={customStyles.stack}>
-        <AppDefinitionConfiguration app={app} />
+        <AppDefinitionConfiguration />
       </div>
       <div className={customStyles.stack}>
         <Label>Is ESM: </Label>

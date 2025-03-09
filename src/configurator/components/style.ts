@@ -3,7 +3,7 @@ import { webLightTheme } from '@fluentui/react-components';
 export const baseStyle = {
   flex: 1,
   display: 'flex',
-  flexDirection: 'column' as 'column',
+  flexDirection: 'column' as const,
   alignItems: 'center',
   padding: '20px',
   borderWidth: 2,

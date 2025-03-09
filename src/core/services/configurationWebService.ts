@@ -51,7 +51,6 @@ async function getWebDataCached() {
     const appCatalogWebs = await getExtensionConfigFromDB("AppCatalogWebs");
     return appCatalogWebs?.Data ?? [];
 }
-//eslint-disable-next-line @typescript-eslint/no-explicit-any
 let ensureWebDataPromise: Promise<any> | undefined;
 export async function ensureSPFxWeb() {
     if (ensureWebDataPromise) {
@@ -63,7 +62,6 @@ export async function ensureSPFxWeb() {
 }
 async function ensureWebDataInternal() {
     const webData = await getWebDataCached();
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hasExtensionWeb = webData.some((web: any) => web.ServerRelativeUrl.endsWith(SPFX_EXTENSIONS_DATA_SITE));
     if (!hasExtensionWeb) {
         const apiData = await getWebData();

@@ -1,8 +1,6 @@
-import { computed, signal } from "@preact/signals-react";
+import { signal } from "@preact/signals-react";
 import { EMPTY_GUID, getWebAbsoluteUrl } from "../core/services/contextService";
-import { logGenericCoreInfo } from "../core/services/loggingService";
 import { EMPTY_APP_MANIFEST } from "../utilities/constants";
-import { isAppInDebug } from "../utilities/debug";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import { getAllAppCollections, getEnabledAppCollection } from "./services/appCollection";
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
@@ -47,7 +45,7 @@ export function updateApp(updatedApp: AppCollectionConfigurationItem) {
     const apps = JSON.parse(
         JSON.stringify(allAppItems.value)
     ) as AppCollectionConfigurationItem[];
-    let foundApp = apps.findIndex((w) => w.name === updatedApp.name);
+    const foundApp = apps.findIndex((w) => w.name === updatedApp.name);
     if (foundApp > -1) {
         apps.splice(foundApp, 1, updatedApp);
     } else {

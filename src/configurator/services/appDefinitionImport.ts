@@ -33,6 +33,10 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
                 logGenericCoreError(`Invalid app definition file ${fullUrl}, default export should be an array.`);
                 continue;
             }
+            if ((module.default as SPFxExtensionAppDefinition[]).some(def => !def.id || !def.name)) {
+                logGenericCoreError(`Invalid app definition file ${fullUrl}, default export should be an array of objects with id and name properties.`);
+                continue;
+            }
             module.default.forEach((appDef: SPFxExtensionAppDefinition) => {
                 allApps.push({
                     id: appDef.id,

@@ -3,7 +3,7 @@ import { getClassicDisplayMode } from "../utilities/display";
 import { loadCoreForSPFxOrClassicWrapper } from "./classicLoader";
 import { logGenericCoreError } from "./services/loggingService";
 
-const IS_MODERN_EXPIRIENCE = !!!window._spBodyOnLoadFunctions;
+const IS_MODERN_EXPIRIENCE = !window._spBodyOnLoadFunctions;
 async function initClassicCore() {
   if (IS_MODERN_EXPIRIENCE) {
     logGenericCoreError(

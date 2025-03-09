@@ -26,9 +26,7 @@ async function ensureConfigurationListDataField() {
         if (req.status === 200) {
             const data = await req.json();
             const fields = data.d.results;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fieldNames = fields.map((f: any) => f.InternalName);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const titleField = fields.find((f: any) => f.InternalName === "Title");
             if (!titleField) {
                 logGenericCoreError("Title field not found.");
@@ -151,7 +149,7 @@ async function getConfigurationListItemsFromAPI() {
             Accept: "application/json;odata=verbose",
         }
     }
-    let req = await fetch(
+    const req = await fetch(
         requestUrl, {
         ...config
     }
@@ -160,8 +158,8 @@ async function getConfigurationListItemsFromAPI() {
         logGenericCoreError("Unable to fetch configuration list items.");
         return [];
     }
-    let data = await req.json();
-    let results = data.d.results as ConfigurationListData[];
+    const data = await req.json();
+    const results = data.d.results as ConfigurationListData[];
     return results;
 }
 
@@ -194,7 +192,7 @@ async function createDefaultListItems() {
 
 
 export function getConfigurationListData(fresh = false) {
-    if(fresh) {
+    if (fresh) {
         return getConfigurationListItemsFromAPI();
     }
     if (configurationListDataPromise) {

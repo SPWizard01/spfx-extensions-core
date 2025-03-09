@@ -15,11 +15,22 @@ import type {
 } from "../../models/cache";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { DEBUG_KEYS, isAppInDebug, isInDebug } from "../../utilities/debug";
-import { GetCacheStringForAsset } from "./browserCache";
 import { currentSiteIsRootHub, getWebId } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
+
+interface AppCollectionValidation {
+  manifest: string[];
+  isAppCollection: true;
+}
+
+interface AppManifestValidation {
+  manifest: SPFxExtensionAppManifest;
+  isAppCollection: false;
+}
+
+type ManifestValidationOptions = AppCollectionValidation | AppManifestValidation;
 
 interface AssetPromise {
   url: string;
@@ -27,7 +38,7 @@ interface AssetPromise {
   manifest: AppFolderManifest;
 }
 
-function validateAppCollectionManifest(manifest: any) {
+function validateAppCollectionManifest(manifest: string[]) {
   if (!Array.isArray(manifest)) {
     throw `${SPFxExtensionCore} App manifest should be an array of strings`;
   }
@@ -56,13 +67,15 @@ function validateAppManifest(manifest: SPFxExtensionAppManifest) {
   }
 }
 
-function validateManifest(manifest: any, isAppCollection: boolean) {
-  if (!manifest) {
+function validateManifest(opts: ManifestValidationOptions) {
+  if (!opts.manifest) {
     throw `${SPFxExtensionCore} Manifest supplied is undefined`;
   }
-  isAppCollection
-    ? validateAppCollectionManifest(manifest)
-    : validateAppManifest(manifest);
+  if (opts.isAppCollection) {
+    validateAppCollectionManifest(opts.manifest)
+  } else {
+    validateAppManifest(opts.manifest);
+  }
 }
 
 //@param [cacheTime=3600000] use ```3600000``` to cache for one hour (3600 seconds)
@@ -90,9 +103,9 @@ async function fetchAndCacheTXT(
 ): Promise<ManifestItem> {
   let appManifest = { ...EMPTY_APP_MANIFEST };
   let appCollection: string[] = [];
-  let fetchLocation = url.toLowerCase();
+  const fetchLocation = url.toLowerCase();
   if (!skipCache && !isInDebug) {
-    let cachedManifest = await getManifestFromCache(fetchLocation, isAppCollection);
+    const cachedManifest = await getManifestFromCache(fetchLocation, isAppCollection);
     if (cachedManifest) {
       cachedManifest.isHubFetch = isHubFetch;
       return cachedManifest;
@@ -111,9 +124,15 @@ async function fetchAndCacheTXT(
     logGenericCoreWarning(`Unable to fetch manifest from`, fetchLocation, err);
   }
   try {
+    const manifestToCheck = isAppCollection ? {
+      manifest: appCollection,
+      isAppCollection,
+    } : {
+      manifest: appManifest,
+      isAppCollection,
+    }
     validateManifest(
-      isAppCollection ? appCollection : appManifest,
-      isAppCollection
+      manifestToCheck
     );
   } catch (err) {
     logGenericCoreError(`Error while parsing manifest from`, fetchLocation, err);

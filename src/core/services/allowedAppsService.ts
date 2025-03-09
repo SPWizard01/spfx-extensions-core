@@ -74,7 +74,7 @@ function fileIsAllowed(
 ) {
   const allAllowed = allowedList.some((e) => e.EntryPointUrl === "*");
   if (allAllowed) return true;
-  let fileOriginAndPath = (absoluteFileUrl.origin + absoluteFileUrl.pathname).toLowerCase();
+  const fileOriginAndPath = (absoluteFileUrl.origin + absoluteFileUrl.pathname).toLowerCase();
   return allowedList.some((allowedEntry) => {
     try {
       const entryURL = new URL(allowedEntry.EntryPointUrl);

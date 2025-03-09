@@ -7,7 +7,7 @@ interface AppProps {
   instance: SPFxExtensionAppInstance;
 }
 
-export function App(props: AppProps) {
+export function App(_props: AppProps) {
   return (
     <FluentProvider theme={webLightTheme}>
       <Index />

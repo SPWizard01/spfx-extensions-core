@@ -1,7 +1,7 @@
-import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
+import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
 import { loadAppInstances } from "./appServices";
-import { logGenericCoreDebug, logGenericCoreError, logInstanceRequestedError } from "./loggingService";
+import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
   logGenericCoreDebug(`Executing appAdded event for`, appDef.id);

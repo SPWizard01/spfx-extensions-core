@@ -95,8 +95,10 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
     },
   }),
 ];
-interface ApplistProps {}
-export function AppList({}: ApplistProps) {
+interface ApplistProps {
+  unused?: boolean;
+}
+export function AppList(_props: ApplistProps) {
   // const apps: AppsItem[] = [];
 
   return (

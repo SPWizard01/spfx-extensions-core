@@ -53,7 +53,7 @@ const openDBPromise = openDB<SPFxExtensionsCoreDB>(DBNAME, 1, {
         spfxExtensionsCoreDB.close();
         alert("A new version of this page is ready. Please reload the page.");
     },
-    async upgrade(database, oldVersion, newVersion, transaction, event) {
+    async upgrade(database, oldVersion, _newVersion, _transaction, _event) {
         /// Create the object store
         if (oldVersion === 0) {
             database.createObjectStore(StoreNames.AppFolderManifestCache, { keyPath: "url" });
@@ -273,9 +273,11 @@ export async function evictManifestCache(
             : await getAppFolderManifestCacheItem(item.url);
         if (matchingItem) {
             if (matchingItem.hash !== item.hash) {
-                isAppCollection
-                    ? await removeAppCollectionManifestFromCache(item.url)
-                    : await removeAppFolderManifestFromCache(item.url);
+                if (isAppCollection) {
+                    await removeAppCollectionManifestFromCache(item.url)
+                } else {
+                    await removeAppFolderManifestFromCache(item.url);
+                }
                 logGenericCoreWarning(
                     `Evicted ${matchingItem.url} from ${isAppCollection ? "AppCollection" : "AppManifest"
                     } cache. Because of hash mismatch.`
@@ -330,7 +332,9 @@ export async function setOrUpdateManifest(
         return;
     }
 
-    retResult.isAppCollection
-        ? await addOrUpdateAppCollectionToCache(retResult, cacheTimeMinutes)
-        : await addOrUpdateAppFolderManifestToCache(retResult, cacheTimeMinutes);
+    if (retResult.isAppCollection) {
+        await addOrUpdateAppCollectionToCache(retResult, cacheTimeMinutes)
+    } else {
+        await addOrUpdateAppFolderManifestToCache(retResult, cacheTimeMinutes);
+    }
 }

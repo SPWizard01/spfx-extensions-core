@@ -172,7 +172,7 @@ function removeCallback(callbackKey: string) {
  * @param withResolve if set to true, the url will be resolved via import.meta.resolve, will give an error if the caller is not in module context
  * @param keepCurrentContext if set to true, the module will be imported via script tag with text content, otherwise it will be imported via script tag with src attribute
  */
-export async function importESModuleViaScriptTag<T>(
+export async function importESModuleViaScriptTag(
   url: string,
   withResolve: boolean,
   keepCurrentContext: boolean
@@ -181,7 +181,7 @@ export async function importESModuleViaScriptTag<T>(
   const cachedUrl = `${cacheItem.url}?${cacheItem.cacheKey}`;
   const importKey = window.crypto.randomUUID();
   let modulePromiseResolver = function (
-    module: SPFxExtensionModuleLoadResult
+    _module: SPFxExtensionModuleLoadResult
   ) {};
   const modulePromise = new Promise<SPFxExtensionModuleLoadResult>(
     (resolve) => {
@@ -203,7 +203,7 @@ export async function importESModuleViaScriptTag<T>(
   } else {
     logGenericCoreDebug("Requesting via script src import: " + cachedUrl);
     script.src = cachedUrl;
-    script.addEventListener("load", (d) => {
+    script.addEventListener("load", (_d) => {
       const cb = window.__SPFxExtensions.ImportCallbacks.find(
         (x) => x.key === importKey
       );

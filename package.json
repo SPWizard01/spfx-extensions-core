@@ -16,12 +16,15 @@
     "bun-dev-server": "^0.9.6",
     "esbuild": "^0.25.0",
     "esbuild-hot-reload": "^1.0.6",
+    "eslint-js": "eslint/js",
     "fflate": "^0.8.2",
     "idb": "^8.0.2",
+    "jiti": "^2.4.2",
     "picocolors": "^1.1.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-dropzone": "^14.3.8",
+    "typescript-eslint": "^8.26.0",
     "webpack": "^5.98.0"
   },
   "peerDependencies": {
