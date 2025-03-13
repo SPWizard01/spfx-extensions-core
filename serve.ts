@@ -13,8 +13,8 @@ startBunDevServer({
         format: "esm",
         define: {
             "BUILD_DATE": JSON.stringify(new Date().toISOString()),
+            "DEBUG": JSON.stringify(true)
         },
-
         plugins: [
             //bunHotReloadPlugin({ port: 33355, secure: true }),
         ]
