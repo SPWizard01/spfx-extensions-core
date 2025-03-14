@@ -7,6 +7,7 @@ import {
   DataGridHeaderCell,
   DataGridRow,
   Link,
+  makeStyles,
   TableCellLayout,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
@@ -22,6 +23,7 @@ import {
   getEnabledAppCollection,
   updateAppCollection,
 } from "../services/appCollection";
+import { AddApp } from "./AddApp";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
@@ -98,11 +100,32 @@ const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
 interface ApplistProps {
   unused?: boolean;
 }
+
+const useStyles = makeStyles({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    flexWrap: "nowrap",
+    width: "auto",
+    height: "auto",
+    boxSizing: "border-box",
+    "> *": {
+      textOverflow: "ellipsis",
+      margin: "10px",
+    },
+    "> :not(:first-child)": {
+      marginTop: "0px",
+    },
+    "> *:not(.ms-StackItem)": {
+      flexShrink: 1,
+    },
+  },
+});
 export function AppList(_props: ApplistProps) {
-  // const apps: AppsItem[] = [];
+  const styles = useStyles();
 
   return (
-    <>
+    <div className={styles.root}>
       <DataGrid
         items={allAppItems.value}
         columns={columns}
@@ -125,6 +148,9 @@ export function AppList(_props: ApplistProps) {
           )}
         </DataGridBody>
       </DataGrid>
-    </>
+      <div>
+        <AddApp />
+      </div>
+    </div>
   );
 }
