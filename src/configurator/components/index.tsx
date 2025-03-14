@@ -66,35 +66,7 @@ export function Index() {
           </Link>
         </div>
       )}
-      {/* {queryWeb && 
-      (
-        <MessageBar color="">
-          <Text>
-            Web you are customizing:{" "}
-            <Link target="_blank" href={cfgWeb}>
-              {cfgWeb}
-            </Link>
-            {configurationWebIsRootHub && (
-              <>
-                {" "}
-                <Badge>Hub Site</Badge>
-              </>
-            )}
-            {configurationWebBelongsToHub && (
-              <>
-                {" "}
-                <Badge color="important">Hub child</Badge>
-              </>
-            )}
-          </Text>
-        </MessageBar>
-      )
-      } */}
       <AppList />
-      <div>
-        <AddApp />
-      </div>
-      <ManifestModal />
     </div>
   );
 }
