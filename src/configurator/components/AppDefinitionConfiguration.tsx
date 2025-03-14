@@ -7,7 +7,7 @@ import {
   type SelectionEvents,
 } from "@fluentui/react-components";
 
-import { useSignalEffect } from "@preact/signals-react";
+import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import {

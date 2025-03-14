@@ -10,7 +10,6 @@
     "@fluentui/react-components": "^9.60.1",
     "@fluentui/react-icons": "^2.0.279",
     "@pnp/sp": "^4.10.0",
-    "@preact/signals-react": "^3.0.1",
     "@types/bun": "^1.2.5",
     "@types/react": "^19.0.10",
     "bun-dev-server": "^0.9.7",
@@ -55,5 +54,8 @@
     "esserve": "bun run esserve.ts",
     "serve": "bun run serve.ts"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@fluentui/react-migration-v8-v9": "^9.7.1"
+  }
 }

@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals-react";
+import { signal } from "@preact/signals";
 import { EMPTY_GUID, getWebAbsoluteUrl } from "../core/services/contextService";
 import { EMPTY_APP_MANIFEST } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";

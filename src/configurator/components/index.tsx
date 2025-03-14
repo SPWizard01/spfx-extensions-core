@@ -1,5 +1,4 @@
 import { Badge, Link, makeStyles, Title2 } from "@fluentui/react-components";
-import { useSignals } from "@preact/signals-react/runtime";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
   configurationWebBelongsToHub,
@@ -39,7 +38,6 @@ const useStyles = makeStyles({
 });
 
 export function Index() {
-  useSignals();
   const styles = useStyles();
   return (
     <div className={styles.container}>
