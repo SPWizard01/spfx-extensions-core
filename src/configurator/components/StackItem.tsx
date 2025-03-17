@@ -90,7 +90,7 @@ export function StackItem(props: RenderableProps<StackProps>) {
     classes.push(props.className);
   }
   return (
-    <div className={classes.join(" ")} style={{ flexGrow: props.grow as any }}>
+    <div className={classes.join(" ")} style={{ ...additionalStyles}}>
       {props.children}
     </div>
   );

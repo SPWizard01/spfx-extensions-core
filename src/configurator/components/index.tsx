@@ -5,9 +5,8 @@ import {
   configurationWebIsRootHub,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
-import { AddApp } from "./AddApp";
 import { AppList } from "./AppList";
-import { ManifestModal } from "./ManifestModal";
+import { SelectedAppConfig } from "./SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
@@ -65,6 +64,7 @@ export function Index() {
         </div>
       )}
       <AppList />
+      <SelectedAppConfig />
     </div>
   );
 }

@@ -48,6 +48,7 @@ interface StackProps {
    * @defaultvalue false
    */
   wrap?: boolean;
+  gap?: JSX.CSSProperties["gap"];
 }
 const useStackStyles = makeStyles({
   root: {
@@ -139,12 +140,15 @@ export function Stack(props: RenderableProps<StackProps>) {
   if (props.grow) {
     additionalStyles.flexGrow = props.grow as any;
   }
+  if (props.gap) {
+    additionalStyles.gap = props.gap;
+  }
 
   classes.push(props.wrap ? stackStyles.wrap : stackStyles.noWrap);
   addHorizontalAlignment(props, classes, stackStyles);
   addVerticalAlignment(props, classes, stackStyles);
   return (
-    <div className={classes.join(" ")} style={{ flexGrow: props.grow as any }}>
+    <div className={classes.join(" ")} style={{ ...additionalStyles }}>
       {props.children}
     </div>
   );

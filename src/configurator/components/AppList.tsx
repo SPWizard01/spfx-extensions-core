@@ -123,7 +123,7 @@ const useStyles = makeStyles({
 });
 export function AppList(_props: ApplistProps) {
   const styles = useStyles();
-
+  if (selectedAppItem.value) return null;
   return (
     <div className={styles.root}>
       <DataGrid
