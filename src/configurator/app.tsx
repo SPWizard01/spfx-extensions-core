@@ -1,9 +1,11 @@
 import {
-  FluentProvider,
   createDarkTheme,
   createLightTheme,
+  FluentProvider,
 } from "@fluentui/react-components";
-import { createBrandVariants } from "@fluentui/react-migration-v8-v9";
+import {
+  createBrandVariants,
+} from "@fluentui/react-migration-v8-v9";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
 import { Index } from "./components";
 
