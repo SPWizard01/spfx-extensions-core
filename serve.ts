@@ -31,7 +31,7 @@ startBunDevServer({
     logRequests: true,
     hotReload: "plugin",
     reloadOnChange: true,
-    watchDelay: 2000,
+    watchDelay: 4000,
     afterBuild(output, _env) {
         bunManifestWriter({
             outdir: "./dist",

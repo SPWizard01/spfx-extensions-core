@@ -35,7 +35,7 @@ export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<Fil
     }
 
     for (const file of files) {
-        if (file.length === 0) {
+        if (file.size === 0) {
             continue;
         }
         const contentBuffer = await file.arrayBuffer();

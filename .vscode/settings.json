@@ -4,5 +4,6 @@
     },
     "typescript.preferences.organizeImports": {
         "typeOrder": "auto"
-    }
+    },
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
