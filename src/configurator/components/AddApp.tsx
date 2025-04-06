@@ -10,9 +10,7 @@ import {
   Input,
   Spinner,
   Toast,
-  Toaster,
   ToastTitle,
-  useId,
   useToastController,
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
@@ -22,6 +20,7 @@ import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../runtimeStore";
 import { addAppCollection } from "../services/appCollection";
+import { toasterId } from "./ToastNotification";
 
 export function AddApp() {
   const [open, setOpen] = useState(false);
@@ -33,7 +32,6 @@ export function AddApp() {
     setOpen(data.open);
   }
 
-  const toasterId = useId("toaster");
   const { dispatchToast, updateToast } = useToastController(toasterId);
 
   const notify = (intent: "progress") => {
@@ -137,7 +135,6 @@ export function AddApp() {
           </DialogBody>
         </DialogSurface>
       </Dialog>
-      <Toaster toasterId={toasterId} />
     </>
   );
 }

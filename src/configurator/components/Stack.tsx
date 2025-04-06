@@ -12,6 +12,7 @@ type Alignment =
   | "stretch";
 
 interface StackProps {
+  style?: JSX.CSSProperties;
   /**
    * Defines whether to render Stack children horizontally.
    * @defaultvalue false
@@ -148,7 +149,7 @@ export function Stack(props: RenderableProps<StackProps>) {
   addHorizontalAlignment(props, classes, stackStyles);
   addVerticalAlignment(props, classes, stackStyles);
   return (
-    <div className={classes.join(" ")} style={{ ...additionalStyles }}>
+    <div className={classes.join(" ")} style={{ ...additionalStyles, ...props.style }}>
       {props.children}
     </div>
   );

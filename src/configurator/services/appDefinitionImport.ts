@@ -10,9 +10,18 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         {
             name: "All",
             id: "*",
+            resolved: true,
         }
     ]
     if (!app.manifest.isESM) {
+        const set = new Set(app.manifest.enabledApps.flatMap((a) => a.enabledAppIds));
+        allApps.push(...set.keys().filter(k => k !== "*").map((a) => {
+            return {
+                id: a,
+                name: a,
+                resolved: false,
+            };
+        }));
         return allApps;
     }
     for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
@@ -41,6 +50,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
                 allApps.push({
                     id: appDef.id,
                     name: appDef.name,
+                    resolved: true,
                 });
             });
         } catch (e) {

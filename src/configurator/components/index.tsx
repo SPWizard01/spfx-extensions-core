@@ -8,13 +8,14 @@ import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList";
 import { SelectedAppConfig } from "./SelectedAppConfig";
 import { Stack } from "./Stack";
+import { ToastNotification } from "./ToastNotification";
 
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
 export function Index() {
   return (
-    <Stack>
+    <Stack style={{ padding: "30px" }}>
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
       {queryWeb && (
         <Stack horizontal gap={8} verticalAlign="center">
@@ -40,6 +41,7 @@ export function Index() {
       )}
       <AppList />
       <SelectedAppConfig />
+      <ToastNotification />
     </Stack>
   );
 }

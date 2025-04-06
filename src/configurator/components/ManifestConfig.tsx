@@ -70,6 +70,7 @@ export function ManifestConfig() {
           <Dropdown
             multiselect={true}
             placeholder="Select entrypoints to load"
+            disabled={!app.manifest.enabled}
             onOptionSelect={onOptionSelect}
             defaultSelectedOptions={app.manifest.appRelativeEntryPointUrls}
             defaultValue={app.manifest.appRelativeEntryPointUrls.join(", ")}
@@ -89,6 +90,7 @@ export function ManifestConfig() {
             <Label>Is ESM: </Label>
             <Switch
               checked={app.manifest.isESM}
+              disabled={!app.manifest.enabled}
               onChange={(_, d) => {
                 app.manifest.isESM = d.checked;
                 updateSelectedApp(app);
@@ -96,8 +98,8 @@ export function ManifestConfig() {
             />
           </Stack>
         </StackItem>
-        {!app.manifest.isESM ? (
-          <StackItem>
+        {!app.manifest.isESM && app.manifest.enabled ? (
+          <StackItem shrink>
             <MessageBar intent="warning">
               <MessageBarBody>
                 <Text>
@@ -114,7 +116,7 @@ export function ManifestConfig() {
           </InfoLabel>
           <Switch
             checked={app.manifest.enabledOnAllHubSites}
-            disabled={!configurationWebIsRootHub}
+            disabled={!configurationWebIsRootHub || !app.manifest.enabled}
             onChange={(_, d) => {
               app.manifest.enabledOnAllHubSites = d.checked;
               updateSelectedApp(app);
@@ -135,6 +137,7 @@ export function ManifestConfig() {
           <Label>Use Caching: </Label>
           <Switch
             checked={app.manifest.enableCaching}
+            disabled={!app.manifest.enabled}
             onChange={(_, d) => {
               app.manifest.enableCaching = d.checked;
               updateSelectedApp(app);
@@ -144,7 +147,7 @@ export function ManifestConfig() {
             <>
               <Input
                 placeholder="Cache string"
-                disabled={!app.manifest.enableCaching}
+                disabled={!app.manifest.enableCaching || !app.manifest.enabled}
                 type="text"
                 value={app.manifest.cacheString ?? ""}
                 onChange={(_ev, data) => {
@@ -154,7 +157,7 @@ export function ManifestConfig() {
               />
               <Button
                 size="medium"
-                disabled={!app.manifest.enableCaching}
+                disabled={!app.manifest.enableCaching || !app.manifest.enabled}
                 onClick={async () => {
                   app.manifest.cacheString = await GetRandomCacheStringAsync();
                   updateSelectedApp(app);
