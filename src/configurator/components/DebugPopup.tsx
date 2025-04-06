@@ -5,7 +5,6 @@ import {
   Popover,
   PopoverSurface,
   PopoverTrigger,
-  TableCellLayout,
 } from "@fluentui/react-components";
 import { useState } from "react";
 import { DEBUG_KEYS, isAppInDebug } from "../../utilities/debug";
@@ -21,35 +20,33 @@ export function DebugPopup({ app }: DebugPopupProps) {
   );
   const [popoverOpen, setOpen] = useState(false);
   return (
-    <TableCellLayout>
-      <Popover positioning={"after"} open={popoverOpen}>
-        <PopoverTrigger disableButtonEnhancement>
-          <Checkbox
-            checked={isAppInDebug(app.name)}
-            onChange={() => {
-              setOpen(!popoverOpen);
-            }}
-          />
-        </PopoverTrigger>
+    <Popover positioning={"after"} open={popoverOpen}>
+      <PopoverTrigger disableButtonEnhancement>
+        <Checkbox
+          checked={isAppInDebug(app.name)}
+          onChange={() => {
+            setOpen(!popoverOpen);
+          }}
+        />
+      </PopoverTrigger>
 
-        <PopoverSurface tabIndex={-1}>
-          <Input
-            defaultValue={port}
-            onChange={(_, data) => {
-              setPort(data.value);
-            }}
-          />
-          <Button
-            appearance="primary"
-            onClick={() => {
-              localStorage.setItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`, port);
-              setOpen(false);
-            }}
-          >
-            Save
-          </Button>
-        </PopoverSurface>
-      </Popover>
-    </TableCellLayout>
+      <PopoverSurface tabIndex={-1}>
+        <Input
+          defaultValue={port}
+          onChange={(_, data) => {
+            setPort(data.value);
+          }}
+        />
+        <Button
+          appearance="primary"
+          onClick={() => {
+            localStorage.setItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`, port);
+            setOpen(false);
+          }}
+        >
+          Save
+        </Button>
+      </PopoverSurface>
+    </Popover>
   );
 }

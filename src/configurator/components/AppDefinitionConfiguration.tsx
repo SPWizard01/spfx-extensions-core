@@ -17,6 +17,7 @@ import {
 } from "../runtimeStore";
 import { getAppDefinitions } from "../services/appDefinitionImport";
 import { useRowStack } from "../styles/stack";
+import { Stack } from "./Stack";
 interface AppDefinitionConfigurationProps {
   app?: AppCollectionConfigurationItem;
 }
@@ -92,7 +93,7 @@ export function AppDefinitionConfiguration(
   const stackStyles = useRowStack();
   if (!app) return null;
   return (
-    <>
+    <Stack>
       <div className={stackStyles.stack}>
         <Label>Enabled On Webs: </Label>
         <Dropdown
@@ -156,6 +157,6 @@ export function AppDefinitionConfiguration(
         <Button size="small">Add app</Button>
         <Button size="small">Remove app</Button>
       </div>
-    </>
+    </Stack>
   );
 }

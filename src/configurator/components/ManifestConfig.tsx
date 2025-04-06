@@ -1,11 +1,14 @@
 import {
   Button,
   Dropdown,
+  InfoLabel,
   Input,
   Label,
-  makeStyles,
+  MessageBar,
+  MessageBarBody,
   Option,
   Switch,
+  Text,
   type OptionOnSelectData,
   type SelectionEvents,
 } from "@fluentui/react-components";
@@ -21,22 +24,8 @@ import {
 import { getAllAppJSFiles } from "../services/fileService";
 import { AppDefinitionConfiguration } from "./AppDefinitionConfiguration";
 import { FilePicker } from "./FilePicker";
-
-const useCustomStyles = makeStyles({
-  stackWrapper: {
-    // display: "flex",
-  },
-  stack: {
-    backgroundColor: "pink",
-    flexDirection: "row",
-    display: "flex",
-    alignItems: "center",
-  },
-  stackItem: {
-    backgroundColor: "lightblue",
-    alignContent: "baseline",
-  },
-});
+import { Stack } from "./Stack";
+import { StackItem } from "./StackItem";
 
 export function ManifestConfig() {
   const app = selectedAppItem.value;
@@ -45,7 +34,6 @@ export function ManifestConfig() {
     if (!selectedAppItem.value) return;
     getJsFiles();
   });
-  const customStyles = useCustomStyles();
   async function onOptionSelect(
     _event: SelectionEvents,
     data: OptionOnSelectData
@@ -75,91 +63,113 @@ export function ManifestConfig() {
   }
   if (!app) return null;
   return (
-    <div className={customStyles.stackWrapper}>
-      <div className={customStyles.stack}>
-        <Label>Entry Points: </Label>
-        <Dropdown
-          multiselect={true}
-          placeholder="Select entrypoints to load"
-          onOptionSelect={onOptionSelect}
-          defaultSelectedOptions={app.manifest.appRelativeEntryPointUrls}
-          defaultValue={app.manifest.appRelativeEntryPointUrls.join(", ")}
-        >
-          {allJSFiles.map((ep) => (
-            <Option key={ep} value={ep}>
-              {ep}
-            </Option>
-          ))}
-        </Dropdown>
-      </div>
-      <div className={customStyles.stack}>
-        <AppDefinitionConfiguration />
-      </div>
-      <div className={customStyles.stack}>
-        <Label>Is ESM: </Label>
-        <Switch
-          checked={app.manifest.isESM}
-          onChange={(_, d) => {
-            app.manifest.isESM = d.checked;
-            updateSelectedApp(app);
-          }}
-        />
-      </div>
-      <div className={customStyles.stack}>
-        <Label>Enabled on all Hub sites: </Label>
-        <Switch
-          checked={app.manifest.enabledOnAllHubSites}
-          disabled={!configurationWebIsRootHub}
-          onChange={(_, d) => {
-            app.manifest.enabledOnAllHubSites = d.checked;
-            updateSelectedApp(app);
-          }}
-        />
-      </div>
-      <div className={customStyles.stack}>
-        <Label>Enabled: </Label>
-        <Switch
-          checked={app.manifest.enabled}
-          onChange={(_, d) => {
-            app.manifest.enabled = d.checked;
-            updateSelectedApp(app);
-          }}
-        />
-      </div>
-      <div className={customStyles.stack}>
-        <Label>Use Caching: </Label>
-        <Switch
-          checked={app.manifest.enableCaching}
-          onChange={(_, d) => {
-            app.manifest.enableCaching = d.checked;
-            updateSelectedApp(app);
-          }}
-        />
-        <Input
-          placeholder="Cache string"
-          disabled={!app.manifest.enableCaching}
-          type="text"
-          value={app.manifest.cacheString ?? ""}
-          onChange={(_ev, data) => {
-            app.manifest.cacheString = data.value;
-            updateSelectedApp(app);
-          }}
-        />
-        <Button
-          size="small"
-          disabled={!app.manifest.enableCaching}
-          onClick={async () => {
-            app.manifest.cacheString = await GetRandomCacheStringAsync();
-            updateSelectedApp(app);
-          }}
-        >
-          Generate
-        </Button>
+    <Stack>
+      <StackItem>
+        <StackItem>
+          <Label>Entry Points: </Label>
+          <Dropdown
+            multiselect={true}
+            placeholder="Select entrypoints to load"
+            onOptionSelect={onOptionSelect}
+            defaultSelectedOptions={app.manifest.appRelativeEntryPointUrls}
+            defaultValue={app.manifest.appRelativeEntryPointUrls.join(", ")}
+          >
+            {allJSFiles.map((ep) => (
+              <Option key={ep} value={ep}>
+                {ep}
+              </Option>
+            ))}
+          </Dropdown>
+        </StackItem>
+        <StackItem>
+          <AppDefinitionConfiguration />
+        </StackItem>
+        <StackItem>
+          <Stack verticalAlign="center" horizontal gap={8}>
+            <Label>Is ESM: </Label>
+            <Switch
+              checked={app.manifest.isESM}
+              onChange={(_, d) => {
+                app.manifest.isESM = d.checked;
+                updateSelectedApp(app);
+              }}
+            />
+          </Stack>
+        </StackItem>
+        {!app.manifest.isESM ? (
+          <StackItem>
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <Text>
+                  You have to manually fill the "Enabled Apps" list as this is
+                  not an ESM module app
+                </Text>
+              </MessageBarBody>
+            </MessageBar>
+          </StackItem>
+        ) : null}
+        <Stack verticalAlign="center" horizontal gap={8}>
+          <InfoLabel info="Only available on hub roots">
+            Enabled on all Hub sites:{" "}
+          </InfoLabel>
+          <Switch
+            checked={app.manifest.enabledOnAllHubSites}
+            disabled={!configurationWebIsRootHub}
+            onChange={(_, d) => {
+              app.manifest.enabledOnAllHubSites = d.checked;
+              updateSelectedApp(app);
+            }}
+          />
+        </Stack>
+        <Stack verticalAlign="center" horizontal gap={8}>
+          <Label>Enabled: </Label>
+          <Switch
+            checked={app.manifest.enabled}
+            onChange={(_, d) => {
+              app.manifest.enabled = d.checked;
+              updateSelectedApp(app);
+            }}
+          />
+        </Stack>
+        <Stack horizontal verticalAlign="center" gap={8}>
+          <Label>Use Caching: </Label>
+          <Switch
+            checked={app.manifest.enableCaching}
+            onChange={(_, d) => {
+              app.manifest.enableCaching = d.checked;
+              updateSelectedApp(app);
+            }}
+          />
+          {app.manifest.enableCaching ? (
+            <>
+              <Input
+                placeholder="Cache string"
+                disabled={!app.manifest.enableCaching}
+                type="text"
+                value={app.manifest.cacheString ?? ""}
+                onChange={(_ev, data) => {
+                  app.manifest.cacheString = data.value;
+                  updateSelectedApp(app);
+                }}
+              />
+              <Button
+                size="medium"
+                disabled={!app.manifest.enableCaching}
+                onClick={async () => {
+                  app.manifest.cacheString = await GetRandomCacheStringAsync();
+                  updateSelectedApp(app);
+                }}
+              >
+                Generate
+              </Button>
+            </>
+          ) : null}
+        </Stack>
         {app.manifest.enableCaching ? (
           <Label size="small">Cache string: {app.manifest.cacheString}</Label>
         ) : null}
-      </div>
-      <FilePicker />
-    </div>
+        <FilePicker />
+      </StackItem>
+    </Stack>
   );
 }

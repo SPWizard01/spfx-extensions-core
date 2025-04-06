@@ -1,28 +1,27 @@
 import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    DialogTrigger,
-    Link,
-    Spinner,
-    TableCellLayout,
-    Text,
-    type DialogOpenChangeData,
-    type DialogOpenChangeEvent,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  DialogTrigger,
+  Link,
+  Spinner,
+  Text,
+  type DialogOpenChangeData,
+  type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Delete20Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import {
-    allAppItems,
-    configrationWebUrl,
-    configurationWebSP,
-    deletingAppItem,
+  allAppItems,
+  configrationWebUrl,
+  configurationWebSP,
+  deletingAppItem,
 } from "../runtimeStore";
 import { removeAppCollection } from "../services/appCollection";
 
@@ -49,7 +48,7 @@ export function DeleteApp({ item }: DeleteAppProps) {
     setOpen(data.open);
   }
   return (
-    <TableCellLayout>
+    <>
       <Link
         disabled={deletingAppItem?.value?.name !== undefined}
         onClick={() => {
@@ -110,6 +109,6 @@ export function DeleteApp({ item }: DeleteAppProps) {
           </DialogBody>
         </DialogSurface>
       </Dialog>
-    </TableCellLayout>
+    </>
   );
 }

@@ -1,15 +1,12 @@
 import {
-  createTableColumn,
-  DataGrid,
-  DataGridBody,
-  DataGridCell,
-  DataGridHeader,
-  DataGridHeaderCell,
-  DataGridRow,
   Link,
-  makeStyles,
+  Table,
+  TableBody,
+  TableCell,
   TableCellLayout,
-  type TableColumnDefinition,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
 } from "@fluentui/react-components";
 import { FolderRegular } from "@fluentui/react-icons";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
@@ -27,6 +24,8 @@ import { AddApp } from "./AddApp";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
+import { Stack } from "./Stack";
+import { StackItem } from "./StackItem";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,
@@ -46,111 +45,82 @@ async function updateCollection(
   app.activated = enabled;
   updateApp(app);
 }
-
-const columns: TableColumnDefinition<AppCollectionConfigurationItem>[] = [
-  createTableColumn<AppCollectionConfigurationItem>({
-    columnId: "appCollection",
-    renderHeaderCell: () => {
-      return "App Collection Name";
-    },
-    renderCell: (item) => {
-      return (
-        <TableCellLayout media={<FolderRegular />}>
-          <Link
-            onClick={() => {
-              selectedAppItem.value = JSON.parse(JSON.stringify(item));
-            }}
-          >
-            {item.name}
-          </Link>
-        </TableCellLayout>
-      );
-    },
-  }),
-
-  createTableColumn<AppCollectionConfigurationItem>({
-    columnId: "activated",
-    renderHeaderCell: () => {
-      return "Activated";
-    },
-    renderCell: (item) => {
-      return <AppCollectionActivator app={item} onChange={updateCollection} />;
-    },
-  }),
-
-  createTableColumn<AppCollectionConfigurationItem>({
-    columnId: "inDebug",
-    renderHeaderCell: () => {
-      return "In debug";
-    },
-    renderCell: (item) => {
-      return <DebugPopup app={item} />;
-    },
-  }),
-  createTableColumn<AppCollectionConfigurationItem>({
-    columnId: "deleteAppColl",
-    renderHeaderCell: () => {
-      return "";
-    },
-    renderCell: (item) => {
-      return <DeleteApp item={item} />;
-    },
-  }),
+const columns = [
+  {
+    columnId: "name",
+    text: "App Collection",
+  },
+  {
+    columnId: "enabled",
+    text: "Enabled",
+  },
+  {
+    columnId: "InDebug",
+    text: "In Debug",
+  },
+  {
+    columnId: "Delete",
+    text: "",
+  },
 ];
 interface ApplistProps {
   unused?: boolean;
 }
 
-const useStyles = makeStyles({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flexWrap: "nowrap",
-    width: "auto",
-    height: "auto",
-    boxSizing: "border-box",
-    "> *": {
-      textOverflow: "ellipsis",
-      margin: "10px",
-    },
-    "> :not(:first-child)": {
-      marginTop: "0px",
-    },
-    "> *:not(.ms-StackItem)": {
-      flexShrink: 1,
-    },
-  },
-});
 export function AppList(_props: ApplistProps) {
-  const styles = useStyles();
   if (selectedAppItem.value) return null;
   return (
-    <div className={styles.root}>
-      <DataGrid
-        items={allAppItems.value}
-        columns={columns}
-        style={{ minWidth: "550px" }}
-      >
-        <DataGridHeader>
-          <DataGridRow>
-            {({ renderHeaderCell }) => (
-              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-            )}
-          </DataGridRow>
-        </DataGridHeader>
-        <DataGridBody<AppCollectionConfigurationItem>>
-          {({ item, rowId }) => (
-            <DataGridRow<AppCollectionConfigurationItem> key={rowId}>
-              {({ renderCell }) => (
-                <DataGridCell>{renderCell(item)}</DataGridCell>
-              )}
-            </DataGridRow>
-          )}
-        </DataGridBody>
-      </DataGrid>
-      <div>
+    <Stack>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHeaderCell key={column.columnId}>
+                {column.text}
+              </TableHeaderCell>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {allAppItems.value.map((item) => (
+            <TableRow key={item.name}>
+              <TableCell>
+                <TableCellLayout media={<FolderRegular />}>
+                  <Link
+                    onClick={() => {
+                      selectedAppItem.value = JSON.parse(JSON.stringify(item));
+                    }}
+                  >
+                    {item.name}
+                  </Link>
+                </TableCellLayout>
+              </TableCell>
+              <TableCell>
+                <TableCellLayout>
+                  <AppCollectionActivator
+                    app={item}
+                    onChange={updateCollection}
+                  />
+                </TableCellLayout>
+              </TableCell>
+              <TableCell>
+                <TableCellLayout>
+                  <DebugPopup app={item} />
+                </TableCellLayout>
+              </TableCell>
+              <TableCell>
+                <TableCellLayout>
+                  <DeleteApp item={item} />
+                </TableCellLayout>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <StackItem>
+        <br />
         <AddApp />
-      </div>
-    </div>
+      </StackItem>
+    </Stack>
   );
 }
