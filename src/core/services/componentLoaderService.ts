@@ -1,161 +1,17 @@
-import {
-  EMPTY_APP_MANIFEST,
-  SPFxExtensionCore,
-} from "../../utilities/constants";
-import { getContentDigest } from "../../utilities/digest";
-import { isFileAllowedToRun } from "./allowedAppsService";
-
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
-import type {
-  AppCollectionManifest,
-  AppFolderManifest,
-  ManifestItem,
-  ManifestLocation,
-} from "../../models/cache";
-import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
-import { DEBUG_KEYS, isAppInDebug, isInDebug } from "../../utilities/debug";
-import { currentSiteIsRootHub, getWebId } from "./contextService";
-import { getRootCDNLocation } from "./coreConfigService";
-import { getManifestFromCache, setOrUpdateManifest } from "./coreIdbService";
+import type { AppFolderManifest } from "../../models/cache";
+import { MANIFEST_NAME, } from "../../utilities/constants";
+import { isAppInDebug, } from "../../utilities/debug";
+import { isFileAllowedToRun } from "./allowedAppsService";
+import { getIsHubSite, getWebId } from "./contextService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
-
-interface AppCollectionValidation {
-  manifest: string[];
-  isAppCollection: true;
-}
-
-interface AppManifestValidation {
-  manifest: SPFxExtensionAppManifest;
-  isAppCollection: false;
-}
-
-type ManifestValidationOptions = AppCollectionValidation | AppManifestValidation;
+import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
+import { getManifestTXTFromAllLocations } from "./txtManifestService";
 
 interface AssetPromise {
   url: string;
   promise: Promise<SPFxExtensionAppRegistration[]>;
   manifest: AppFolderManifest;
-}
-
-function validateAppCollectionManifest(manifest: string[]) {
-  if (!Array.isArray(manifest)) {
-    throw `${SPFxExtensionCore} App manifest should be an array of strings`;
-  }
-  if (
-    manifest.some((v) => {
-      return typeof v !== "string";
-    })
-  ) {
-    throw `${SPFxExtensionCore} App manifest should only contain strings`;
-  }
-}
-
-function validateAppManifest(manifest: SPFxExtensionAppManifest) {
-  if (Array.isArray(manifest) || typeof manifest !== "object") {
-    throw `${SPFxExtensionCore} App manifest has to be an object.`;
-  }
-
-  if (!manifest.appRelativeEntryPointUrls) {
-    logGenericCoreError(`Manifest does not have appRelativeEntryPointUrl property.`, manifest);
-    throw `${SPFxExtensionCore} Manifest does not have appRelativeEntryPointUrl property.`;
-
-  }
-  if (!manifest.enabledApps) {
-    logGenericCoreError(`Manifest does not have enabledApps property.`, manifest);
-    throw `${SPFxExtensionCore} Manifest does not have enabledApps property.`;
-  }
-}
-
-function validateManifest(opts: ManifestValidationOptions) {
-  if (!opts.manifest) {
-    throw `${SPFxExtensionCore} Manifest supplied is undefined`;
-  }
-  if (opts.isAppCollection) {
-    validateAppCollectionManifest(opts.manifest)
-  } else {
-    validateAppManifest(opts.manifest);
-  }
-}
-
-//@param [cacheTime=3600000] use ```3600000``` to cache for one hour (3600 seconds)
-
-/**
- * fetches Manifest from cache, and if it does not exist downloads it and caches for 3600 seconds by default
- * @param url url of the manifest to download
- * @param type type of the manifest related to sharepoint context
- *
- *  ```root``` global
- *
- * ```site``` for site collection
- *
- * ```web``` site collection subsite
- * @param [cacheTimeMinutes] Default is ```60``` to cache for one hour
- */
-async function fetchAndCacheTXT(
-  url: string,
-  name: string,
-  type: ManifestLocation,
-  isAppCollection: boolean,
-  isHubFetch: boolean,
-  skipCache = false,
-  cacheTimeMinutes = 60
-): Promise<ManifestItem> {
-  let appManifest = { ...EMPTY_APP_MANIFEST };
-  let appCollection: string[] = [];
-  const fetchLocation = url.toLowerCase();
-  if (!skipCache && !isInDebug) {
-    const cachedManifest = await getManifestFromCache(fetchLocation, isAppCollection);
-    if (cachedManifest) {
-      cachedManifest.isHubFetch = isHubFetch;
-      return cachedManifest;
-    }
-  }
-  try {
-    logGenericCoreDebug(`Fetching manifest from`, fetchLocation);
-    const mnfReq = await fetch(fetchLocation);
-    const result = await mnfReq.json();
-    if (isAppCollection) {
-      appCollection = result;
-    } else {
-      appManifest = result;
-    }
-  } catch (err) {
-    logGenericCoreWarning(`Unable to fetch manifest from`, fetchLocation, err);
-  }
-  try {
-    const manifestToCheck = isAppCollection ? {
-      manifest: appCollection,
-      isAppCollection,
-    } : {
-      manifest: appManifest,
-      isAppCollection,
-    }
-    validateManifest(
-      manifestToCheck
-    );
-  } catch (err) {
-    logGenericCoreError(`Error while parsing manifest from`, fetchLocation, err);
-    appManifest = { ...EMPTY_APP_MANIFEST };
-    appCollection = [];
-  }
-  const hash = await getContentDigest(
-    JSON.stringify(isAppCollection ? appCollection : appManifest)
-  );
-  const baseResult = {
-    name,
-    url: fetchLocation,
-    type,
-    hash,
-  };
-
-  const retResult: ManifestItem = isAppCollection
-    ? { appCollection, isAppCollection: true, ...baseResult }
-    : { appManifest, isAppCollection: false, ...baseResult };
-
-  await setOrUpdateManifest(retResult, isInDebug ? 1 : cacheTimeMinutes);
-  retResult.isHubFetch = isHubFetch;
-  return retResult;
 }
 
 export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
@@ -229,128 +85,6 @@ async function parseManifestAndImportEntryPoints(
 
   return returnPromiseArray;
 }
-
-export async function fetchAppsTXTFromAllLocations(
-  siteUrl: string,
-  webUrl: string,
-  hubUrl: string,
-  skipCache = false
-): Promise<AppCollectionManifest[]> {
-  // all apps.txt accross the context (root / site /web)
-  const allAppManifests: Promise<ManifestItem>[] = [];
-  const rootLocation = await getRootCDNLocation();
-  // const rootUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
-  allAppManifests.push(
-    fetchAndCacheTXT(
-      rootLocation,
-      "apps",
-      // rootUrl,
-      "root",
-      true,
-      true,
-      skipCache
-    )
-  );
-
-  const normalizedSiteUrl = siteUrl + WELL_KNOWN_MANIFEST_LOCATION;
-
-  allAppManifests.push(
-    fetchAndCacheTXT(
-      `${normalizedSiteUrl}${APPCOLLECTION_MANIFEST_NAME}`,
-      "apps",
-      // siteUrl,
-      "site",
-      true,
-      false,
-      skipCache
-    )
-  );
-
-  if (hubUrl) {
-    const normalizedHubUrl = hubUrl + WELL_KNOWN_MANIFEST_LOCATION;
-    allAppManifests.push(
-      fetchAndCacheTXT(
-        `${normalizedHubUrl}${APPCOLLECTION_MANIFEST_NAME}`,
-        "apps",
-        // hubUrl,
-        "site",
-        true,
-        true,
-        skipCache
-      )
-    );
-  }
-
-  const normalizedWebUrl = webUrl + WELL_KNOWN_MANIFEST_LOCATION;
-  const fullWebUrl = `${normalizedWebUrl}${APPCOLLECTION_MANIFEST_NAME}`;
-  const siteIsWeb = siteUrl.toLowerCase() === webUrl.toLowerCase();
-  const webIsRoot = fullWebUrl.toLowerCase() === rootLocation.toLowerCase();
-  if (!siteIsWeb && !webIsRoot) {
-    allAppManifests.push(
-      fetchAndCacheTXT(
-        fullWebUrl,
-        "apps",
-        // webUrl,
-        "web",
-        true,
-        false,
-        skipCache
-      )
-    );
-  }
-  const manifestResult = await Promise.all(allAppManifests);
-
-  return manifestResult as AppCollectionManifest[];
-}
-
-/***
- * @param baseUrl should be:
- *
- * Root: ```/sites/appcatalog/CDN/SPFxExtensionApps/```
- *
- * Site: ```/sites/[SomeSite]/SPFxExtensionApps/```
- */
-function GetAppManifestLocation(baseUrl: string, appKey: string) {
-  const siteLocation = `${baseUrl}${appKey}/${MANIFEST_NAME}`;
-  const lsKey = `${DEBUG_KEYS.SPFXEXT}${appKey}`;
-  const devSitePort = Number(localStorage.getItem(lsKey));
-  if (devSitePort > 0) {
-    const debugLoc = `https://localhost:${devSitePort}/${MANIFEST_NAME}`;
-    logGenericCoreInfo(
-      `<${appKey}> App is in debug mode, loading from`,
-      debugLoc
-    );
-    return debugLoc;
-  }
-  return siteLocation;
-}
-
-function loadAppFolderManifestTXT(
-  appCollectionManifests: AppCollectionManifest[],
-  skipCache = false
-) {
-  if (appCollectionManifests.length === 0) return [];
-  const manifestPromises: Promise<AppFolderManifest>[] = [];
-  for (const appCollectionManifest of appCollectionManifests) {
-    const baseUrl = appCollectionManifest.url.replace(
-      APPCOLLECTION_MANIFEST_NAME,
-      ""
-    );
-    for (const appFolderName of appCollectionManifest.appCollection) {
-      const manifestLocation = GetAppManifestLocation(baseUrl, appFolderName);
-      manifestPromises.push(fetchAndCacheTXT(
-        manifestLocation,
-        appFolderName,
-        appCollectionManifest.type,
-        false,
-        appCollectionManifest.isHubFetch ?? false,
-        skipCache
-      ) as Promise<AppFolderManifest>);
-    }
-  }
-  return manifestPromises;
-}
-
 
 export async function loadModernApps(
   siteUrl: string,
@@ -464,7 +198,7 @@ export async function loadModernApps(
 }
 
 async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
-  const isHub = currentSiteIsRootHub();
+  const isHub = getIsHubSite();
   const currentWebId = getWebId();
 
   if (!Array.isArray(registrations)) {
@@ -497,46 +231,6 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
   }
 }
 
-export function getManifestTXTFromAllLocations(
-  coreCollection: AppCollectionManifest[],
-  skipCache = false
-) {
-  const rootAppsCollectionManifest = coreCollection.filter(
-    (app) => app.type === "root"
-  );
-  const rootAppPromises = loadAppFolderManifestTXT(
-    rootAppsCollectionManifest,
-    skipCache
-  );
-
-  const siteCollectionAppsManifest = coreCollection.filter(
-    (app) => app.type === "site"
-  );
-  const scAppPromises = loadAppFolderManifestTXT(
-    siteCollectionAppsManifest,
-    skipCache
-  );
-
-  // const siteIsWeb = siteUrl.toLowerCase() === webUrl.toLowerCase();
-  // let subsitePromises: Promise<ManifestItem>[] = [];
-  // if (!siteIsWeb) {
-  const webAppCollectionManifest = coreCollection.filter(
-    (app) => app.type === "web"
-  );
-  const subsitePromises = loadAppFolderManifestTXT(
-    webAppCollectionManifest,
-    skipCache
-  );
-  //}
-
-  //foreach app do stuff
-  const allManifestsTXT = [
-    ...rootAppPromises,
-    ...scAppPromises,
-    ...subsitePromises,
-  ];
-  return allManifestsTXT;
-}
 
 function getModulePromises(
   manifestResults: PromiseSettledResult<AssetPromise[]>[]

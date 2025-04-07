@@ -1,8 +1,9 @@
 import { deleteDB, openDB, type DBSchema } from "idb";
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import type { AppCollectionManifest, AppCollectionManifestCacheItem, AppFolderManifest, AppFolderManifestCacheItem, ManifestBase, ManifestItem } from "../../models/cache";
+import type { AppCollectionManifest, AppCollectionManifestCacheItem, AppFolderManifest, AppFolderManifestCacheItem } from "../../models/cache";
 import type { ConfigurationListData } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
+import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
@@ -82,7 +83,7 @@ openDBPromise.catch((err) => {
 
 export const spfxExtensionsCoreDB = await openDBPromise;
 
-export function getCacheItemBase(cacheTimeMinutes: number) {
+function getCacheItemBase(cacheTimeMinutes: number) {
     const dateNow = new Date();
     const date = dateNow.toISOString();
     dateNow.setMinutes(dateNow.getMinutes() + cacheTimeMinutes);
@@ -94,7 +95,7 @@ export function getCacheItemBase(cacheTimeMinutes: number) {
     };
 }
 
-export async function evictItemsFromStore(storeName: StoreKeys, key: any) {
+async function evictItemsFromStore(storeName: StoreKeys, key: any) {
 
     const cachedItems = await spfxExtensionsCoreDB.getAll(storeName);
     const nowTime = new Date();
@@ -140,37 +141,17 @@ export function addOrUpdateExtensionConfigs(items: ConfigurationListData[], cach
     return tx.done;
 }
 
-export function removeExtensionConfigFromCache(title: string) {
-    return spfxExtensionsCoreDB.delete(StoreNames.SPFxExtensionConfig, title);
-}
-
-
-export async function getAllAppCollections() {
-    return spfxExtensionsCoreDB.getAll(StoreNames.AppCollectionManifestCache);
-}
-
-export async function getAllAppManifests() {
-    return spfxExtensionsCoreDB.getAll(StoreNames.AppFolderManifestCache);
-}
 
 export async function getAllAllowedAppsFromDB() {
     return spfxExtensionsCoreDB.getAll(StoreNames.AllowedApps);
 }
 
-export async function getAllHubData() {
-    return spfxExtensionsCoreDB.getAll(StoreNames.HubSiteData);
-}
-
-export async function getAppFolderManifestCacheItem(url: string) {
+async function getManifestTXTCacheItem(url: string) {
     return spfxExtensionsCoreDB.get(StoreNames.AppFolderManifestCache, url);
 }
 
-export async function getAppCollectionManifestCacheItem(url: string) {
+async function getAppsTXTCacheItem(url: string) {
     return spfxExtensionsCoreDB.get(StoreNames.AppCollectionManifestCache, url);
-}
-
-export async function getAllowedAppCacheItem(id: number) {
-    return spfxExtensionsCoreDB.get(StoreNames.AllowedApps, id);
 }
 
 export async function getHubData(id: string) {
@@ -187,7 +168,7 @@ export async function addOrUpdateHubDataToCache(
     });
 }
 
-export async function addOrUpdateAppCollectionToCache(
+async function addOrUpdateAppsTXTToCache(
     item: AppCollectionManifest,
     cacheTimeMinutes = 60
 ) {
@@ -197,21 +178,11 @@ export async function addOrUpdateAppCollectionToCache(
     });
 }
 
-export async function addOrUpdateAppFolderManifestToCache(
+async function addOrUpdateManifestTXTToCache(
     item: AppFolderManifest,
     cacheTimeMinutes = 60
 ) {
     await spfxExtensionsCoreDB.put(StoreNames.AppFolderManifestCache, {
-        ...item,
-        ...getCacheItemBase(cacheTimeMinutes),
-    });
-}
-
-export async function addOrUpdateAllowedAppToCache(
-    item: AllowedAppsListData,
-    cacheTimeMinutes = 5
-) {
-    await spfxExtensionsCoreDB.put(StoreNames.AllowedApps, {
         ...item,
         ...getCacheItemBase(cacheTimeMinutes),
     });
@@ -228,65 +199,17 @@ export async function addOrUpdateAllowedAppsToCache(
     return tx.done;
 }
 
-export function clearAppCollectionManifestCache() {
-    return spfxExtensionsCoreDB.clear(StoreNames.AppCollectionManifestCache);
-}
-
-export function clearAppFolderManifestCache() {
-    return spfxExtensionsCoreDB.clear(StoreNames.AppFolderManifestCache);
-}
-
-export function clearAllowedAppsCache() {
-    return spfxExtensionsCoreDB.clear(StoreNames.AllowedApps);
-}
-
-export function removeAppCollectionManifestFromCache(url: string) {
+function removeAppCollectionManifestFromCache(url: string) {
     return spfxExtensionsCoreDB.delete(StoreNames.AppCollectionManifestCache, url);
 }
 
-export function removeAppCollectionManifestsFromCache(url: string[]) {
-    const tx = spfxExtensionsCoreDB.transaction(StoreNames.AppCollectionManifestCache, "readwrite");
-    const txStore = tx.objectStore(StoreNames.AppCollectionManifestCache);
-    url.forEach((u) => txStore.delete(u));
-    return tx.done;
-}
-
-export function removeAppFolderManifestFromCache(url: string) {
+function removeAppFolderManifestFromCache(url: string) {
     return spfxExtensionsCoreDB.delete(StoreNames.AppFolderManifestCache, url);
 }
 
-export function removeAppFolderManifestsFromCache(url: string[]) {
-    const tx = spfxExtensionsCoreDB.transaction(StoreNames.AppFolderManifestCache, "readwrite");
-    const txStore = tx.objectStore(StoreNames.AppFolderManifestCache);
-    url.forEach((u) => txStore.delete(u));
-    return tx.done;
-}
 
-export async function evictManifestCache(
-    isAppCollection: boolean,
-    item?: ManifestBase
-) {
-    if (item) {
-        //check if there is an item that should be evicted
-        const matchingItem = isAppCollection
-            ? await getAppCollectionManifestCacheItem(item.url)
-            : await getAppFolderManifestCacheItem(item.url);
-        if (matchingItem) {
-            if (matchingItem.hash !== item.hash) {
-                if (isAppCollection) {
-                    await removeAppCollectionManifestFromCache(item.url)
-                } else {
-                    await removeAppFolderManifestFromCache(item.url);
-                }
-                logGenericCoreWarning(
-                    `Evicted ${matchingItem.url} from ${isAppCollection ? "AppCollection" : "AppManifest"
-                    } cache. Because of hash mismatch.`
-                );
-            }
-        }
-    }
-    return isAppCollection ? evictAppCollectionCache() : evictManifestFolderCache();
-}
+
+
 
 async function evictAppCollectionCache() {
     return evictItemsFromStore(StoreNames.AppCollectionManifestCache, "url");
@@ -303,38 +226,90 @@ export async function evictHubDataCache() {
     return evictItemsFromStore(StoreNames.HubSiteData, "SiteId");
 }
 
-export async function getManifestFromCache(
+
+export async function evictManifestTXTCache(
+    item?: AppFolderManifest
+) {
+    if (item) {
+        //check if there is an item that should be evicted
+        const matchingItem = await getManifestTXTCacheItem(item.url)
+        if (matchingItem) {
+            if (matchingItem.hash !== item.hash) {
+                await removeAppFolderManifestFromCache(item.url);
+                logGenericCoreWarning(
+                    `Evicted ${MANIFEST_NAME} ${matchingItem.url} from cache. Because of hash mismatch.`
+                );
+            }
+        }
+    }
+    return evictManifestFolderCache();
+}
+export async function evictAppsTXTCache(
+    item?: AppCollectionManifest
+) {
+    if (item) {
+        //check if there is an item that should be evicted
+        const matchingItem = await getAppsTXTCacheItem(item.url);
+        if (matchingItem) {
+            if (matchingItem.hash !== item.hash) {
+                await removeAppCollectionManifestFromCache(item.url)
+                logGenericCoreWarning(
+                    `Evicted ${APPCOLLECTION_MANIFEST_NAME} ${matchingItem.url} from cache. Because of hash mismatch.`
+                );
+            }
+        }
+    }
+    return evictAppCollectionCache();
+}
+
+
+export async function getManifestTXTFromCache(
     url: string,
-    isAppCollection: boolean
 ) {
     //first lets do cache eviction
-    await evictManifestCache(isAppCollection);
+    await evictManifestTXTCache();
 
     //do not get cached manifests when debugging
     if (isInDebug) {
         return undefined;
     }
 
-    return isAppCollection
-        ? getAppCollectionManifestCacheItem(url)
-        : getAppFolderManifestCacheItem(url);
+    return getManifestTXTCacheItem(url);
 }
 
-export async function setOrUpdateManifest(
-    retResult: ManifestItem,
+export async function setOrUpdateManifestTXT(
+    retResult: AppFolderManifest,
     cacheTimeMinutes: number
 ) {
-    await evictManifestCache(retResult.isAppCollection, retResult);
-    const foundItem = retResult.isAppCollection
-        ? await getAppCollectionManifestCacheItem(retResult.url)
-        : await getAppFolderManifestCacheItem(retResult.url);
+    await evictManifestTXTCache(retResult);
+    const foundItem = await getManifestTXTCacheItem(retResult.url);
     if (foundItem && foundItem.hash === retResult.hash && !isInDebug) {
         return;
     }
+    await addOrUpdateManifestTXTToCache(retResult, cacheTimeMinutes);
+}
 
-    if (retResult.isAppCollection) {
-        await addOrUpdateAppCollectionToCache(retResult, cacheTimeMinutes)
-    } else {
-        await addOrUpdateAppFolderManifestToCache(retResult, cacheTimeMinutes);
+export async function setOrUpdateAppCollectionTXT(
+    retResult: AppCollectionManifest,
+    cacheTimeMinutes: number
+) {
+    await evictAppsTXTCache(retResult);
+    const foundItem = await getAppsTXTCacheItem(retResult.url)
+    if (foundItem && foundItem.hash === retResult.hash && !isInDebug) {
+        return;
     }
+    await addOrUpdateAppsTXTToCache(retResult, cacheTimeMinutes)
+}
+
+export async function getAppCollectionTXTFromCache(
+    url: string,
+) {
+    //first lets do cache eviction
+    await evictAppsTXTCache();
+
+    //do not get cached manifests when debugging
+    if (isInDebug) {
+        return undefined;
+    }
+    return getAppsTXTCacheItem(url)
 }

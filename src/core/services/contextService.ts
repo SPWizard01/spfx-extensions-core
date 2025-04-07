@@ -12,7 +12,7 @@ export function getWebAbsoluteUrl() {
 }
 
 export function getSiteId() {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.site.id.toString() : contextInfo.context.siteId.replace("{", "").replace("}", "");
+    return contextInfo.contextType === "SPOModernContext" ? (contextInfo.context.site.id.toString() as string) : contextInfo.context.siteId.replace("{", "").replace("}", "");
 }
 
 export function getSiteAbsoluteUrl() {
@@ -23,7 +23,6 @@ export function getHubSiteId() {
     return (contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.hubSiteId?.toString() : contextInfo.context.hubSiteId) ?? EMPTY_GUID;
 }
 
-export function currentSiteIsRootHub() {
-    const hubId = getHubSiteId();
-    return getSiteId().toLowerCase() === hubId.toLowerCase() || !hubId || hubId === EMPTY_GUID;
+export function getIsHubSite() {
+    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.isHubSite : (contextInfo.context as any).isHubSite;
 }
