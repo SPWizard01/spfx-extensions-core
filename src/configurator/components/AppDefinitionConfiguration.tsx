@@ -1,19 +1,19 @@
 import {
-  Button,
-  Dropdown,
-  Label,
-  Option,
-  type OptionOnSelectData,
-  type SelectionEvents,
+    Button,
+    Dropdown,
+    Label,
+    Option,
+    type OptionOnSelectData,
+    type SelectionEvents,
 } from "@fluentui/react-components";
 
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import {
-  selectedAppItem,
-  selectedWebAvailableWebs,
-  updateSelectedApp,
+    selectedAppItem,
+    selectedWebAvailableWebs,
+    updateSelectedApp,
 } from "../runtimeStore";
 import { getAppDefinitions } from "../services/appDefinitionImport";
 import { AddWeb } from "./AddWeb";
@@ -54,7 +54,7 @@ export function AppDefinitionConfiguration(
   const [selectedWeb, setSelectedWeb] = useState<WebIdAppIdMap>(allWebs);
   function getSelectedAppValue() {
     const selectedWebIdApps =
-      app?.manifest.enabledApps.find((a) => a.webId === selectedWeb.Id)
+      app?.manifest.appDefinitionMap.find((a) => a.webId === selectedWeb.Id)
         ?.enabledAppIds ?? [];
 
     const values = selectedWebIdApps.map((a) => {
@@ -81,7 +81,7 @@ export function AppDefinitionConfiguration(
         enabledApps: [],
       }))
     );
-    downloadDataApp.manifest.enabledApps.forEach((w) => {
+    downloadDataApp.manifest.appDefinitionMap.forEach((w) => {
       const web = allWebIds.find((w1) => w1.Id === w.webId);
       if (web) {
         web.enabledApps = w.enabledAppIds;
@@ -164,12 +164,12 @@ export function AppDefinitionConfiguration(
           placeholder="Select App Definitions"
           disabled={!app.manifest.enabled}
           selectedOptions={
-            app.manifest.enabledApps.find((a) => a.webId === selectedWeb.Id)
+            app.manifest.appDefinitionMap.find((a) => a.webId === selectedWeb.Id)
               ?.enabledAppIds ?? []
           }
           value={getSelectedAppValue()}
           onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
-            const arrayEntry = app.manifest.enabledApps.find(
+            const arrayEntry = app.manifest.appDefinitionMap.find(
               (a) => a.webId === selectedWeb.Id
             );
             const selected = data.selectedOptions.map((o) => o);
@@ -179,7 +179,7 @@ export function AppDefinitionConfiguration(
             if (arrayEntry) {
               arrayEntry.enabledAppIds = selected;
             } else {
-              app.manifest.enabledApps.push({
+              app.manifest.appDefinitionMap.push({
                 webId: selectedWeb.Id,
                 enabledAppIds: selected,
               });
@@ -192,7 +192,7 @@ export function AppDefinitionConfiguration(
               key={d.id}
               value={d.id}
               disabled={
-                app.manifest.enabledApps
+                app.manifest.appDefinitionMap
                   .find((a) => a.webId === selectedWeb.Id)
                   ?.enabledAppIds.includes("*") && d.id !== "*"
               }
@@ -208,7 +208,7 @@ export function AppDefinitionConfiguration(
           size="medium"
           disabled={!app.manifest.enabled}
           onClick={() => {
-            for (const appMap of app.manifest.enabledApps) {
+            for (const appMap of app.manifest.appDefinitionMap) {
               appMap.enabledAppIds = appMap.enabledAppIds.filter(
                 (a) => a !== selectedWeb.Id
               );

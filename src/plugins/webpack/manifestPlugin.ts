@@ -27,10 +27,8 @@ export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance
             (stats) => {
                 const manifestToWrite: SPFxExtensionAppManifest = {
                     appRelativeEntryPointUrls: this.options.appRelativeEntryPointUrls ?? [],
-                    enabled: this.options.enabled ?? true,
-                    enabledApps: this.options.enabledApps ?? [{ enabledAppIds: ["*"], webId: "*" }],
+                    appDefinitionMap: this.options.appDefinitionMap ?? [{appId: "*", config: { webIds: [], enabledOnChildren: true }}],
                     isESM: this.options.isESM,
-                    enabledOnAllHubSites: this.options.enabledOnAllHubSites ?? true,
                     enableCaching: this.options.enableCaching ?? false,
                     cacheString: this.options.cacheString ?? "",
                 }

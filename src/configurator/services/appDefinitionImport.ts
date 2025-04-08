@@ -14,7 +14,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         }
     ]
     if (!app.manifest.isESM) {
-        const set = new Set(app.manifest.enabledApps.flatMap((a) => a.enabledAppIds));
+        const set = new Set(app.manifest.appDefinitionMap.flatMap((a) => a.appId));
         allApps.push(...set.keys().filter(k => k !== "*").map((a) => {
             return {
                 id: a,

@@ -54,7 +54,7 @@ export async function initCoreServices() {
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
   const hubSiteUrl = await getHubSiteUrl();
-
+  //getRootWebId(siteUrl)
   window.__SPFxExtensions.__CorePromiseResolver?.();
   await loadModernApps(siteUrl, webUrl, hubSiteUrl);
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);

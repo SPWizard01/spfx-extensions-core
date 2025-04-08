@@ -1,9 +1,10 @@
+import type { SPFxExtensionAppMap } from "../../models/appCollectionManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { AppFolderManifest } from "../../models/cache";
 import { MANIFEST_NAME, } from "../../utilities/constants";
 import { isAppInDebug, } from "../../utilities/debug";
 import { isFileAllowedToRun } from "./allowedAppsService";
-import { getIsHubSite, getWebId } from "./contextService";
+import { getWebId } from "./contextService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
@@ -46,11 +47,9 @@ async function parseManifestAndImportEntryPoints(
     "manifest:",
     manifestToParse.appManifest
   );
-  if (!manifestToParse.appManifest.enabled) {
-    return returnPromiseArray;
-  }
+
   for (const entryUrl of manifestToParse.appManifest.appRelativeEntryPointUrls) {
-    const ep = entryUrl.replace(/\.\.\/?/g, "asdasd");
+    const ep = entryUrl.replace(/\.\.\/?/g, "./");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
 
@@ -198,7 +197,7 @@ export async function loadModernApps(
 }
 
 async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
-  const isHub = getIsHubSite();
+  // const isHub = getIsHubSite();
   const currentWebId = getWebId();
 
   if (!Array.isArray(registrations)) {
@@ -209,19 +208,31 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
       logGenericCoreError(`App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
       continue;
     }
-    const appEnabled = manifestToParse.appManifest.enabledApps.some((ea) => {
-      const isSameWebId = ea.webId.toLowerCase() === currentWebId.toLowerCase();
-      const allWebsEnabled = ea.webId === "*";
-      const isEnabledAppId = ea.enabledAppIds.some((eai) => eai.toLowerCase() === appReg.id.toLowerCase());
-      const allAppsEnabled = ea.enabledAppIds.some((eai) => eai === "*");
-      return (isSameWebId && isEnabledAppId) ||
-        (isSameWebId && allAppsEnabled) ||
-        (allWebsEnabled && allAppsEnabled) ||
-        (allWebsEnabled && isEnabledAppId);
-    }) || isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
+    const foundMapItem = manifestToParse.appManifest.appDefinitionMap.find((a) => a.appId.toLowerCase() === appReg.id.toLowerCase());
+    const foundAllItem = manifestToParse.appManifest.appDefinitionMap.find((a) => a.appId === "*");
+    const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
+    const relatedApps: SPFxExtensionAppMap[] = [];
+    if (foundMapItem) {
+      relatedApps.push(foundMapItem);
+    }
+    if (foundAllItem) {
+      relatedApps.push(foundAllItem);
+    }
+    if (relatedApps.length === 0) {
+      logGenericCoreInfo(notEnabledMSG);
+      continue;
+    }
+
+    const appEnabled = relatedApps.some((ea) => {
+      //any of the related apps has matching web id
+      const isSameWebId = ea.config.webIds.some(wid => wid.toLowerCase() === currentWebId.toLowerCase())
+      //any of the related apps has wildcard web id
+      const allWebsEnabled = ea.config.enabledOnChildren || ea.config.webIds.some(wid => wid === "*");
+      return isSameWebId || allWebsEnabled;
+    }) //|| isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
 
     if (!appEnabled) {
-      logGenericCoreInfo(`App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`);
+      logGenericCoreInfo(notEnabledMSG);
       continue;
     }
     window.__SPFxExtensions.RegisterApp(appReg);

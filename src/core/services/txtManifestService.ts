@@ -17,7 +17,7 @@ function validateManifestTXT(manifest: SPFxExtensionAppManifest) {
         throw `${SPFxExtensionCore} Manifest does not have appRelativeEntryPointUrl property.`;
 
     }
-    if (!manifest.enabledApps) {
+    if (!manifest.appDefinitionMap) {
         logGenericCoreError(`Manifest does not have enabledApps property.`, manifest);
         throw `${SPFxExtensionCore} Manifest does not have enabledApps property.`;
     }
