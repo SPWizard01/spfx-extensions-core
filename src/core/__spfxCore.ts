@@ -23,14 +23,13 @@ const configuratorApp: SPFxExtensionAppRegistration = {
 async function start() {
   const buildDate = BUILD_DATE;
   logGenericCoreInfo(`Initializing Core Services Built:`, buildDate);
-  initCoreServices().then(() => {
-    try {
-      window.__SPFxExtensions.RegisterApp(configuratorApp);
-    }
-    catch (e) {
-      logGenericCoreError("Error registering configurator app", e);
-    }
-  });
+  await initCoreServices();
+  try {
+    await window.__SPFxExtensions.RegisterApp(configuratorApp);
+  }
+  catch (e) {
+    logGenericCoreError("Error registering configurator app", e);
+  }
 }
 
 start();

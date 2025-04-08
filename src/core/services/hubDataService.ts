@@ -1,13 +1,18 @@
-import { currentSiteIsRootHub, getHubSiteId, getSiteAbsoluteUrl } from "./contextService";
+import { EMPTY_GUID, getHubSiteId, getIsHubSite, getSiteAbsoluteUrl, getSiteId } from "./contextService";
 import { addOrUpdateHubDataToCache, evictHubDataCache, getHubData } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 export async function getHubSiteUrl() {
-  if (currentSiteIsRootHub()) {
+  if (getIsHubSite()) {
+    return "";
+  }
+  const hubSiteId = getHubSiteId();
+  const siteId = getSiteId();
+  // hubid is null or is empty guid or current subsite belongs to a site which is a hub site;
+  if (!hubSiteId || hubSiteId === EMPTY_GUID || hubSiteId === siteId) {
     return "";
   }
   await evictHubDataCache();
-  const hubSiteId = getHubSiteId();
   const cached = await getHubData(hubSiteId);
   if (!cached) {
     const siteUrl = getSiteAbsoluteUrl();

@@ -1,17 +1,11 @@
-import {
-  fetchAppsTXTFromAllLocations,
-  getManifestTXTFromAllLocations,
-} from "./componentLoaderService";
-import { evictManifestCache } from "./coreIdbService";
+import { evictAppsTXTCache, evictManifestTXTCache } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
+import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
+import { getManifestTXTFromAllLocations } from "./txtManifestService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
 const CORE_MANIFEST_CHECK_INTERVAL = 60000;
 let manifestWatch = 0;
 let fistTimeChecked = false;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getRandomArbitrary(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min) + min);
-}
 
 export function registerManifestWatcher(
   site: string,
@@ -57,7 +51,7 @@ export async function performManifestCheck(
       new Date().toISOString(),
       `Checking for manifest updates across all locations...`
     );
-    await Promise.all([evictManifestCache(true), evictManifestCache(false)]);
+    await Promise.all([evictAppsTXTCache(), evictManifestTXTCache()]);
     const appLocations = await fetchAppsTXTFromAllLocations(
       site,
       web,

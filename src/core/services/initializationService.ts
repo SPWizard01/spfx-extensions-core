@@ -56,7 +56,7 @@ export async function initCoreServices() {
   const hubSiteUrl = await getHubSiteUrl();
 
   window.__SPFxExtensions.__CorePromiseResolver?.();
-  loadModernApps(siteUrl, webUrl, hubSiteUrl);
+  await loadModernApps(siteUrl, webUrl, hubSiteUrl);
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);
   logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");
 }
