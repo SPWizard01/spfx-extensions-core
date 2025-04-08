@@ -5,17 +5,17 @@ import {
   configurationWebIsRootHub,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
-import { AppList } from "./AppList";
-import { SelectedAppConfig } from "./SelectedAppConfig";
-import { Stack } from "./Stack";
-import { ToastNotification } from "./ToastNotification";
+import { Stack } from "./@common/Stack";
+import { ToastNotification } from "./@common/ToastNotification";
+import { AppList } from "./AppList/AppList";
+import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
 export function Index() {
   return (
-    <Stack style={{ padding: "30px" }}>
+    <Stack style={{ padding: "30px 30px 0 30px", height: "100%" }} gap={20}>
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
       {queryWeb && (
         <Stack horizontal gap={8} verticalAlign="center">

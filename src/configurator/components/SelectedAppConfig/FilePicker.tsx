@@ -8,21 +8,22 @@ import {
 import { Body1Strong, Text } from "@fluentui/react-text";
 import { useState } from "react";
 import Dropzone from "react-dropzone";
-import { MANIFEST_NAME } from "../../utilities/constants";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { MANIFEST_NAME } from "../../../utilities/constants";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   configurationWebSP,
   selectedAppItem,
   updateSelectedApp,
-} from "../runtimeStore";
+} from "../../runtimeStore";
 import {
+  type FileContents,
   addFiles,
   parseUploadFiles,
-  type FileContents,
-} from "../services/fileService";
-import { getZipManifestContents } from "../services/zipService";
-import { useRowStack } from "../styles/stack";
-import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "./style";
+} from "../../services/fileService";
+import { getZipManifestContents } from "../../services/zipService";
+import { useRowStack } from "../../styles/stack";
+import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "../style";
+
 //use-file-picker
 //react-drag-drop-files
 interface UploadStatus extends FileContents {
@@ -48,7 +49,9 @@ export function FilePicker() {
         file.status = d.success ? "uploaded" : "error";
       }
       if (isManifest && d.success && file) {
-        const updateApp = JSON.parse(JSON.stringify(selectedAppItem.value)) as AppCollectionConfigurationItem;
+        const updateApp = JSON.parse(
+          JSON.stringify(selectedAppItem.value)
+        ) as AppCollectionConfigurationItem;
         const content = new TextDecoder().decode(file.content);
         const manifestJson = JSON.parse(content);
         updateApp.manifest = manifestJson;

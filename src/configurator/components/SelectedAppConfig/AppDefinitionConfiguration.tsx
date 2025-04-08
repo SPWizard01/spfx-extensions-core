@@ -9,15 +9,16 @@ import {
 
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   selectedAppItem,
   selectedWebAvailableWebs,
   updateSelectedApp,
-} from "../runtimeStore";
-import { getAppDefinitions } from "../services/appDefinitionImport";
+} from "../../runtimeStore";
+import { getAppDefinitions } from "../../services/appDefinitionImport";
+import { Stack } from "../@common/Stack";
 import { AddWeb } from "./AddWeb";
-import { Stack } from "./Stack";
+
 interface AppDefinitionConfigurationProps {
   app?: AppCollectionConfigurationItem;
 }

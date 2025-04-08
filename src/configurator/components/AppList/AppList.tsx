@@ -9,23 +9,23 @@ import {
   TableRow,
 } from "@fluentui/react-components";
 import { FolderRegular } from "@fluentui/react-icons";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
   configurationWebSP,
   selectedAppItem,
   updateApp,
-} from "../runtimeStore";
+} from "../../runtimeStore";
 import {
   getEnabledAppCollection,
   updateAppCollection,
-} from "../services/appCollection";
+} from "../../services/appCollection";
+import { Stack } from "../@common/Stack";
+import { StackItem } from "../@common/StackItem";
 import { AddApp } from "./AddApp";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
-import { Stack } from "./Stack";
-import { StackItem } from "./StackItem";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,

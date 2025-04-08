@@ -17,10 +17,10 @@ import {
 } from "@fluentui/react-components";
 import { Add24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
-import { configurationWebSP } from "../runtimeStore";
-import { addAppCollection } from "../services/appCollection";
-import { toasterId } from "./ToastNotification";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
+import { configurationWebSP } from "../../runtimeStore";
+import { addAppCollection } from "../../services/appCollection";
+import { toasterId } from "../@common/ToastNotification";
 
 export function AddApp() {
   const [open, setOpen] = useState(false);
