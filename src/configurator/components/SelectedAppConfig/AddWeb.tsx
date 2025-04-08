@@ -23,8 +23,9 @@ import { HttpRequestError } from "@pnp/queryable";
 import type { IWebInfo } from "@pnp/sp/webs";
 import type { ComponentChildren } from "preact";
 import { useState } from "react";
-import { getPnPSP } from "../services/pnpService";
-import { toasterId } from "./ToastNotification";
+import { getPnPSP } from "../../services/pnpService";
+import { toasterId } from "../@common/ToastNotification";
+
 interface AddWebProps {
   disabled?: boolean;
   onWebResolved?: (web: IWebInfo) => void;

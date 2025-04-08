@@ -1,5 +1,5 @@
 import { Switch } from "@fluentui/react-components";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 
 interface AppEnabledProps {
   app: AppCollectionConfigurationItem;

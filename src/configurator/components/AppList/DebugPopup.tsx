@@ -7,8 +7,8 @@ import {
   PopoverTrigger,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import { DEBUG_KEYS, isAppInDebug } from "../../utilities/debug";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { DEBUG_KEYS, isAppInDebug } from "../../../utilities/debug";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 
 interface DebugPopupProps {
   app: AppCollectionConfigurationItem;

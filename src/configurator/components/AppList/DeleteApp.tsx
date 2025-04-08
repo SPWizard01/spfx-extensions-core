@@ -15,15 +15,15 @@ import {
 } from "@fluentui/react-components";
 import { Delete20Regular } from "@fluentui/react-icons";
 import { useState } from "react";
-import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
-import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import { SPFX_EXTENSIONS_FOLDER } from "../../../utilities/constants";
+import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
   configrationWebUrl,
   configurationWebSP,
   deletingAppItem,
-} from "../runtimeStore";
-import { removeAppCollection } from "../services/appCollection";
+} from "../../runtimeStore";
+import { removeAppCollection } from "../../services/appCollection";
 
 interface DeleteAppProps {
   item: AppCollectionConfigurationItem;

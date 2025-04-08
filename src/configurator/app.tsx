@@ -3,9 +3,7 @@ import {
   createLightTheme,
   FluentProvider,
 } from "@fluentui/react-components";
-import {
-  createBrandVariants,
-} from "@fluentui/react-migration-v8-v9";
+import { createBrandVariants } from "@fluentui/react-migration-v8-v9";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
 import { Index } from "./components";
 
@@ -23,7 +21,12 @@ const thm = window.__globalSettings__.customizations.settings.theme.isInverted
 // const thm = createV9Theme(window.__themeState__.theme)
 export function App(_props: AppProps) {
   return (
-    <FluentProvider theme={thm}>
+    <FluentProvider
+      theme={thm}
+      style={{
+        height: "100%",
+      }}
+    >
       <Index />
     </FluentProvider>
   );
