@@ -87,19 +87,19 @@ export const AppDefinitionGrid = () => {
         enabledApps: [],
       }))
     );
-    downloadDataApp.manifest.enabledApps.forEach((w) => {
-      const web = allWebIds.find((w1) => w1.Id === w.webId);
-      if (web) {
-        web.enabledApps = w.enabledAppIds;
-      } else {
-        allWebIds.push({
-          Id: w.webId,
-          Name: "Unknown",
-          Url: `Unknown_${w.webId}`,
-          isSubWeb: false,
-          enabledApps: w.enabledAppIds,
-        });
-      }
+    downloadDataApp.manifest.appDefinitionMap.forEach((w) => {
+      // const web = allWebIds.find((w1) => w1.Id === w.webId);
+      // if (web) {
+      //   web.enabledApps = w.enabledAppIds;
+      // } else {
+      //   allWebIds.push({
+      //     Id: w.webId,
+      //     Name: "Unknown",
+      //     Url: `Unknown_${w.webId}`,
+      //     isSubWeb: false,
+      //     enabledApps: w.enabledAppIds,
+      //   });
+      // }
     });
     setWebIdMap(allWebIds);
     setAllDefs(allAppDefinitions);

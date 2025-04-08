@@ -54,9 +54,7 @@ export function AppDefinitionConfiguration(
   const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
   const [selectedWeb, setSelectedWeb] = useState<WebIdAppIdMap>(allWebs);
   function getSelectedAppValue() {
-    const selectedWebIdApps =
-      app?.manifest.appDefinitionMap.find((a) => a.webId === selectedWeb.Id)
-        ?.enabledAppIds ?? [];
+    const selectedWebIdApps: any[] = [];
 
     const values = selectedWebIdApps.map((a) => {
       return Alldefs.find((d) => d.id === a)?.name ?? a;
@@ -83,18 +81,18 @@ export function AppDefinitionConfiguration(
       }))
     );
     downloadDataApp.manifest.appDefinitionMap.forEach((w) => {
-      const web = allWebIds.find((w1) => w1.Id === w.webId);
-      if (web) {
-        web.enabledApps = w.enabledAppIds;
-      } else {
-        allWebIds.push({
-          Id: w.webId,
-          Name: "Unknown",
-          Url: `Unknown_${w.webId}`,
-          isSubWeb: false,
-          enabledApps: w.enabledAppIds,
-        });
-      }
+      // const web = allWebIds.find((w1) => w1.Id === w.webId);
+      // if (web) {
+      //   web.enabledApps = w.enabledAppIds;
+      // } else {
+      //   allWebIds.push({
+      //     Id: w.webId,
+      //     Name: "Unknown",
+      //     Url: `Unknown_${w.webId}`,
+      //     isSubWeb: false,
+      //     enabledApps: w.enabledAppIds,
+      //   });
+      // }
     });
     setWebIdMap(allWebIds);
     setAllDefs(allAppDefinitions);
@@ -110,7 +108,6 @@ export function AppDefinitionConfiguration(
         <Label>Enabled On Webs: </Label>
         <Dropdown
           multiselect={false}
-          disabled={!app.manifest.enabled}
           selectedOptions={[selectedWeb.Id]}
           value={getSelectedWebValue()}
           onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
@@ -127,7 +124,6 @@ export function AppDefinitionConfiguration(
           ))}
         </Dropdown>
         <AddWeb
-          disabled={!app.manifest.enabled}
           onWebResolved={(web) => {
             if (webIdMap.some((w) => w.Id === web.Id)) return;
             const newWebIdMap = [
@@ -148,7 +144,7 @@ export function AppDefinitionConfiguration(
         <Button
           appearance="secondary"
           size="medium"
-          disabled={!app.manifest.enabled || selectedWeb.isSubWeb}
+          disabled={selectedWeb.isSubWeb}
           onClick={() => {
             const newWebIdMap = webIdMap.filter((w) => w.Id !== selectedWeb.Id);
             setWebIdMap(newWebIdMap);
@@ -163,57 +159,49 @@ export function AppDefinitionConfiguration(
         <Dropdown
           multiselect={true}
           placeholder="Select App Definitions"
-          disabled={!app.manifest.enabled}
           selectedOptions={
-            app.manifest.appDefinitionMap.find((a) => a.webId === selectedWeb.Id)
-              ?.enabledAppIds ?? []
+            // app.manifest.appDefinitionMap.find(
+            //   (a) => a.webId === selectedWeb.Id
+            // )?.enabledAppIds ??
+             []
           }
           value={getSelectedAppValue()}
           onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
-            const arrayEntry = app.manifest.appDefinitionMap.find(
-              (a) => a.webId === selectedWeb.Id
-            );
-            const selected = data.selectedOptions.map((o) => o);
-            if (selected.includes("*")) {
-              selected.splice(0, selected.length, "*");
-            }
-            if (arrayEntry) {
-              arrayEntry.enabledAppIds = selected;
-            } else {
-              app.manifest.appDefinitionMap.push({
-                webId: selectedWeb.Id,
-                enabledAppIds: selected,
-              });
-            }
+            // const arrayEntry = app.manifest.appDefinitionMap.find(
+            //   (a) => a.webId === selectedWeb.Id
+            // );
+            // const selected = data.selectedOptions.map((o) => o);
+            // if (selected.includes("*")) {
+            //   selected.splice(0, selected.length, "*");
+            // }
+            // if (arrayEntry) {
+            //   arrayEntry.enabledAppIds = selected;
+            // } else {
+            //   app.manifest.appDefinitionMap.push({
+            //     webId: selectedWeb.Id,
+            //     enabledAppIds: selected,
+            //   });
+            // }
             updateSelectedApp(app);
           }}
         >
           {Alldefs.map((d) => (
-            <Option
-              key={d.id}
-              value={d.id}
-              disabled={
-                app.manifest.appDefinitionMap
-                  .find((a) => a.webId === selectedWeb.Id)
-                  ?.enabledAppIds.includes("*") && d.id !== "*"
-              }
-            >
+            <Option key={d.id} value={d.id}>
               {d.name}
             </Option>
           ))}
         </Dropdown>
-        <Button size="medium" disabled={!app.manifest.enabled}>
+        <Button size="medium" disabled={app.manifest.isESM}>
           Add app
         </Button>
         <Button
           size="medium"
-          disabled={!app.manifest.enabled}
+          disabled={app.manifest.isESM}
           onClick={() => {
-            for (const appMap of app.manifest.appDefinitionMap) {
-              appMap.enabledAppIds = appMap.enabledAppIds.filter(
-                (a) => a !== selectedWeb.Id
+            app.manifest.appDefinitionMap =
+              app.manifest.appDefinitionMap.filter(
+                (a) => a.appId !== selectedWeb.Id
               );
-            }
           }}
         >
           Remove app
