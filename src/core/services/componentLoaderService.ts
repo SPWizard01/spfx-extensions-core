@@ -4,7 +4,7 @@ import type { AppFolderManifest } from "../../models/cache";
 import { MANIFEST_NAME, } from "../../utilities/constants";
 import { isAppInDebug, } from "../../utilities/debug";
 import { isFileAllowedToRun } from "./allowedAppsService";
-import { getWebId } from "./contextService";
+import { getHubSiteId, getSiteId, getWebId } from "./contextService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
@@ -198,7 +198,9 @@ export async function loadModernApps(
 
 async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
   // const isHub = getIsHubSite();
-  const currentWebId = getWebId();
+  const currentWebId = getWebId().toLowerCase();
+  const currentSiteId = getSiteId().toLowerCase();
+  const currentHubId = getHubSiteId().toLowerCase();
 
   if (!Array.isArray(registrations)) {
     logGenericCoreError(`Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
@@ -225,10 +227,22 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
 
     const appEnabled = relatedApps.some((ea) => {
       //any of the related apps has matching web id
-      const isSameWebId = ea.config.webIds.some(wid => wid.toLowerCase() === currentWebId.toLowerCase())
+      const hasMatchingHubId = ea.config.hubObjectIds.some(wid => wid.toLowerCase() === currentHubId);
+
+      const hasMatchingEnabledId = ea.config.includedIds.some(wid => {
+        const objectId = wid.toLowerCase();
+        if (hasMatchingHubId) {
+          return objectId === currentWebId || objectId === currentSiteId || objectId === currentHubId;
+        }
+        return objectId === currentWebId || objectId === currentSiteId;
+      })
+      const hasDisabledId = ea.config.excludedIds.some(wid => {
+        const objectId = wid.toLowerCase();
+        return objectId === currentWebId || objectId === currentSiteId || objectId === currentHubId;
+      })
       //any of the related apps has wildcard web id
-      const allWebsEnabled = ea.config.enabledOnChildren || ea.config.webIds.some(wid => wid === "*");
-      return isSameWebId || allWebsEnabled;
+      const allWebsEnabled = ea.config.enabledEverywhere;
+      return (hasMatchingEnabledId || allWebsEnabled) && !hasDisabledId;
     }) //|| isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
 
     if (!appEnabled) {

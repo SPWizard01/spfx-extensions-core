@@ -12,7 +12,7 @@ import {
 } from "@fluentui/react-components";
 import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
-import * as React from "react";
+import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { selectedAppItem, selectedWebAvailableWebs } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
@@ -71,8 +71,8 @@ interface WebIdAppIdMap extends WebIdName {
 export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
 
-  const [Alldefs, setAllDefs] = React.useState<AppIdName[]>([]);
-  const [webIdMap, setWebIdMap] = React.useState<WebIdAppIdMap[]>([]);
+  const [Alldefs, setAllDefs] = useState<AppIdName[]>([]);
+  const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
@@ -87,7 +87,7 @@ export const AppDefinitionGrid = () => {
         enabledApps: [],
       }))
     );
-    downloadDataApp.manifest.appDefinitionMap.forEach((w) => {
+    downloadDataApp.manifest.appDefinitionMap?.forEach((w) => {
       // const web = allWebIds.find((w1) => w1.Id === w.webId);
       // if (web) {
       //   web.enabledApps = w.enabledAppIds;

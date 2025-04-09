@@ -80,7 +80,7 @@ export function AppDefinitionConfiguration(
         enabledApps: [],
       }))
     );
-    downloadDataApp.manifest.appDefinitionMap.forEach((w) => {
+    downloadDataApp.manifest.appDefinitionMap.forEach((_w) => {
       // const web = allWebIds.find((w1) => w1.Id === w.webId);
       // if (web) {
       //   web.enabledApps = w.enabledAppIds;
@@ -166,7 +166,7 @@ export function AppDefinitionConfiguration(
              []
           }
           value={getSelectedAppValue()}
-          onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
+          onOptionSelect={(_ev: SelectionEvents, _data: OptionOnSelectData) => {
             // const arrayEntry = app.manifest.appDefinitionMap.find(
             //   (a) => a.webId === selectedWeb.Id
             // );

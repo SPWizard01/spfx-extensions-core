@@ -9,10 +9,11 @@
   "devDependencies": {
     "@fluentui/react-components": "^9.61.6",
     "@fluentui/react-icons": "^2.0.294",
+    "@fluentui/react-migration-v8-v9": "^9.7.8",
     "@pnp/sp": "^4.11.0",
     "@preact/signals": "^2.0.3",
     "@types/bun": "^1.2.8",
-    "bun": "^1.2.8",
+    "@types/sharepoint": "^2016.1.14",
     "bun-dev-server": "^0.9.84",
     "esbuild": "^0.25.2",
     "esbuild-hot-reload": "^1.0.6",
@@ -29,9 +30,6 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.1",
     "webpack": "^5.99.0"
-  },
-  "peerDependencies": {
-    "@types/sharepoint": "^2016.1.14"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -55,8 +53,5 @@
     "esserve": "bun run esserve.ts",
     "serve": "bun run serve.ts"
   },
-  "type": "module",
-  "dependencies": {
-    "@fluentui/react-migration-v8-v9": "^9.7.8"
-  }
+  "type": "module"
 }

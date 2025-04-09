@@ -1,8 +1,11 @@
 import { Badge, Link, Title2 } from "@fluentui/react-components";
+import type { ComponentChildren } from "preact";
+import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
   configurationWebBelongsToHub,
   configurationWebIsRootHub,
+  configurationWebIsSubsite,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { Stack } from "./@common/Stack";
@@ -13,27 +16,57 @@ import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
+function getBadges() {
+  const badges: ComponentChildren[] = [];
+  if (configurationWebIsRootHub) {
+    badges.push(
+      <Badge key="root" size="extra-large" color="success">
+        Hub root site
+      </Badge>
+    );
+  }
+  if (configurationWebBelongsToHub) {
+    badges.push(
+      <Badge key="child" size="extra-large" color="warning">
+        Hub child site
+      </Badge>
+    );
+  }
+  if (!configurationWebIsRootHub && !configurationWebBelongsToHub) {
+    badges.push(
+      <Badge key="nonhub" size="extra-large" color="danger">
+        Non hub site
+      </Badge>
+    );
+  }
+  if (configurationWebIsSubsite) {
+    badges.push(
+      <Badge key="subsite" size="extra-large" color="informative">
+        Sub site
+      </Badge>
+    );
+  } else {
+    badges.push(
+      <Badge key="root" size="extra-large" color="informative">
+        Site collection
+      </Badge>
+    );
+  }
+  return badges;
+}
+
 export function Index() {
+  const [error] = useErrorBoundary();
+  if (error) {
+    console.error("Error in App component:", error);
+    return <div>Error: {error.message}</div>;
+  }
   return (
     <Stack style={{ padding: "30px 30px 0 30px", height: "100%" }} gap={20}>
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
       {queryWeb && (
         <Stack horizontal gap={8} verticalAlign="center">
-          {configurationWebIsRootHub && (
-            <Badge size="extra-large" color="success">
-              Hub root site
-            </Badge>
-          )}
-          {configurationWebBelongsToHub && (
-            <Badge size="extra-large" color="warning">
-              Hub child site
-            </Badge>
-          )}
-          {!configurationWebIsRootHub && !configurationWebBelongsToHub && (
-            <Badge size="extra-large" color="danger">
-              Non hub site
-            </Badge>
-          )}
+          {...getBadges()}
           <Link target="_blank" href={cfgWeb}>
             {cfgWeb}
           </Link>

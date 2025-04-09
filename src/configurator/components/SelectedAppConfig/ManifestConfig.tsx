@@ -9,6 +9,7 @@ import {
 import { getAllAppJSFiles } from "../../services/fileService";
 import { Stack } from "../@common/Stack";
 import { StackItem } from "../@common/StackItem";
+import { AddWeb } from "./AddWeb";
 import { AppDefinitionGrid } from "./AppDefinitionGrid";
 import { FilePicker } from "./FilePicker";
 
@@ -103,6 +104,7 @@ export function ManifestConfig() {
       <StackItem>
         <Subtitle2>Web application</Subtitle2>
         <AppDefinitionGrid />
+        <AddWeb />
         {/* <StackItem>
           <AppDefinitionConfiguration />
         </StackItem> */}

@@ -27,10 +27,11 @@ export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance
             (stats) => {
                 const manifestToWrite: SPFxExtensionAppManifest = {
                     appRelativeEntryPointUrls: this.options.appRelativeEntryPointUrls ?? [],
-                    appDefinitionMap: this.options.appDefinitionMap ?? [{appId: "*", config: { webIds: [], enabledOnChildren: true }}],
+                    appDefinitionMap: this.options.appDefinitionMap ?? [{appId: "*", config: { includedIds: [], excludedIds: [], hubObjectIds: [], enabledEverywhere: true }}],
                     isESM: this.options.isESM,
                     enableCaching: this.options.enableCaching ?? false,
                     cacheString: this.options.cacheString ?? "",
+                    urlMap: this.options.urlMap ?? [],
                 }
                 if (this.options.generateCacheString) {
                     const hashedString = hash("sha1", `${new Date().getTime()}`, "hex")

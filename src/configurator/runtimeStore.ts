@@ -23,14 +23,15 @@ export const configurationWebBelongsToHub =
   !configurationSiteInfo.IsHubSite &&
   configurationSiteInfo.HubSiteId !== EMPTY_GUID;
 
+export const configurationWebIsSubsite =
+  configurationSiteRootWeb.Id !== configurationWebInfo.Id;
+
 export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
 export const selectedWebAvailableWebs = await getAllWebInfos(
   configurationWebSP
 );
 console.log(
-  configurationWebInfo,
-  configurationSiteRootWeb,
-  configurationSiteInfo
+  selectedWebAvailableWebs
 );
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getEnabledAppCollection(configurationWebSP);

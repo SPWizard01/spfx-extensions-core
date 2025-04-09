@@ -13,10 +13,11 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
     }
     const manifestToWrite: SPFxExtensionAppManifest = {
         appRelativeEntryPointUrls: options.appRelativeEntryPointUrls ?? [],
-        appDefinitionMap: options.appDefinitionMap ?? [{appId: "*", config: { webIds: [], enabledOnChildren: true }}],
+        appDefinitionMap: options.appDefinitionMap ?? [{ appId: "*", config: { includedIds: [], excludedIds: [], hubObjectIds: [], enabledEverywhere: true } }],
         isESM: options.isESM,
         enableCaching: options.enableCaching ?? false,
         cacheString: options.cacheString ?? "",
+        urlMap: options.urlMap ?? [],
     }
     if (options.generateCacheString) {
         const hash = Bun.CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")

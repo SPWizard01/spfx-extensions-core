@@ -55,6 +55,7 @@ export async function initCoreServices() {
   const webUrl = getWebAbsoluteUrl();
   const hubSiteUrl = await getHubSiteUrl();
   //getRootWebId(siteUrl)
+  //TODO: figure out what to do with all apps when context change (i.e. to a completely different site)
   window.__SPFxExtensions.__CorePromiseResolver?.();
   await loadModernApps(siteUrl, webUrl, hubSiteUrl);
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);
