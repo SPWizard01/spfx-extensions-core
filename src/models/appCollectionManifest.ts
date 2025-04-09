@@ -6,14 +6,28 @@ export interface SPFxExtensionApp {
 
 export interface SPFxExtensionAppMapItemConfig {
     /**
-     * WebId of the site where the app is enabled or `*` for all sites
+     * WebId or siteid or hubid of the sp site where the app should be enabled;
      */
-    webIds: string[];
+    includedIds: string[];
     /**
-     * If enabled webIds has no effect, same as webIds would have been set to `*`, also applicable to hub child sites
-     * @default false
+     * WebId or siteid or hubid of the sp site where the app should be disabled;
+     * Takes precendence over `includedIds`, i.e. if the app is enabled on a site and disabled on the same site, it will be disabled.
      */
-    enabledOnChildren: boolean;
+    excludedIds: string[];
+    /**
+     * A subset of `includedIds` that will be used to determine if the app should be enabled on all hub children.
+     * 
+     * Only applicable to `includedIds` that refer to a hub site.
+     * 
+     * This ismplies that the `includedIds` item is treated as hub root instead of site collection.
+     */
+    hubObjectIds: string[];
+    /**
+     * If enabled takes precedence over `includedIds` and `hubObjectIds`
+     * 
+     * `excludedObjectIds` will still take precedence over this flag.
+     */
+    enabledEverywhere: boolean;
 }
 
 export interface SPFxExtensionAppMap {
@@ -25,6 +39,11 @@ export interface SPFxExtensionAppMap {
      * Configuration of said app definition item.
      */
     config: SPFxExtensionAppMapItemConfig;
+    urlMap: {
+        siteId: string;
+        webId: string;
+        url: string;
+    }
 }
 
 export interface SPFxExtensionAppManifest {
