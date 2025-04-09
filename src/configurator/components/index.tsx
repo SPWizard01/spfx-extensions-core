@@ -3,8 +3,9 @@ import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
-  configurationWebBelongsToHub,
-  configurationWebIsRootHub,
+  configurationBelongsToHub,
+  configurationIsGlobal,
+  configurationIsRootHub,
   configurationWebIsSubsite,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
@@ -18,23 +19,31 @@ const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
 
 function getBadges() {
   const badges: ComponentChildren[] = [];
-  if (configurationWebIsRootHub) {
+  if (configurationIsGlobal) {
+    badges.push(
+      <Badge key="global" size="extra-large" color="danger">
+        Global
+      </Badge>
+    );
+    return badges;
+  }
+  if (configurationIsRootHub) {
     badges.push(
       <Badge key="root" size="extra-large" color="success">
         Hub root site
       </Badge>
     );
   }
-  if (configurationWebBelongsToHub) {
+  if (configurationBelongsToHub && !configurationIsRootHub) {
     badges.push(
       <Badge key="child" size="extra-large" color="warning">
         Hub child site
       </Badge>
     );
   }
-  if (!configurationWebIsRootHub && !configurationWebBelongsToHub) {
+  if (!configurationIsRootHub && !configurationBelongsToHub) {
     badges.push(
-      <Badge key="nonhub" size="extra-large" color="danger">
+      <Badge key="nonhub" size="extra-large" color="brand">
         Non hub site
       </Badge>
     );
@@ -64,14 +73,13 @@ export function Index() {
   return (
     <Stack style={{ padding: "30px 30px 0 30px", height: "100%" }} gap={20}>
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
-      {queryWeb && (
-        <Stack horizontal gap={8} verticalAlign="center">
-          {...getBadges()}
-          <Link target="_blank" href={cfgWeb}>
-            {cfgWeb}
-          </Link>
-        </Stack>
-      )}
+      <Stack horizontal gap={8} verticalAlign="center">
+        {...getBadges()}
+        <Link target="_blank" href={cfgWeb}>
+          {cfgWeb}
+        </Link>
+      </Stack>
+
       <AppList />
       <SelectedAppConfig />
       <ToastNotification />

@@ -2,6 +2,7 @@ import { Divider, Subtitle2, Switch } from "@fluentui/react-components";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
 import {
+  configurationIsRootHub,
   configurationWebSP,
   selectedAppItem,
   updateSelectedApp,
@@ -104,7 +105,7 @@ export function ManifestConfig() {
       <StackItem>
         <Subtitle2>Web application</Subtitle2>
         <AppDefinitionGrid />
-        <AddWeb />
+        {configurationIsRootHub ? <AddWeb /> : null}
         {/* <StackItem>
           <AppDefinitionConfiguration />
         </StackItem> */}

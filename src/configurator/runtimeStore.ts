@@ -13,18 +13,18 @@ import { getAllWebInfos } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
-export const configurationSiteInfo = await configurationWebSP.site();
-export const configurationWebInfo = await configurationWebSP.web();
-export const configurationSiteRootWeb = await configurationWebSP.site.rootWeb();
-export const configurationWebIsRootHub =
-  configurationSiteInfo.IsHubSite &&
-  configurationSiteRootWeb.Id === configurationWebInfo.Id;
-export const configurationWebBelongsToHub =
-  !configurationSiteInfo.IsHubSite &&
-  configurationSiteInfo.HubSiteId !== EMPTY_GUID;
+export const configurationSite = await configurationWebSP.site();
+export const configurationWeb = await configurationWebSP.web();
+export const configurationRootWeb = await configurationWebSP.site.rootWeb();
+export const configurationIsGlobal = !queryWeb
+export const configurationIsRootHub =
+  configurationSite.IsHubSite &&
+  configurationRootWeb.Id === configurationWeb.Id;
+export const configurationBelongsToHub =
+  configurationSite.HubSiteId !== EMPTY_GUID;
 
 export const configurationWebIsSubsite =
-  configurationSiteRootWeb.Id !== configurationWebInfo.Id;
+  configurationRootWeb.Id !== configurationWeb.Id;
 
 export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
 export const selectedWebAvailableWebs = await getAllWebInfos(

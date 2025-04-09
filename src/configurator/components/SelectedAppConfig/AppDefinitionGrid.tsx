@@ -43,10 +43,10 @@ const columns: TableColumnDefinition<WebIdAppIdMap>[] = [
     },
     renderCell: () => {
       return (
-        <>
+        <TableCellLayout>
           <Button aria-label="Edit" icon={<EditRegular />} />
           <Button aria-label="Delete" icon={<DeleteRegular />} />
-        </>
+        </TableCellLayout>
       );
     },
   }),
