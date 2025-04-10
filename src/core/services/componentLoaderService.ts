@@ -1,7 +1,7 @@
 import type { SPFxExtensionAppMap } from "../../models/appCollectionManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { AppFolderManifest } from "../../models/cache";
-import { MANIFEST_NAME, } from "../../utilities/constants";
+import { CONFIGURATOR_APP_ID, MANIFEST_NAME, } from "../../utilities/constants";
 import { isAppInDebug, } from "../../utilities/debug";
 import { isFileAllowedToRun } from "./allowedAppsService";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
@@ -183,7 +183,7 @@ export async function loadModernApps(
 
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
     const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
-    if (!foundApp) {
+    if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
       //unregister app as it does not belong to this context
       window.__SPFxExtensions.UnregisterApp(alreadyRegisteredApp.id);
     }
