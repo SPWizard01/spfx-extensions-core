@@ -1,11 +1,11 @@
 import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
 import type {
-  SPFxExtensionAppDefinition,
-  SPFxExtensionAppInstance,
+    SPFxExtensionAppDefinition,
+    SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import type {
-  SPFxExtensionAppInstanceEventListener,
-  SPFxExtensionAppInstanceEvents,
+    SPFxExtensionAppInstanceEventListener,
+    SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
 import { ensureApp } from "./appDefinitionService";
 import { loadAppInstances as loadAppInstance } from "./appServices";
@@ -114,8 +114,8 @@ export function createAppInstance(
 }
 
 export function registerAppInstanceService() {
-  if (!window.__SPFxExtensions.LoadApp) {
-    window.__SPFxExtensions.LoadApp = async (
+  if (!window.__SPFxExtensions.InstantiateApp) {
+    window.__SPFxExtensions.InstantiateApp = async (
       appId: string,
       runTimeConfig: SPFxExtensionAppRuntimeConfig
     ) => {

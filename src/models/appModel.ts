@@ -28,6 +28,11 @@ export interface SPFxExtensionAppInstance {
   saveConfigValue?(config: SPFxExtensionAppConfig, raiseEvent?: boolean): void;
   getConfigValue?(): SPFxExtensionAppConfig | undefined;
 
+  /**
+   * Calls cleanup function provided by `onInstanceRequested` method of the app definition.
+   * 
+   * Removes all app event listeners.
+   */
   unmount(): void;
 
   /**
@@ -86,6 +91,10 @@ export interface SPFxExtensionAppDefinition {
   description: string;
   /**
    * If set to false or undefined the app wont show in webpart picker
+   * 
+   * This also means it wont be automatically executed by spfx.
+   * 
+   * You will have to call `window.__SPFxExtensions.InstantiateApp` method to run the app.
    */
   isWebPartApp: boolean;
   /**
@@ -97,7 +106,7 @@ export interface SPFxExtensionAppDefinition {
    * If set to true, the "Open Configurator" button will be hidden in the property pane
    */
   hideConfiguratorButton?: boolean;
-  
+
   /**
    * Internal registry of all the instances of this app
    */

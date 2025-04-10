@@ -13,6 +13,7 @@ import { registerManifestWatcher } from "./manifestWatcherService";
 
 let coreGlobalPromise: Promise<void> | undefined;
 async function initGlobal() {
+  //init once.
   if (coreGlobalPromise) {
     return coreGlobalPromise;
   }
@@ -20,10 +21,6 @@ async function initGlobal() {
   return coreGlobalPromise;
 }
 async function initGlobalInternal() {
-  //init once.
-  if (window.__SPFxExtensions.__CoreInitialized) {
-    return;
-  }
   await initializeCoreConfiguration();
   const coreConfig = await getCoreConfig();
   const historyInterceptEnabled = coreConfig.find(c => c.Title === "InterceptHistory")?.Data === "true";
@@ -41,7 +38,6 @@ async function initGlobalInternal() {
       }
     );
   }
-  window.__SPFxExtensions.__CoreInitialized = true;
 }
 
 /**

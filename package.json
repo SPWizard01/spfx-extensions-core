@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -34,10 +34,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./spfxCoreEntry": "./dist/core/__spfxCore.js",
+    "./spfxLoader": "./dist/core/__spfxLoader.js",
     "./configurator": "./dist/configurator/__spfxCoreConfigurator.js",
-    "./context": "./dist/services/spContextService.js",
-    "./launcher": "./dist/services/appLauncher.js",
-    "./utils/display": "./dist/utilities/display.js",
     "./plugins/bun": "./dist/plugins/bun/index.js",
     "./plugins/esbuild": "./dist/plugins/esbuild/index.js",
     "./plugins/webpack": "./dist/plugins/webpack/index.js"
@@ -51,6 +49,7 @@
   "scripts": {
     "esbuild": "bun run esbuild.ts",
     "esserve": "bun run esserve.ts",
+    "build": "bun run build.ts",
     "serve": "bun run serve.ts"
   },
   "type": "module"

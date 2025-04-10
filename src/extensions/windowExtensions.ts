@@ -11,7 +11,6 @@ import type {
   SPFxExtensionAppEvents,
   SPFxExtensionAppInstanceEventListener,
 } from "../models/events";
-import type { SPFxExtensionImportCallback } from "../models/importLoader";
 import type { SPOPageContext } from "../models/spoContextInitializationData";
 
 
@@ -56,10 +55,6 @@ declare global {
 
     __SPFxExtensions: {
       /**
-       * Required to build `window.__SPFxExtensions` object, initializes Core solution, ensures that its called only once;
-       */
-      __CoreInitialized?: boolean;
-      /**
        * Most important part of Core solution, this promise is resolved when all core assets are loaded
        */
       __CorePromise: Promise<void>;
@@ -70,16 +65,20 @@ declare global {
 
       __ConfiguratorUrl: string;
 
-      ImportCallbacks: SPFxExtensionImportCallback[];
-
-      AppLoadInitialized: boolean;
-      LoadedAppAssets: string[];
       AllAppAssetsLoadedPromise: Promise<void>;
       AllAppAssetsLoadedResolver(): void;
 
       Utils: SPFxExtensionAppUtils;
       Apps: SPFxExtensionAppDefinition[];
-      LoadApp(
+      /**
+       * Runs the app, it has to be registered first via `window.__SPFxExtensions.RegisterApp`
+       * 
+       * If the app was not registered before calling this method, `Core` will queue it up.
+       * so that it will be called once `window.__SPFxExtensions.RegisterApp` is called.
+       * @param appId appllication id to run
+       * @param runTimeConfig runtime configuration for the app to use.
+       */
+      InstantiateApp(
         appId: string,
         runTimeConfig: SPFxExtensionAppRuntimeConfig
       ): Promise<SPFxExtensionAppInstance | undefined>;
@@ -91,7 +90,15 @@ declare global {
 
       RegisterApp(
         app: SPFxExtensionAppRegistration
-      ): Promise<SPFxExtensionAppDefinition | null>;
+      ): Promise<SPFxExtensionAppDefinition | undefined>;
+
+      /**
+       * Unregisters app from global registry, removes all instances of the app.
+       * @param appId application id to unregister
+       */
+      UnregisterApp(
+        appId: string
+      ): Promise<SPFxExtensionAppDefinition | undefined>;
 
       AppEventListeners: SPFxExtensionAppEventListener[];
       AddAppEventListener<

@@ -1,6 +1,6 @@
 import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
 import { getClassicDisplayMode } from "../utilities/display";
-import { loadCoreForSPFxOrClassicWrapper } from "./classicLoader";
+// import { loadCoreForSPFxOrClassicWrapper } from "./__spfxOrClassicLoader";
 import { logGenericCoreError } from "./services/loggingService";
 
 const IS_MODERN_EXPIRIENCE = !window._spBodyOnLoadFunctions;
@@ -39,7 +39,7 @@ async function initClassicCore() {
     };
   }
 
-  loadCoreForSPFxOrClassicWrapper();
+  //loadCoreForSPFxOrClassicWrapper();
 }
 
 function init() {

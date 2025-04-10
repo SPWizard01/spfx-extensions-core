@@ -51,7 +51,7 @@ export function registerAppService() {
           appDefinition,
           "is being re-registered. This is not allowed."
         );
-        return null;
+        return;
       }
       appDefinition.name = newAppDefinition.name;
       appDefinition.description = newAppDefinition.description;
@@ -67,6 +67,24 @@ export function registerAppService() {
       executeAppAddedEvents(appDefinition);
 
       return appDefinition;
+    };
+  }
+
+  if (!window.__SPFxExtensions.UnregisterApp) {
+    window.__SPFxExtensions.UnregisterApp = async (appId) => {
+      const appDefinitionIdx = window.__SPFxExtensions.Apps.findIndex((a) => a.id === appId);
+      if (appDefinitionIdx < 0) {
+        return;
+      }
+      const appDefinition = window.__SPFxExtensions.Apps.splice(appDefinitionIdx, 1)
+      if (appDefinition.length < 1) {
+        return;
+      }
+      appDefinition[0].instances.forEach((appInstance) => {
+        appInstance.unmount();
+      });
+
+      return appDefinition[0];
     };
   }
 }

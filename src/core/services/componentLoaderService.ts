@@ -14,6 +14,8 @@ interface AssetPromise {
   promise: Promise<SPFxExtensionAppRegistration[]>;
   manifest: AppFolderManifest;
 }
+let isLoaded = false;
+const loadedAssets: string[] = [];
 
 export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
 
@@ -66,10 +68,9 @@ async function parseManifestAndImportEntryPoints(
     }
     const plainUrl = `${jsUrl.origin}${jsUrl.pathname}`;
     const urlWithCache = `${jsUrl}`;
-    const isScriptLoaded =
-      window.__SPFxExtensions.LoadedAppAssets.includes(plainUrl);
+    const isScriptLoaded = loadedAssets.includes(plainUrl);
     if (!isScriptLoaded) {
-      window.__SPFxExtensions.LoadedAppAssets.push(plainUrl);
+      loadedAssets.push(plainUrl);
       returnPromiseArray.push({
         url: urlWithCache,
         promise: importEntryPoint(urlWithCache, manifestToParse.appManifest.isESM),
@@ -84,15 +85,14 @@ async function parseManifestAndImportEntryPoints(
 
   return returnPromiseArray;
 }
-
 export async function loadModernApps(
   siteUrl: string,
   webUrl: string,
   hubUrl: string
 ) {
-  if (window.__SPFxExtensions.AppLoadInitialized) return;
-  window.__SPFxExtensions.AppLoadInitialized = true;
-  window.__SPFxExtensions.LoadedAppAssets = [];
+  if (isLoaded) return;
+  isLoaded = true;
+  // window.__SPFxExtensions.LoadedAppAssets = [];
   //LOAD apps.txt
   const coreCollection = await fetchAppsTXTFromAllLocations(
     siteUrl,
@@ -178,7 +178,17 @@ export async function loadModernApps(
   )
 
   const assetPromises = fetchedEntryPoints.flatMap((a) => a.value);
-  await Promise.allSettled(assetPromises.map((a) => a.promise));
+  const allExportsSettled = await Promise.allSettled(assetPromises.map((a) => a.promise));
+  const allExports = allExportsSettled.filter((a) => a.status === "fulfilled").flatMap((a) => a.value);
+
+  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
+    const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
+    if (!foundApp) {
+      //unregister app as it does not belong to this context
+      window.__SPFxExtensions.UnregisterApp(alreadyRegisteredApp.id);
+    }
+  }
+
 
   for (const asset of assetPromises) {
     try {
@@ -251,7 +261,7 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
     }
     window.__SPFxExtensions.RegisterApp(appReg);
     if (!appReg.isWebPartApp) {
-      window.__SPFxExtensions.LoadApp(appReg.id, {});
+      window.__SPFxExtensions.InstantiateApp(appReg.id, {});
     }
   }
 }
