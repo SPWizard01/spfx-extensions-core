@@ -1,21 +1,21 @@
-import type { AppCollectionManifest, ManifestLocation } from "../../models/cache";
-import { APPCOLLECTION_MANIFEST_NAME, SPFxExtensionCore, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
+import type { SPFxExtensionCollectionManifest } from "../../models/appCollectionManifest";
+import type { CacheableAppCollectionManifest, ManifestLocation } from "../../models/cache";
+import { APPCOLLECTION_MANIFEST_NAME, EMPTY_COLLECTION_MANIFEST, SPFxExtensionCore, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { isInDebug } from "../../utilities/debug";
 import { getContentDigest } from "../../utilities/digest";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getAppCollectionTXTFromCache, setOrUpdateAppCollectionTXT } from "./coreIdbService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
-function validateAppTXT(manifest: string[]) {
-    if (!Array.isArray(manifest)) {
-        throw `${SPFxExtensionCore} App manifest should be an array of strings`;
+
+
+function validateAppsTXT(manifest: SPFxExtensionCollectionManifest) {
+    if (!Array.isArray(manifest.enabledAppCollections)) {
+        throw `${SPFxExtensionCore} ${APPCOLLECTION_MANIFEST_NAME} enabledAppCollections should be an array`;
     }
-    if (
-        manifest.some((v) => {
-            return typeof v !== "string";
-        })
-    ) {
-        throw `${SPFxExtensionCore} App manifest should only contain strings`;
+
+    if (!Array.isArray(manifest.urlMap)) {
+        throw `${SPFxExtensionCore} ${APPCOLLECTION_MANIFEST_NAME} urlMap should be an array`;
     }
 }
 
@@ -26,8 +26,8 @@ async function fetchAndCacheAppsTXT(
     isHubFetch: boolean,
     skipCache = false,
     cacheTimeMinutes = 60
-): Promise<AppCollectionManifest> {
-    let appCollection: string[] = [];
+): Promise<CacheableAppCollectionManifest> {
+    let appCollection = EMPTY_COLLECTION_MANIFEST;
     const fetchLocation = url.toLowerCase();
     if (!skipCache && !isInDebug) {
         const cachedManifest = await getAppCollectionTXTFromCache(fetchLocation);
@@ -46,10 +46,10 @@ async function fetchAndCacheAppsTXT(
         logGenericCoreWarning(`Unable to fetch ${APPCOLLECTION_MANIFEST_NAME} from`, fetchLocation, err);
     }
     try {
-        validateAppTXT(appCollection);
+        validateAppsTXT(appCollection);
     } catch (err) {
         logGenericCoreError(`Error while parsing ${APPCOLLECTION_MANIFEST_NAME} from`, fetchLocation, err);
-        appCollection = [];
+        appCollection = EMPTY_COLLECTION_MANIFEST;
     }
     const hash = await getContentDigest(JSON.stringify(appCollection));
     const baseResult = {
@@ -59,7 +59,7 @@ async function fetchAndCacheAppsTXT(
         hash,
     };
 
-    const retResult: AppCollectionManifest = { appCollection, ...baseResult };
+    const retResult: CacheableAppCollectionManifest = { manifest: appCollection, ...baseResult };
     await setOrUpdateAppCollectionTXT(retResult, isInDebug ? 1 : cacheTimeMinutes);
     //assign later so we dont save to cache.
     retResult.isHubFetch = isHubFetch;
@@ -71,9 +71,9 @@ export async function fetchAppsTXTFromAllLocations(
     webUrl: string,
     hubUrl: string,
     skipCache = false
-): Promise<AppCollectionManifest[]> {
-    // all apps.txt accross the context (root / site /web)
-    const allAppManifests: Promise<AppCollectionManifest>[] = [];
+): Promise<CacheableAppCollectionManifest[]> {
+    // all collectionConfig.txt accross the context (root / site /web)
+    const allAppManifests: Promise<CacheableAppCollectionManifest>[] = [];
     const rootLocation = await getRootCDNLocation();
     // const rootUrl = `${appCatalogUrl}/${SPFX_EXTENSIONS_DATA_SITE}`;
     allAppManifests.push(

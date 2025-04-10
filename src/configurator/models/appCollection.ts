@@ -1,6 +1,6 @@
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 
 export interface SelectedAppWebs {
     appCollectionName: string;
-    manifest: SPFxExtensionAppManifest;
+    manifest: SPFxExtensionFolderManifest;
 }

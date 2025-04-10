@@ -27,7 +27,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
         const ep = entryUrl.replace(/\.\.\/?/g, "").replace(/\.\//g, "");
         const fullUrl = new URL(`${configrationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${ep}`);
-        const isAllowed = await isFileAllowedToRun(fullUrl, true);
+        const isAllowed = await isFileAllowedToRun(fullUrl, app.name, true);
         fullUrl.searchParams.set("t", `${new Date().getTime()}`);
         if (!isAllowed) {
             continue;

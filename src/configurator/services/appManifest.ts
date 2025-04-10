@@ -1,6 +1,6 @@
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { addAppCollection } from "./appCollection";
@@ -10,7 +10,7 @@ export async function getAppManifest(sp: SPFI, appName: string) {
     const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     const fileExists = await manifestQuery.exists();
-    const result: ApiCallResult<SPFxExtensionAppManifest> = {
+    const result: ApiCallResult<SPFxExtensionFolderManifest> = {
         data: EMPTY_APP_MANIFEST,
         error: "",
         isError: false,
@@ -25,7 +25,7 @@ export async function getAppManifest(sp: SPFI, appName: string) {
     try {
         const content = await manifestQuery.getBlob();
         const stringData = await content.text();
-        const data = JSON.parse(stringData) as SPFxExtensionAppManifest;
+        const data = JSON.parse(stringData) as SPFxExtensionFolderManifest;
         result.data = data;
         return result;
     } catch (error) {
@@ -37,7 +37,7 @@ export async function getAppManifest(sp: SPFI, appName: string) {
     }
 }
 
-export async function updateAppManifest(sp: SPFI, appName: string, manifest: SPFxExtensionAppManifest) {
+export async function updateAppManifest(sp: SPFI, appName: string, manifest: SPFxExtensionFolderManifest) {
     await getAppManifest(sp, appName);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     try {

@@ -10,8 +10,14 @@ let fistTimeChecked = false;
 export function registerManifestWatcher(
   site: string,
   web: string,
-  hubUrl: string
+  hubUrl: string,
+  contextChange = false
 ) {
+  if (contextChange) {
+    window.clearInterval(manifestWatch);
+    manifestWatch = 0;
+    fistTimeChecked = false;
+  }
   if (manifestWatch) return;
   if (!fistTimeChecked) {
     //do not await, just check in background first time.

@@ -35,7 +35,7 @@ export async function getRootCDNLocation() {
     const ROOT_APPS_LOCATION = `${ROOT_CDN_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
     /**
      * Points to root sharepoint manifest location
-     * OnPrem/SPO: ```/sites/appcatalog/CDN/SPFxExtensionApps/apps.txt```
+     * OnPrem/SPO: ```/sites/appcatalog/CDN/SPFxExtensionApps/collectionConfig.txt```
      */
     return `${ROOT_APPS_LOCATION}${APPCOLLECTION_MANIFEST_NAME}`;
 }

@@ -1,9 +1,10 @@
-import type { SPFxExtensionAppMap } from "../../models/appCollectionManifest";
+import type { SPFxExtensionAppDefinitionMap } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
-import type { AppFolderManifest } from "../../models/cache";
+import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME, } from "../../utilities/constants";
 import { isAppInDebug, } from "../../utilities/debug";
 import { isFileAllowedToRun } from "./allowedAppsService";
+import { unmountInstancesOnContextChange } from "./appServices";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
@@ -12,7 +13,7 @@ import { getManifestTXTFromAllLocations } from "./txtManifestService";
 interface AssetPromise {
   url: string;
   promise: Promise<SPFxExtensionAppRegistration[]>;
-  manifest: AppFolderManifest;
+  manifest: CacheableAppFolderManifest;
 }
 let isLoaded = false;
 const loadedAssets: string[] = [];
@@ -38,7 +39,7 @@ export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
 }
 
 async function parseManifestAndImportEntryPoints(
-  manifestToParse: AppFolderManifest,
+  manifestToParse: CacheableAppFolderManifest,
 ) {
   const returnPromiseArray: AssetPromise[] = [];
   const cdnLoc = manifestToParse.url.replace(MANIFEST_NAME, "");
@@ -47,22 +48,22 @@ async function parseManifestAndImportEntryPoints(
     "Parsing",
     manifestToParse.type,
     "manifest:",
-    manifestToParse.appManifest
+    manifestToParse.manifest
   );
 
-  for (const entryUrl of manifestToParse.appManifest.appRelativeEntryPointUrls) {
+  for (const entryUrl of manifestToParse.manifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "./");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
 
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
     const jsUrl = new URL(fullJSUrl);
-    if (manifestToParse.appManifest.cacheString && manifestToParse.appManifest.enableCaching) {
-      const cacheString = isAppInDebug(manifestToParse.name) ? `${(new Date()).getTime()}` : manifestToParse.appManifest.cacheString
+    if (manifestToParse.manifest.cacheString && manifestToParse.manifest.enableCaching) {
+      const cacheString = isAppInDebug(manifestToParse.name) ? `${(new Date()).getTime()}` : manifestToParse.manifest.cacheString
       jsUrl.searchParams.set("v", `${cacheString}`);
     }
     // if()
-    const isAllowed = await isFileAllowedToRun(jsUrl);
+    const isAllowed = await isFileAllowedToRun(jsUrl, manifestToParse.name);
     if (!isAllowed) {
       continue;
     }
@@ -73,7 +74,7 @@ async function parseManifestAndImportEntryPoints(
       loadedAssets.push(plainUrl);
       returnPromiseArray.push({
         url: urlWithCache,
-        promise: importEntryPoint(urlWithCache, manifestToParse.appManifest.isESM),
+        promise: importEntryPoint(urlWithCache, manifestToParse.manifest.isESM),
         manifest: manifestToParse
       });
     } else {
@@ -88,12 +89,16 @@ async function parseManifestAndImportEntryPoints(
 export async function loadModernApps(
   siteUrl: string,
   webUrl: string,
-  hubUrl: string
+  hubUrl: string,
+  contextChange = false
 ) {
+  if (contextChange) {
+    handleContextChange();
+  }
   if (isLoaded) return;
   isLoaded = true;
   // window.__SPFxExtensions.LoadedAppAssets = [];
-  //LOAD apps.txt
+  //LOAD collectionConfig.txt
   const coreCollection = await fetchAppsTXTFromAllLocations(
     siteUrl,
     webUrl,
@@ -180,33 +185,52 @@ export async function loadModernApps(
   const assetPromises = fetchedEntryPoints.flatMap((a) => a.value);
   const allExportsSettled = await Promise.allSettled(assetPromises.map((a) => a.promise));
   const allExports = allExportsSettled.filter((a) => a.status === "fulfilled").flatMap((a) => a.value);
+  await unregisterNonApplicable(allExports);
 
-  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
-    const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
-    if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
-      //unregister app as it does not belong to this context
-      window.__SPFxExtensions.UnregisterApp(alreadyRegisteredApp.id);
-    }
-  }
-
-
+  const successfullyRegistered: SPFxExtensionAppRegistration[] = [];
   for (const asset of assetPromises) {
     try {
       const exports = await asset.promise;
-      if (!asset.manifest.appManifest.isESM) {
+      if (!asset.manifest.manifest.isESM) {
         continue;
       }
-      await executeRegistration(exports, asset.manifest, asset.url);
+      successfullyRegistered.push(...await executeRegistration(exports, asset.manifest, asset.url));
     }
     catch (e) {
       logGenericCoreError(`Could not load or parse manifest.`, e);
     }
   }
+  //unregister any remaining app definitions that are not applicable to this context
+  await unregisterNonApplicable(successfullyRegistered);
   window.__SPFxExtensions.AllAppAssetsLoadedResolver();
   logGenericCoreInfo("SPFx Extensions Core Components Loaded.");
 }
 
-async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: AppFolderManifest, fullJSUrl: string) {
+function handleContextChange() {
+  isLoaded = false;
+  loadedAssets.splice(0, loadedAssets.length);
+  unmountInstancesOnContextChange();
+  const { promise: assetPromise, resolve: assetPromiseResolver } = Promise.withResolvers<void>();
+  window.__SPFxExtensions.AllAppAssetsLoadedPromise = assetPromise;
+  window.__SPFxExtensions.AllAppAssetsLoadedResolver = assetPromiseResolver;
+}
+
+async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[]) {
+  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
+    const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
+    if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
+      //unregister app as it does not belong to this context
+      const unregistered = await window.__SPFxExtensions.UnregisterApp(alreadyRegisteredApp.id);
+      if (unregistered) {
+        logGenericCoreWarning(`Unregistered app as it does not belong in this context`, alreadyRegisteredApp.id, alreadyRegisteredApp.name);
+      }
+    }
+  }
+}
+
+
+
+async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: CacheableAppFolderManifest, fullJSUrl: string) {
   // const isHub = getIsHubSite();
   const currentWebId = getWebId().toLowerCase();
   const currentSiteId = getSiteId().toLowerCase();
@@ -215,15 +239,16 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
   if (!Array.isArray(registrations)) {
     logGenericCoreError(`Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
   }
+  const successfullyRegistered: SPFxExtensionAppRegistration[] = [];
   for (const appReg of registrations) {
     if (!appReg.id) {
       logGenericCoreError(`App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
       continue;
     }
-    const foundMapItem = manifestToParse.appManifest.appDefinitionMap.find((a) => a.appId.toLowerCase() === appReg.id.toLowerCase());
-    const foundAllItem = manifestToParse.appManifest.appDefinitionMap.find((a) => a.appId === "*");
+    const foundMapItem = manifestToParse.manifest.appDefinitionMap.find((a) => a.appId.toLowerCase() === appReg.id.toLowerCase());
+    const foundAllItem = manifestToParse.manifest.appDefinitionMap.find((a) => a.appId === "*");
     const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
-    const relatedApps: SPFxExtensionAppMap[] = [];
+    const relatedApps: SPFxExtensionAppDefinitionMap[] = [];
     if (foundMapItem) {
       relatedApps.push(foundMapItem);
     }
@@ -260,10 +285,12 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
       continue;
     }
     window.__SPFxExtensions.RegisterApp(appReg);
+    successfullyRegistered.push(appReg);
     if (!appReg.isWebPartApp) {
       window.__SPFxExtensions.InstantiateApp(appReg.id, {});
     }
   }
+  return successfullyRegistered;
 }
 
 

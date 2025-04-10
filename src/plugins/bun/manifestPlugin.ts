@@ -1,6 +1,6 @@
 import type { BuildOutput } from "bun";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
-interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
+interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionFolderManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
     outdir: string;
@@ -11,13 +11,12 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
         console.error("No entry points provided make sure to specify either `appRelativeEntryPointUrls` or `includeAllOutputJs`");
         return;
     }
-    const manifestToWrite: SPFxExtensionAppManifest = {
+    const manifestToWrite: SPFxExtensionFolderManifest = {
         appRelativeEntryPointUrls: options.appRelativeEntryPointUrls ?? [],
         appDefinitionMap: options.appDefinitionMap ?? [{ appId: "*", config: { includedIds: [], excludedIds: [], hubObjectIds: [], enabledEverywhere: true } }],
         isESM: options.isESM,
         enableCaching: options.enableCaching ?? false,
         cacheString: options.cacheString ?? "",
-        urlMap: options.urlMap ?? [],
     }
     if (options.generateCacheString) {
         const hash = Bun.CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")
@@ -48,6 +47,6 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
 
 }
 
-async function writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionAppManifest) {
+async function writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionFolderManifest) {
     await Bun.write(outputManifest, JSON.stringify(manifestToWrite));
 }

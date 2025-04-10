@@ -1,7 +1,7 @@
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 
 export interface AppCollectionConfigurationItem {
   name: string;
   activated: boolean;
-  manifest: SPFxExtensionAppManifest;
+  manifest: SPFxExtensionFolderManifest;
 }

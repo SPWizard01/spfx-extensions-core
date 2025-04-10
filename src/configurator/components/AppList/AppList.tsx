@@ -17,7 +17,7 @@ import {
   updateApp,
 } from "../../runtimeStore";
 import {
-  getEnabledAppCollection,
+  getAppCollectionManifest,
   updateAppCollection,
 } from "../../services/appCollection";
 import { Stack } from "../@common/Stack";
@@ -31,16 +31,15 @@ async function updateCollection(
   app: AppCollectionConfigurationItem,
   enabled: boolean
 ) {
-  const dataOnServer = await getEnabledAppCollection(configurationWebSP);
-  const isEnabledOnServer = dataOnServer.data.includes(app.name);
+  const dataOnServer = await getAppCollectionManifest(configurationWebSP);
+  const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(app.name);
   if (enabled !== isEnabledOnServer) {
-    const apps = [...dataOnServer.data];
     if (enabled) {
-      apps.push(app.name);
+      dataOnServer.data.enabledAppCollections.push(app.name);
     } else {
-      apps.splice(apps.indexOf(app.name), 1);
+      dataOnServer.data.enabledAppCollections.splice(dataOnServer.data.enabledAppCollections.indexOf(app.name), 1);
     }
-    await updateAppCollection(configurationWebSP, apps);
+    await updateAppCollection(configurationWebSP, dataOnServer.data);
   }
   app.activated = enabled;
   updateApp(app);

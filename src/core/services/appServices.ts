@@ -13,11 +13,20 @@ export function unmountAppInstance(
     }
 }
 
-export function loadAppInstances(foundApp: SPFxExtensionAppDefinition, appInstance: SPFxExtensionAppInstance) {
+export async function unmountInstancesOnContextChange() {
+    for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
+        if (alreadyRegisteredApp.keepOnContextChange) continue;
+        for (const appInstance of alreadyRegisteredApp.instances) {
+            appInstance.unmount?.();
+        }
+    }
+}
+
+export function loadAppInstance(foundApp: SPFxExtensionAppDefinition, appInstance: SPFxExtensionAppInstance) {
     try {
+        appInstance.isLoaded = true;
         foundApp.onInstanceRequested?.(appInstance).then((cleanup) => {
             appInstance.instanceLoadPromiseResolver();
-            appInstance.isLoaded = true;
             appInstance.unmount = () => {
                 cleanup();
                 unmountAppInstance(foundApp, appInstance);

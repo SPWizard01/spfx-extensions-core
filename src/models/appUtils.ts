@@ -23,12 +23,17 @@ export interface SPFxExtensionAppUtils {
   placeHolderResolver: (plc: SPFxExtensionUtilsPlaceHolderProvider) => void;
   placeHolderResolved: boolean;
   /**
-   * Promise that loads apps.txt from root, site and web location.
+   * Promise that loads collectionConfig.txt from root, site and web location.
+   * 
+   * Used by SPFx webpart `renderEditMode` to track assets that are in progress of loading
+   * 
    */
   spAppInitializationPromise: Promise<void>;
   spAppInitializationPromiseResolver(): void;
   /**
-   * All application manifest.txt collected from root, site, and web apps.txt
+   * All application manifest.txt collected from root, site, web, hub
+   * 
+   * Used by SPFx webpart `renderEditMode` to track assets that are in progress of loading
    */
   appManifestPromises: Promise<any>[];
   fluentIconsInitialized: boolean;

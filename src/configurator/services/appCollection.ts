@@ -1,6 +1,7 @@
 import { type SPFI } from "@pnp/sp";
 import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/loggingService";
-import { APPCOLLECTION_MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import type { SPFxExtensionCollectionManifest } from "../../models/appCollectionManifest";
+import { APPCOLLECTION_MANIFEST_NAME, EMPTY_COLLECTION_MANIFEST, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { allAppItems } from "../runtimeStore";
 import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
@@ -16,7 +17,7 @@ export async function addAppCollection(sp: SPFI, collectionName: string) {
             SPFX_EXTENSIONS_FOLDER
         ).rootFolder;
         const allAppCollectionsData = await getAllAppCollections(sp);
-        const enabledAppsData = await getEnabledAppCollection(sp);
+        const appCollectionManifest = await getAppCollectionManifest(sp);
         if (!allAppCollectionsData.some((f) => f === collectionName)) {
             await rootFolderQuery.folders.addUsingPath(collectionName);
             allAppCollectionsData.push(collectionName);
@@ -24,7 +25,7 @@ export async function addAppCollection(sp: SPFI, collectionName: string) {
         allAppItems.value = await getAllAppItems(
             sp,
             allAppCollectionsData,
-            enabledAppsData.data
+            appCollectionManifest.data.enabledAppCollections
         );
         return allAppItems.value.find((f) => f.name === collectionName)!;
     } catch (error: any) {
@@ -59,8 +60,8 @@ export async function getAllAppCollections(sp: SPFI) {
 }
 
 
-export async function updateAppCollection(sp: SPFI, appCollection: string[]) {
-    await getEnabledAppCollection(sp);
+export async function updateAppCollection(sp: SPFI, appCollection: SPFxExtensionCollectionManifest) {
+    await getAppCollectionManifest(sp);
     const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
     try {
@@ -73,12 +74,12 @@ export async function updateAppCollection(sp: SPFI, appCollection: string[]) {
     }
 }
 
-export async function getEnabledAppCollection(sp: SPFI) {
+export async function getAppCollectionManifest(sp: SPFI) {
     const appsQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
     const webUrl = getWebUrlFromSP(sp);
     const fileExists = await appsQuery.exists();
-    const result: ApiCallResult<string[]> = {
-        data: [],
+    const result: ApiCallResult<SPFxExtensionCollectionManifest> = {
+        data: EMPTY_COLLECTION_MANIFEST,
         error: "",
         isError: false,
         warnings: [],
@@ -92,8 +93,8 @@ export async function getEnabledAppCollection(sp: SPFI) {
     try {
         const content = await appsQuery.getBlob();
         const stringData = await content.text();
-        const data = JSON.parse(stringData) as string[];
-        if (!Array.isArray(data) || data.length > 0 && typeof data[0] !== "string") {
+        const data = JSON.parse(stringData) as SPFxExtensionCollectionManifest;
+        if (!Array.isArray(data.enabledAppCollections) || !Array.isArray(data.urlMap)) {
             const msg = `Invalid data inside ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}, it should be an array`;
             logGenericCoreError(msg);
             result.error = msg;

@@ -1,6 +1,6 @@
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
-import { loadAppInstances } from "./appServices";
+import { loadAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
@@ -46,12 +46,10 @@ export function registerAppService() {
       const appDefinition = ensureApp(newAppDefinition.id);
       const isNew = appDefinition.name === APP_LOADING && appDefinition.description === APP_LOADING;
       if (!isNew) {
-        logGenericCoreError(
-          "App",
-          appDefinition,
-          "is being re-registered. This is not allowed."
-        );
-        return;
+        appDefinition.instances.filter(i => !i.isLoaded).forEach((appInstance) => {
+          loadAppInstance(appDefinition, appInstance);
+        });
+        return appDefinition;
       }
       appDefinition.name = newAppDefinition.name;
       appDefinition.description = newAppDefinition.description;
@@ -62,7 +60,7 @@ export function registerAppService() {
       appDefinition.icon = newAppDefinition.icon;
       appDefinition.onInstanceRequested = newAppDefinition.onInstanceRequested;
       appDefinition.instances.forEach((appInstance) => {
-        loadAppInstances(appDefinition, appInstance);
+        loadAppInstance(appDefinition, appInstance);
       });
       executeAppAddedEvents(appDefinition);
 
@@ -80,6 +78,7 @@ export function registerAppService() {
       if (appDefinition.length < 1) {
         return;
       }
+      logGenericCoreDebug(`Unregistering app`, appDefinition[0].id, appDefinition[0].name);
       appDefinition[0].instances.forEach((appInstance) => {
         appInstance.unmount();
       });

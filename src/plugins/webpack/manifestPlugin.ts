@@ -1,14 +1,14 @@
 import { hash } from "crypto";
 import { writeFileSync } from "fs";
 import type { Compiler, WebpackPluginInstance } from "webpack";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
-interface SPFxWebpackManifestPluginOptions extends Partial<SPFxExtensionAppManifest> {
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
+interface SPFxWebpackManifestPluginOptions extends Partial<SPFxExtensionFolderManifest> {
     includeAllOutputJs?: boolean;
     isESM: boolean;
     outdir?: string;
     generateCacheString?: boolean;
 }
-export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance {
+export class SPFxExtensionManifestWriterPluginWebpack implements WebpackPluginInstance {
     /**
      *
      */
@@ -17,7 +17,7 @@ export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance
             throw "No entry points provided make sure to specify either `appRelativeEntryPointUrls` or `includeAllOutputJs`";
         }
     }
-    writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionAppManifest) {
+    writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionFolderManifest) {
         writeFileSync(outputManifest, JSON.stringify(manifestToWrite));
     }
 
@@ -25,13 +25,12 @@ export class SPFxExtensionsManifestWriterPlugin implements WebpackPluginInstance
         compiler.hooks.done.tap(
             'SPFxExtensions Manifest Writer Plugin',
             (stats) => {
-                const manifestToWrite: SPFxExtensionAppManifest = {
+                const manifestToWrite: SPFxExtensionFolderManifest = {
                     appRelativeEntryPointUrls: this.options.appRelativeEntryPointUrls ?? [],
                     appDefinitionMap: this.options.appDefinitionMap ?? [{appId: "*", config: { includedIds: [], excludedIds: [], hubObjectIds: [], enabledEverywhere: true }}],
                     isESM: this.options.isESM,
                     enableCaching: this.options.enableCaching ?? false,
                     cacheString: this.options.cacheString ?? "",
-                    urlMap: this.options.urlMap ?? [],
                 }
                 if (this.options.generateCacheString) {
                     const hashedString = hash("sha1", `${new Date().getTime()}`, "hex")

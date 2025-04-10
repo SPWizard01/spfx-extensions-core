@@ -88,7 +88,7 @@ function fileIsAllowed(
   });
 }
 
-export async function isFileAllowedToRun(absoluteFileUrl: URL, fresh = false) {
+export async function isFileAllowedToRun(absoluteFileUrl: URL, manifestName: string, fresh = false) {
   if (isFileInDebug(absoluteFileUrl)) return true;
 
   // Service should load list data from whatever source which can be reached by everyone.
@@ -97,7 +97,8 @@ export async function isFileAllowedToRun(absoluteFileUrl: URL, fresh = false) {
     logGenericCoreWarning(
       "File",
       absoluteFileUrl,
-      `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}. If you are a developer you can enable this app by adding localstorage item ${DEBUG_KEYS.SPFXEXT}[folderName] with a number value corresponding to development port of the localhost server.`
+      `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.
+      If you are a developer you can enable this app by adding localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
     );
 
     return false;

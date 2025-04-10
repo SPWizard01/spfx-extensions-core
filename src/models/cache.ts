@@ -1,4 +1,5 @@
-import type { SPFxExtensionAppManifest } from "./appCollectionManifest";
+import type { SPFxExtensionCollectionManifest } from "./appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "./appFolderManifest";
 
 export type ManifestLocation = "root" | "site" | "web";
 interface ManifestBase {
@@ -14,15 +15,15 @@ export interface CacheItemBase {
   expires: string;
 }
 
-export interface AppFolderManifest extends ManifestBase {
-  appManifest: SPFxExtensionAppManifest;
+export interface CacheableAppFolderManifest extends ManifestBase {
+  manifest: SPFxExtensionFolderManifest;
 }
 
-export interface AppCollectionManifest extends ManifestBase {
-  appCollection: string[];
+export interface CacheableAppCollectionManifest extends ManifestBase {
+  manifest: SPFxExtensionCollectionManifest;
 }
 
 
-export type AppFolderManifestCacheItem = CacheItemBase & AppFolderManifest;
+export type AppFolderManifestCacheItem = CacheItemBase & CacheableAppFolderManifest;
 export type AppCollectionManifestCacheItem = CacheItemBase &
-  AppCollectionManifest;
+  CacheableAppCollectionManifest;

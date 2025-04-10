@@ -1,6 +1,6 @@
 import { deleteDB, openDB, type DBSchema } from "idb";
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import type { AppCollectionManifest, AppCollectionManifestCacheItem, AppFolderManifest, AppFolderManifestCacheItem } from "../../models/cache";
+import type { AppCollectionManifestCacheItem, AppFolderManifestCacheItem, CacheableAppCollectionManifest, CacheableAppFolderManifest } from "../../models/cache";
 import type { ConfigurationListData } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
@@ -32,7 +32,7 @@ interface SPFxExtensionSchema {
     };
 }
 
-export interface SPFxExtensionsCoreDB extends DBSchema, SPFxExtensionSchema {
+export interface SPFxExtensionCoreDB extends DBSchema, SPFxExtensionSchema {
 
 }
 
@@ -49,7 +49,7 @@ export const StoreNames: Stores = {
 
 
 const DBNAME = `${DEBUG_KEYS.SPFXEXT}COREDB`;
-const openDBPromise = openDB<SPFxExtensionsCoreDB>(DBNAME, 1, {
+const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
     blocking(_currentVersion, _blockedVersion, _event) {
         spfxExtensionsCoreDB.close();
         alert("A new version of this page is ready. Please reload the page.");
@@ -169,7 +169,7 @@ export async function addOrUpdateHubDataToCache(
 }
 
 async function addOrUpdateAppsTXTToCache(
-    item: AppCollectionManifest,
+    item: CacheableAppCollectionManifest,
     cacheTimeMinutes = 60
 ) {
     await spfxExtensionsCoreDB.put(StoreNames.AppCollectionManifestCache, {
@@ -179,7 +179,7 @@ async function addOrUpdateAppsTXTToCache(
 }
 
 async function addOrUpdateManifestTXTToCache(
-    item: AppFolderManifest,
+    item: CacheableAppFolderManifest,
     cacheTimeMinutes = 60
 ) {
     await spfxExtensionsCoreDB.put(StoreNames.AppFolderManifestCache, {
@@ -228,7 +228,7 @@ export async function evictHubDataCache() {
 
 
 export async function evictManifestTXTCache(
-    item?: AppFolderManifest
+    item?: CacheableAppFolderManifest
 ) {
     if (item) {
         //check if there is an item that should be evicted
@@ -245,7 +245,7 @@ export async function evictManifestTXTCache(
     return evictManifestFolderCache();
 }
 export async function evictAppsTXTCache(
-    item?: AppCollectionManifest
+    item?: CacheableAppCollectionManifest
 ) {
     if (item) {
         //check if there is an item that should be evicted
@@ -278,7 +278,7 @@ export async function getManifestTXTFromCache(
 }
 
 export async function setOrUpdateManifestTXT(
-    retResult: AppFolderManifest,
+    retResult: CacheableAppFolderManifest,
     cacheTimeMinutes: number
 ) {
     await evictManifestTXTCache(retResult);
@@ -290,7 +290,7 @@ export async function setOrUpdateManifestTXT(
 }
 
 export async function setOrUpdateAppCollectionTXT(
-    retResult: AppCollectionManifest,
+    retResult: CacheableAppCollectionManifest,
     cacheTimeMinutes: number
 ) {
     await evictAppsTXTCache(retResult);

@@ -1,18 +1,19 @@
 import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
 import type {
-    SPFxExtensionAppDefinition,
-    SPFxExtensionAppInstance,
+  SPFxExtensionAppDefinition,
+  SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import type {
-    SPFxExtensionAppInstanceEventListener,
-    SPFxExtensionAppInstanceEvents,
+  SPFxExtensionAppInstanceEventListener,
+  SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
 import { ensureApp } from "./appDefinitionService";
-import { loadAppInstances as loadAppInstance } from "./appServices";
+import { loadAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 const emptyDummy = () => {
-  throw "This should not happen";
+  console.trace("This should not happen");
+  throw new Error("This should not happen");
 };
 
 

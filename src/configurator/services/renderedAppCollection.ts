@@ -1,5 +1,5 @@
 import type { SPFI } from "@pnp/sp";
-import type { SPFxExtensionAppManifest } from "../../models/appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import { MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { getEmptyAppItem } from "../runtimeStore";
@@ -12,7 +12,7 @@ export async function getAllAppItems(sp: SPFI, allAppCollections: string[], enab
             .then((blob) => {
                 const empty = getEmptyAppItem(appCollection);
                 try {
-                    const manifest = JSON.parse(blob) as SPFxExtensionAppManifest;
+                    const manifest = JSON.parse(blob) as SPFxExtensionFolderManifest;
                     empty.manifest = manifest;
                     empty.activated = enabledAppCollections.includes(appCollection);
                     allAppsItems.push(empty);

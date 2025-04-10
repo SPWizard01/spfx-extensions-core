@@ -3,7 +3,7 @@
  */
 
 import { logGenericCoreDebug } from "../core/services/loggingService";
-import type { SPFxExtensionAppManifest } from "../models/appCollectionManifest";
+import type { SPFxExtensionFolderManifest } from "../models/appFolderManifest";
 import { DEBUG_KEYS } from "../utilities/debug";
 
 /**
@@ -45,7 +45,7 @@ export async function startAppWithESDebugging(
   const pubPath = addESBuildDebugging(debugKey, prodPublicPath);
   const manifest = await fetch(`${pubPath}/manifest.txt`);
   const manifestData = await manifest.text();
-  const manifestJson = JSON.parse(manifestData) as SPFxExtensionAppManifest;
+  const manifestJson = JSON.parse(manifestData) as SPFxExtensionFolderManifest;
   const modulePath = `${pubPath}/${manifestJson.appRelativeEntryPointUrls}`;
   logGenericCoreDebug(`[${debugKey}] Importing module ${modulePath}`);
   await import(modulePath);

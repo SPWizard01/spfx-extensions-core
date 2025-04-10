@@ -74,7 +74,11 @@ declare global {
        * Runs the app, it has to be registered first via `window.__SPFxExtensions.RegisterApp`
        * 
        * If the app was not registered before calling this method, `Core` will queue it up.
-       * so that it will be called once `window.__SPFxExtensions.RegisterApp` is called.
+       * 
+       * It will be called once `window.__SPFxExtensions.RegisterApp` is called.
+       * 
+       * This method is called inside SPFx when applicable, otherwise it is up to the user to call this method.
+       * 
        * @param appId appllication id to run
        * @param runTimeConfig runtime configuration for the app to use.
        */
@@ -84,7 +88,11 @@ declare global {
       ): Promise<SPFxExtensionAppInstance | undefined>;
       /**
        * Ensures that app is registered in global registry, returns app definition.
-       * if app was registered earlier it might contain instances
+       * 
+       * If app was registered earlier it might contain instances that need to be instantiated.
+       * 
+       * This will usually be done by `Core` however, in cases where apps are not in `ESM` format, it is up to the user to call this method.
+       * 
        * @param app app definition
        */
 

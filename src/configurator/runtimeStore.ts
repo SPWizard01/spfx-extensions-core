@@ -4,7 +4,7 @@ import { EMPTY_APP_MANIFEST } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
   getAllAppCollections,
-  getEnabledAppCollection,
+  getAppCollectionManifest,
 } from "./services/appCollection";
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
@@ -34,13 +34,13 @@ console.log(
   selectedWebAvailableWebs
 );
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
-const enabledAppsData = await getEnabledAppCollection(configurationWebSP);
+const enabledAppsData = await getAppCollectionManifest(configurationWebSP);
 
 // export const selectedManifest = signal<SPFxExtensionAppManifest>(EMPTY_APP_MANIFEST);
 const allApiAppItems = await getAllAppItems(
   configurationWebSP,
   allAppCollectionsData,
-  enabledAppsData.data
+  enabledAppsData.data.enabledAppCollections
 );
 export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);

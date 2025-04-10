@@ -13,6 +13,11 @@ export type SPFxExtensionAppCleanup = () => void;
 
 export interface SPFxExtensionAppInstance {
   key: string;
+  /**
+   * Ensures that subsiquent `onInstanceRequested` are not called for the same instance.
+   * 
+   * Used by context change event where app registration remains but new instances might be created.
+   */
   isLoaded: boolean;
   element?: HTMLElement;
 
@@ -106,6 +111,15 @@ export interface SPFxExtensionAppDefinition {
    * If set to true, the "Open Configurator" button will be hidden in the property pane
    */
   hideConfiguratorButton?: boolean;
+
+  /**
+   * If set to true, the app will not be unmounted when the SPO context changes and app belongs to that context.
+   * 
+   * Usefull for apps that do not need to be unmounted when the context changes. i.e. styles/footer etc.
+   * 
+   * It will still be unmounted regardless of this flag if the app does not belong (not allowed) to the new context.
+   */
+  keepOnContextChange?: boolean;
 
   /**
    * Internal registry of all the instances of this app

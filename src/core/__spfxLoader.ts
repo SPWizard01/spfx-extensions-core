@@ -57,22 +57,24 @@ export async function loadCoreForSPFxOrClassic(suggestedUrlResolver: SuggestedUr
   if (window.__SPFxExtensions.__CorePromise) {
     return window.__SPFxExtensions.__CorePromise;
   }
-  const coreUrl = await getRootCoreLocation(suggestedUrlResolver);
-  window.__SPFxExtensions.__ConfiguratorUrl = coreUrl.configuratorUrl;
-  window.__SPFxExtensions.__CorePromise = new Promise((resolve) => {
-    window.__SPFxExtensions.__CorePromiseResolver = resolve;
-    const coreScript = document.createElement("script");
-    coreScript.src = coreUrl.core;
-    coreScript.type = "module";
-    coreScript.addEventListener("error", (err) => {
-      console.error(
-        SPFXPREFIX,
-        "Catastrophic failure, cannot load SPFxExtensions Core from",
-        coreUrl,
-        err
-      );
-    });
-    document.head.appendChild(coreScript);
+  const { promise: corePromise, resolve: coreResolver } = Promise.withResolvers<void>();
+  window.__SPFxExtensions.__CorePromise = corePromise;
+  window.__SPFxExtensions.__CorePromiseResolver = coreResolver;
+
+  const coreAddress = await getRootCoreLocation(suggestedUrlResolver);
+  window.__SPFxExtensions.__ConfiguratorUrl = coreAddress.configuratorUrl;
+
+  const coreScript = document.createElement("script");
+  coreScript.src = coreAddress.core;
+  coreScript.type = "module";
+  coreScript.addEventListener("error", (err) => {
+    console.error(
+      SPFXPREFIX,
+      "Catastrophic failure, cannot load SPFxExtensions Core from",
+      coreAddress,
+      err
+    );
   });
+  document.head.appendChild(coreScript);
   return window.__SPFxExtensions.__CorePromise;
 }
