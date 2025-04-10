@@ -7,8 +7,15 @@ import {
   TableHeader,
   TableHeaderCell,
   TableRow,
+  Toolbar,
+  ToolbarButton,
 } from "@fluentui/react-components";
-import { FolderRegular } from "@fluentui/react-icons";
+import {
+  Add16Regular,
+  FolderRegular,
+  WebAsset16Regular,
+} from "@fluentui/react-icons";
+import { signal } from "@preact/signals";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
@@ -21,11 +28,11 @@ import {
   updateAppCollection,
 } from "../../services/appCollection";
 import { Stack } from "../@common/Stack";
-import { StackItem } from "../@common/StackItem";
-import { AddApp } from "./AddApp";
+import { AddAppDialog } from "./AddAppDialog";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
+import ManageSitesDrawer from "./ManageSitesDrawer";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,
@@ -66,10 +73,33 @@ interface ApplistProps {
   unused?: boolean;
 }
 
+export const AddAppDialogStateSignal = signal<boolean>(false);
+export const ManageSitesDrawerSignal = signal<boolean>(false);
+
 export function AppList(_props: ApplistProps) {
   if (selectedAppItem.value) return null;
   return (
-    <Stack>
+    <Stack gap={16}>
+      <Toolbar>
+        <Stack gap={8} horizontal>
+          <ToolbarButton
+            onClick={() => {
+              AddAppDialogStateSignal.value = true;
+            }}
+            appearance="primary"
+            icon={<Add16Regular />}
+          >
+            Create app
+          </ToolbarButton>
+          <ToolbarButton
+            appearance="secondary"
+            onClick={() => (ManageSitesDrawerSignal.value = true)}
+            icon={<WebAsset16Regular />}
+          >
+            Manage sites
+          </ToolbarButton>
+        </Stack>
+      </Toolbar>
       <Table>
         <TableHeader>
           <TableRow>
@@ -116,10 +146,8 @@ export function AppList(_props: ApplistProps) {
           ))}
         </TableBody>
       </Table>
-      <StackItem>
-        <br />
-        <AddApp />
-      </StackItem>
+      <AddAppDialog />
+      <ManageSitesDrawer />
     </Stack>
   );
 }
