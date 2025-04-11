@@ -17,6 +17,14 @@ import {
 } from "@fluentui/react-icons";
 import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
+import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
+import {
+  configurationIsGlobal,
+  configurationIsRootHub,
+  configurationWebIsSubsite,
+  contextCollectionConfig,
+  selectedWebAvailableWebs,
+} from "../../runtimeStore";
 import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
 import { Stack } from "./Stack";
 import { StackItem } from "./StackItem";
@@ -30,11 +38,6 @@ const URL_VALIDATION_ERROR = {
   },
 };
 
-interface SiteCollectionInfo {
-  webId: string;
-  url: string;
-}
-
 export const ManageSitesDrawerSignal = signal<{
   open: boolean;
   appDefinition?: AppIdName | undefined;
@@ -46,12 +49,16 @@ export const ManageSitesDrawerSignal = signal<{
 export default function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [urlInputError, setUrlInputError] = useState<string>();
-  const [siteList, setSiteList] = useState<SiteCollectionInfo[]>([
-    {
-      webId: crypto.randomUUID(),
-      url: "https://contoso.sharepoint.com/sites/1",
-    },
-  ]);
+  const list: SPFxExtensionUrlMapItem[] =
+    !configurationIsGlobal && !configurationIsRootHub
+      ? selectedWebAvailableWebs.map((w) => {
+          return {
+            id: w.Id,
+            url: w.Url,
+            type: configurationWebIsSubsite ? "web" : "site",
+          };
+        })
+      : contextCollectionConfig.value.urlMap;
   const [urlInput, setUrlInput] = useState<string>();
 
   function addSite() {
@@ -65,7 +72,6 @@ export default function ManageSitesDrawer() {
       return;
     }
 
-    setSiteList((prev) => [...prev, validatedSite.siteCollectionInfo!]);
     setUrlInputError(undefined);
     setUrlInput(undefined);
   }
@@ -80,7 +86,9 @@ export default function ManageSitesDrawer() {
     if (!isValidUrl) {
       error = URL_VALIDATION_ERROR.invalid;
     }
-    const isDuplicate = siteList.some((site) => site.url === urlInput);
+    const isDuplicate = contextCollectionConfig.value.urlMap.some(
+      (site) => site.url === urlInput
+    );
 
     if (isDuplicate) {
       error = URL_VALIDATION_ERROR.duplicate;
@@ -98,9 +106,8 @@ export default function ManageSitesDrawer() {
     };
   }
 
-  function deleteSite(site: SiteCollectionInfo) {
+  function deleteSite(site: SPFxExtensionUrlMapItem) {
     // Delete site from site list
-    setSiteList((prev) => prev.filter((s) => s.webId !== site.webId));
   }
 
   return (
@@ -139,54 +146,58 @@ export default function ManageSitesDrawer() {
             : "Manage sites"}
         </DrawerHeaderTitle>
       </DrawerHeader>
-      <Stack style={{ padding: "12px 24px", width: "100%" }} gap={8}>
-        <MessageBar intent="info">
-          <MessageBarBody>
-            {ManageSitesDrawerSignal.value.appDefinition
-              ? "Enable app on sites."
-              : "Add site collections and hub child sites."}
-          </MessageBarBody>
-        </MessageBar>
-        <Stack horizontal gap={8}>
-          <Input
-            style={{
-              width: "100%",
-            }}
-            onChange={(_, d) => {
-              setUrlInput(d.value);
-            }}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") {
-                addSite();
-              }
-            }}
-            value={urlInput}
-            placeholder="Site collection URL"
-          />
-          <Button
-            disabled={!urlInput}
-            onClick={() => addSite()}
-            icon={<Add16Regular />}
-          >
-            Add
-          </Button>
-        </Stack>
-        {urlInputError && (
-          <MessageBar intent="error">
-            <MessageBarBody>{urlInputError}</MessageBarBody>
+      {configurationIsGlobal || configurationIsRootHub ? (
+        <Stack style={{ padding: "12px 24px", width: "100%" }} gap={8}>
+          <MessageBar intent="info">
+            <MessageBarBody>
+              {ManageSitesDrawerSignal.value.appDefinition
+                ? "Enable app on sites."
+                : "Add site collections and hub child sites."}
+            </MessageBarBody>
           </MessageBar>
-        )}
-      </Stack>
+          <Stack horizontal gap={8}>
+            <Input
+              style={{
+                width: "100%",
+              }}
+              onChange={(_, d) => {
+                setUrlInput(d.value);
+              }}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "Enter") {
+                  addSite();
+                }
+              }}
+              value={urlInput}
+              placeholder="Site/Web URL"
+            />
+            <Button
+              disabled={!urlInput}
+              onClick={() => addSite()}
+              icon={<Add16Regular />}
+            >
+              Add
+            </Button>
+          </Stack>
+
+          {urlInputError && (
+            <MessageBar intent="error">
+              <MessageBarBody>{urlInputError}</MessageBarBody>
+            </MessageBar>
+          )}
+        </Stack>
+      ) : null}
+
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
           <Stack gap={8}>
-            {siteList.map((site) => (
+            {list.map((site) => (
               <Stack
                 horizontalAlign="space-between"
                 verticalAlign="center"
                 horizontal
                 gap={8}
-                key={site.webId}
+                key={site.id}
               >
                 <StackItem>{site.url}</StackItem>
                 {ManageSitesDrawerSignal.value.appDefinition ? (

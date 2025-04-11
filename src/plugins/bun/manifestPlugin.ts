@@ -19,7 +19,7 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
         cacheString: options.cacheString ?? "",
     }
     if (options.generateCacheString) {
-        const hash = Bun.CryptoHasher.hash("sha1", `${new Date().getTime()}`, "hex")
+        const hash = Bun.CryptoHasher.hash("sha1", `${Date.now()}`, "hex")
         manifestToWrite.cacheString = hash
     }
 

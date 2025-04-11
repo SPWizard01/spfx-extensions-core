@@ -49,5 +49,5 @@ export async function GetCacheStringHashForAssetAsync(start: number, cacheTimeMi
 
 export function GetRandomCacheStringAsync() {
     
-    return getContentDigest(`${new Date().getTime()}`, 13);
+    return getContentDigest(`${Date.now()}`, 13);
 }

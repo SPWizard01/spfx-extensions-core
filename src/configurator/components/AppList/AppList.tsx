@@ -16,9 +16,12 @@ import {
   WebAsset16Regular,
 } from "@fluentui/react-icons";
 import { signal } from "@preact/signals";
+import { getIsHubSite } from "../../../core/services/contextService";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
+  configurationIsGlobal,
+  configurationIsRootHub,
   configurationWebSP,
   selectedAppItem,
   updateApp,
@@ -82,6 +85,7 @@ export const AddAppDialogStateSignal = signal<boolean>(false);
 
 export function AppList(_props: ApplistProps) {
   if (selectedAppItem.value) return null;
+  console.log(configurationIsGlobal, getIsHubSite());
   return (
     <Stack gap={16}>
       <Toolbar>
@@ -93,15 +97,17 @@ export function AppList(_props: ApplistProps) {
             appearance="primary"
             icon={<Add16Regular />}
           >
-            Create app
+            Create collection
           </ToolbarButton>
-          <ToolbarButton
-            appearance="secondary"
-            onClick={() => (ManageSitesDrawerSignal.value = { open: true })}
-            icon={<WebAsset16Regular />}
-          >
-            Manage sites
-          </ToolbarButton>
+          {configurationIsGlobal || configurationIsRootHub ? (
+            <ToolbarButton
+              appearance="secondary"
+              onClick={() => (ManageSitesDrawerSignal.value = { open: true })}
+              icon={<WebAsset16Regular />}
+            >
+              Manage sites
+            </ToolbarButton>
+          ) : null}
         </Stack>
       </Toolbar>
       <Table>

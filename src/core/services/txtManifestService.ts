@@ -1,26 +1,26 @@
 import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import type {
-    CacheableAppCollectionManifest,
-    CacheableAppFolderManifest,
-    ManifestLocation,
+  CacheableAppCollectionManifest,
+  CacheableAppFolderManifest,
+  ManifestLocation,
 } from "../../models/cache";
 import {
-    APPCOLLECTION_MANIFEST_NAME,
-    EMPTY_APP_MANIFEST,
-    MANIFEST_NAME,
-    SPFxExtensionCore,
+  APPCOLLECTION_MANIFEST_NAME,
+  EMPTY_APP_MANIFEST,
+  MANIFEST_NAME,
+  SPFxExtensionCore,
 } from "../../utilities/constants";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import { getContentDigest } from "../../utilities/digest";
 import {
-    getManifestTXTFromCache,
-    setOrUpdateManifestTXT,
+  getManifestTXTFromCache,
+  setOrUpdateManifestTXT,
 } from "./coreIdbService";
 import {
-    logGenericCoreDebug,
-    logGenericCoreError,
-    logGenericCoreInfo,
-    logGenericCoreWarning,
+  logGenericCoreDebug,
+  logGenericCoreError,
+  logGenericCoreInfo,
+  logGenericCoreWarning,
 } from "./loggingService";
 
 function validateManifestTXT(manifest: SPFxExtensionFolderManifest) {
@@ -73,7 +73,7 @@ async function fetchAndCacheManifestTXT(
       return cachedManifest;
     }
   }
-  const fetchUrl = `${fetchLocation}?v=${new Date().getTime()}`;
+  const fetchUrl = `${fetchLocation}?v=${Date.now()}`;
   try {
     logGenericCoreDebug(`Fetching ${MANIFEST_NAME} from`, fetchUrl);
     const mnfReq = await fetch(fetchUrl);

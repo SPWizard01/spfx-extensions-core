@@ -14,22 +14,15 @@ async function initClassicCore() {
   if (!window.__SPFxExtensions.Utils) {
 
 
-    const { promise, resolve } = Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
-
-    let spAppInitializationPromiseResolver = () => {
-      // This does nothing. Comment to avoid eslint error
-    };
-
-    const spAppInitializationPromise = new Promise<void>((resolve) => {
-      spAppInitializationPromiseResolver = resolve;
-    });
+    const { promise: placeHolderProviderPromise, resolve: placeHolderResolver } = Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
+    const { promise: spAppInitializationPromise, resolve: spAppInitializationPromiseResolver } = Promise.withResolvers<void>();
 
     window.__SPFxExtensions.Utils = {
       displayMode: getClassicDisplayMode(),
       environmentType: "ClassicSharePoint",
       ConfiguratorUrl: "",
-      placeHolderProviderPromise: promise,
-      placeHolderResolver: resolve,
+      placeHolderProviderPromise,
+      placeHolderResolver,
       appManifestPromises: [],
       spAppInitializationPromise,
       spAppInitializationPromiseResolver,

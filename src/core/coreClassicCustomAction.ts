@@ -11,7 +11,7 @@ function addScriptElement(src: string) {
 }
 
 const classicWrapperLocation = isDebugging
-  ? `https://localhost:${debugPort}/coreClassicWrapper.js`
+  ? `https://localhost:${debugPort}/__spfxWrapperClassic.js?v=${Date.now()}`
   : "/sites/appcatalog/CDN/SPFxExtensionAppsCore/coreClassicWrapper.js";
 
 addScriptElement(classicWrapperLocation);

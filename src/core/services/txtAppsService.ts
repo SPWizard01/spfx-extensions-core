@@ -36,7 +36,7 @@ async function fetchAndCacheAppsTXT(
             return cachedManifest;
         }
     }
-    const fetchUrl = `${fetchLocation}?v=${new Date().getTime()}`;
+    const fetchUrl = `${fetchLocation}?v=${Date.now()}`;
     try {
         logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
         const mnfReq = await fetch(fetchUrl);

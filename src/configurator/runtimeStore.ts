@@ -1,5 +1,6 @@
 import { signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
+import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
@@ -30,9 +31,7 @@ export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
 export const selectedWebAvailableWebs = await getAllWebInfos(
   configurationWebSP
 );
-console.log(
-  selectedWebAvailableWebs
-);
+
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getAppCollectionManifest(configurationWebSP);
 
@@ -42,6 +41,8 @@ const allApiAppItems = await getAllAppItems(
   allAppCollectionsData,
   enabledAppsData.data.enabledAppCollections
 );
+
+export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(enabledAppsData.data);
 export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();

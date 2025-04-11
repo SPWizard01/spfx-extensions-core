@@ -3,7 +3,7 @@ import { startBunDevServer } from "bun-dev-server";
 import { bunManifestWriter } from "./src/plugins/bun/manifestPlugin";
 startBunDevServer({
     buildConfig: {
-        entrypoints: ["./src/core/__spfxCore.ts", "./src/configurator/__spfxCoreConfigurator.ts"],
+        entrypoints: ["./src/core/__spfxCore.ts", "./src/configurator/__spfxCoreConfigurator.ts", "./src/core/__spfxWrapperClassic.ts"],
         naming: {
             entry: "[name].[ext]"
         },

@@ -36,7 +36,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
       `${configrationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${ep}`
     );
     const isAllowed = await isFileAllowedToRun(fullUrl, app.name, true);
-    fullUrl.searchParams.set("t", `${new Date().getTime()}`);
+    fullUrl.searchParams.set("t", `${Date.now()}`);
     if (!isAllowed) {
       continue;
     }

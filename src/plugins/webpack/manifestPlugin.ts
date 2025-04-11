@@ -33,7 +33,7 @@ export class SPFxExtensionManifestWriterPluginWebpack implements WebpackPluginIn
                     cacheString: this.options.cacheString ?? "",
                 }
                 if (this.options.generateCacheString) {
-                    const hashedString = hash("sha1", `${new Date().getTime()}`, "hex")
+                    const hashedString = hash("sha1", `${Date.now()}`, "hex")
                     manifestToWrite.cacheString = hashedString
                 }
                 const manifestDir = this.options.outdir ?? stats.compilation.outputOptions.path ?? "";

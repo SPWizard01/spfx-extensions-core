@@ -28,7 +28,7 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
                     cacheString: options.cacheString ?? "",
                 }
                 if (options.generateCacheString) {
-                    const hashedString = hash("sha1", `${new Date().getTime()}`, "hex")
+                    const hashedString = hash("sha1", `${Date.now()}`, "hex")
                     manifestToWrite.cacheString = hashedString
                 }
                 const outputDir = build.initialOptions.outdir ?? "";

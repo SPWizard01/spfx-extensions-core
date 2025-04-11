@@ -3,6 +3,7 @@ export const coreEntryPoints = [
     "./src/configurator/__spfxCoreConfigurator.ts",
     "./src/core/__spfxCore.ts",
     "./src/core/__spfxLoader.ts",
+    "./src/core/__spfxWrapperClassic.ts",
     // "./src/core/coreClassicWrapper.ts",
     // "./src/core/coreClassicCustomAction.ts",
 ]
