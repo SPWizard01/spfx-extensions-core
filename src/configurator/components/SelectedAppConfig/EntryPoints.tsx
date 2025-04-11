@@ -35,7 +35,6 @@ export default function EntryPoints() {
       selectedAppItem.value.name
     );
     setAllJSFiles(allAvailableJS);
-    console.log(allJSFiles, "from getJS");
   }
   return (
     <>

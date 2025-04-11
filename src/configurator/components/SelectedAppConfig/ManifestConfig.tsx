@@ -1,8 +1,7 @@
-import { Divider, Subtitle2 } from "@fluentui/react-components";
-import { configurationIsRootHub, selectedAppItem } from "../../runtimeStore";
+import { Button, Subtitle2 } from "@fluentui/react-components";
+import { Add16Regular } from "@fluentui/react-icons";
+import { selectedAppItem } from "../../runtimeStore";
 import { Stack } from "../@common/Stack";
-import { StackItem } from "../@common/StackItem";
-import { AddWeb } from "./AddWeb";
 import { AppDefinitionGrid } from "./AppDefinitionGrid";
 import EntryPoints from "./EntryPoints";
 
@@ -11,7 +10,7 @@ export function ManifestConfig() {
 
   if (!app) return null;
   return (
-    <Stack horizontal gap={20} style={{ height: "100%" }}>
+    <Stack horizontal gap={20}>
       <Stack
         gap={16}
         style={{
@@ -22,13 +21,20 @@ export function ManifestConfig() {
       >
         <EntryPoints />
       </Stack>
-      <Stack>
-        <Divider vertical style={{ height: "100%" }} />
-      </Stack>
-      <StackItem>
-        <Subtitle2>Web application</Subtitle2>
+      <Stack style={{ flexGrow: 1 }}>
+        <Stack
+          horizontal
+          horizontalAlign="space-between"
+          verticalAlign="center"
+        >
+          <Subtitle2>Applications</Subtitle2>
+          <Stack horizontal gap={8}>
+            <Button onClick={() => {}} icon={<Add16Regular />}>
+              Add app
+            </Button>
+          </Stack>
+        </Stack>
         <AppDefinitionGrid />
-        {configurationIsRootHub ? <AddWeb /> : null}
         {/* <StackItem>
           <AppDefinitionConfiguration />
         </StackItem> */}
@@ -118,7 +124,7 @@ export function ManifestConfig() {
         {/* {app.manifest.enableCaching ? (
           <Label size="small">Cache string: {app.manifest.cacheString}</Label>
         ) : null} */}
-      </StackItem>
+      </Stack>
       {/* <StackItem>
         <Label>Entry Points: </Label>
         <Dropdown
