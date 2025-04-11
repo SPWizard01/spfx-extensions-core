@@ -71,7 +71,12 @@ export function Index() {
     return <div>Error: {error.message}</div>;
   }
   return (
-    <Stack style={{ padding: "30px 30px 0 30px", height: "100%" }} gap={20}>
+    <Stack
+      style={{
+        padding: "30px",
+      }}
+      gap={20}
+    >
       <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
       <Stack horizontal gap={8} verticalAlign="center">
         {...getBadges()}
@@ -79,7 +84,6 @@ export function Index() {
           {cfgWeb}
         </Link>
       </Stack>
-
       <AppList />
       <SelectedAppConfig />
       <ToastNotification />

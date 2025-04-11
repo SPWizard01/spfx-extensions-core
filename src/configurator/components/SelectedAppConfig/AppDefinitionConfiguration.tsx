@@ -80,20 +80,7 @@ export function AppDefinitionConfiguration(
         enabledApps: [],
       }))
     );
-    downloadDataApp.manifest.appDefinitionMap.forEach((_w) => {
-      // const web = allWebIds.find((w1) => w1.Id === w.webId);
-      // if (web) {
-      //   web.enabledApps = w.enabledAppIds;
-      // } else {
-      //   allWebIds.push({
-      //     Id: w.webId,
-      //     Name: "Unknown",
-      //     Url: `Unknown_${w.webId}`,
-      //     isSubWeb: false,
-      //     enabledApps: w.enabledAppIds,
-      //   });
-      // }
-    });
+    downloadDataApp.manifest.appDefinitionMap.forEach((_w) => {});
     setWebIdMap(allWebIds);
     setAllDefs(allAppDefinitions);
   }
@@ -163,7 +150,7 @@ export function AppDefinitionConfiguration(
             // app.manifest.appDefinitionMap.find(
             //   (a) => a.webId === selectedWeb.Id
             // )?.enabledAppIds ??
-             []
+            []
           }
           value={getSelectedAppValue()}
           onOptionSelect={(_ev: SelectionEvents, _data: OptionOnSelectData) => {

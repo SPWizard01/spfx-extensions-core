@@ -15,21 +15,21 @@ import {
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
-import { Add24Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../../runtimeStore";
 import { addAppCollection } from "../../services/appCollection";
 import { toasterId } from "../@common/ToastNotification";
+import { AddAppDialogStateSignal } from "./AppList";
 
-export function AddApp() {
-  const [open, setOpen] = useState(false);
+export function AddAppDialog() {
   const [inputValue, setInputValue] = useState("");
   async function dialogOpenChange(
     _event: DialogOpenChangeEvent,
     data: DialogOpenChangeData
   ) {
-    setOpen(data.open);
+    AddAppDialogStateSignal.value = data.open;
   }
 
   const { dispatchToast, updateToast } = useToastController(toasterId);
@@ -66,7 +66,7 @@ export function AddApp() {
         toastId: toasterId,
         timeout: 2000,
       });
-      setOpen(false);
+      AddAppDialogStateSignal.value = false;
       return;
     }
     updateToast({
@@ -84,16 +84,11 @@ export function AddApp() {
   return (
     <>
       <Dialog
-        open={open}
+        open={AddAppDialogStateSignal.value}
         surfaceMotion={null}
         modalType="alert"
         onOpenChange={dialogOpenChange}
       >
-        <DialogTrigger action="open">
-          <Button appearance="primary" icon={<Add24Regular />}>
-            Create application
-          </Button>
-        </DialogTrigger>
         <DialogSurface>
           <DialogBody>
             <DialogTitle

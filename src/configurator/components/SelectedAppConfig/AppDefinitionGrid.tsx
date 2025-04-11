@@ -6,7 +6,9 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
+  Label,
   TableCellLayout,
+  TableRow,
   createTableColumn,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
@@ -14,39 +16,33 @@ import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
-import { selectedAppItem, selectedWebAvailableWebs } from "../../runtimeStore";
+import { selectedAppItem } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
+import { Stack } from "../@common/Stack";
+import { StackItem } from "../@common/StackItem";
 
-const columns: TableColumnDefinition<WebIdAppIdMap>[] = [
-  createTableColumn<WebIdAppIdMap>({
+const columns: TableColumnDefinition<AppIdName>[] = [
+  createTableColumn<AppIdName>({
     columnId: "name",
     renderHeaderCell: () => {
       return "Name";
     },
     renderCell: (item) => {
-      return <TableCellLayout>{item.Name}</TableCellLayout>;
+      return <TableCellLayout>{item.name}</TableCellLayout>;
     },
   }),
-  createTableColumn<WebIdAppIdMap>({
-    columnId: "web",
-    renderHeaderCell: () => {
-      return "Web";
-    },
-    renderCell: (item) => {
-      return <TableCellLayout>{item.Url}</TableCellLayout>;
-    },
-  }),
-  createTableColumn<WebIdAppIdMap>({
+  createTableColumn<AppIdName>({
     columnId: "actions",
     renderHeaderCell: () => {
       return "Actions";
     },
+
     renderCell: () => {
       return (
-        <TableCellLayout>
+        <>
           <Button aria-label="Edit" icon={<EditRegular />} />
           <Button aria-label="Delete" icon={<DeleteRegular />} />
-        </TableCellLayout>
+        </>
       );
     },
   }),
@@ -57,36 +53,32 @@ interface AppIdName {
   name: string;
 }
 
-interface WebIdName {
-  Id: string;
-  Name: string;
-  Url: string;
-  isSubWeb: boolean;
-}
-
-interface WebIdAppIdMap extends WebIdName {
-  enabledApps: string[];
-}
+// interface WebIdName {
+//   Id: string;
+//   Name: string;
+//   Url: string;
+//   isSubWeb: boolean;
+// }
 
 export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
 
-  const [Alldefs, setAllDefs] = useState<AppIdName[]>([]);
-  const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
+  const [appDefinitions, setAppDefinitions] = useState<AppIdName[]>([]);
+  // const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
-    const allWebIds: WebIdAppIdMap[] = [];
+    // const allWebIds: WebIdAppIdMap[] = [];
 
-    allWebIds.push(
-      ...selectedWebAvailableWebs.map((w) => ({
-        Id: w.Id,
-        Name: w.Title,
-        Url: w.ServerRelativeUrl,
-        isSubWeb: true,
-        enabledApps: [],
-      }))
-    );
+    // allWebIds.push(
+    //   ...selectedWebAvailableWebs.map((w) => ({
+    //     Id: w.Id,
+    //     Name: w.Title,
+    //     Url: w.ServerRelativeUrl,
+    //     isSubWeb: true,
+    //     enabledApps: [],
+    //   }))
+    // );
     downloadDataApp.manifest.appDefinitionMap?.forEach((w) => {
       // const web = allWebIds.find((w1) => w1.Id === w.webId);
       // if (web) {
@@ -101,8 +93,8 @@ export const AppDefinitionGrid = () => {
       //   });
       // }
     });
-    setWebIdMap(allWebIds);
-    setAllDefs(allAppDefinitions);
+    // setWebIdMap(allWebIds);
+    setAppDefinitions(allAppDefinitions);
   }
 
   useSignalEffect(() => {
@@ -112,27 +104,79 @@ export const AppDefinitionGrid = () => {
   if (!app) return null;
 
   return (
-    <DataGrid
-      items={webIdMap}
-      columns={columns}
-      getRowId={(item: WebIdAppIdMap) => item.Id}
+    <Stack
+      style={{
+        marginTop: "10px",
+      }}
     >
-      <DataGridHeader>
-        <DataGridRow>
-          {({ renderHeaderCell }) => (
-            <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-          )}
-        </DataGridRow>
-      </DataGridHeader>
-      <DataGridBody<WebIdAppIdMap>>
-        {({ item, rowId }) => (
-          <DataGridRow<WebIdAppIdMap> key={rowId}>
-            {({ renderCell }) => (
-              <DataGridCell>{renderCell(item)}</DataGridCell>
+      {appDefinitions.map((appDef) => (
+        <Stack
+          horizontal
+          gap={8}
+          horizontalAlign="space-between"
+          verticalAlign="center"
+          style={{
+            borderTop: "1px solid #eaeaea",
+            borderBottom: "1px solid #eaeaea",
+            padding: "10px 6px",
+          }}
+        >
+          <StackItem>
+            <Label size="large" weight="semibold">
+              {appDef.name}
+            </Label>
+          </StackItem>
+          <Stack gap={8} horizontal>
+            <Button
+              aria-label="Edit sites"
+              icon={<EditRegular />}
+              onClick={() => {
+                console.log("Edit clicked");
+              }}
+            />
+            {!app.manifest.isESM && (
+              <Button
+                aria-label="Delete"
+                icon={<DeleteRegular />}
+                onClick={() => {
+                  console.log("Delete clicked");
+                }}
+              />
             )}
-          </DataGridRow>
-        )}
-      </DataGridBody>
-    </DataGrid>
+          </Stack>
+        </Stack>
+      ))}
+    </Stack>
+    // <DataGrid
+    //   items={appDefinitions}
+    //   columns={columns}
+    //   getRowId={(item: AppIdName) => item.id}
+    //   style={{
+    //     minWidth: "100%",
+    //   }}
+    //   columnSizingOptions={{
+    //     actions: {
+    //       maxWidth: 100,
+    //       idealWidth: 100,
+    //     },
+    //   }}
+    // >
+    //   <DataGridHeader>
+    //     <DataGridRow>
+    //       {({ renderHeaderCell }) => (
+    //         <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+    //       )}
+    //     </DataGridRow>
+    //   </DataGridHeader>
+    //   <DataGridBody<AppIdName>>
+    //     {({ item, rowId }) => (
+    //       <DataGridRow<AppIdName> key={rowId}>
+    //         {({ renderCell }) => (
+    //           <DataGridCell>{renderCell(item)}</DataGridCell>
+    //         )}
+    //       </DataGridRow>
+    //     )}
+    //   </DataGridBody>
+    // </DataGrid>
   );
 };

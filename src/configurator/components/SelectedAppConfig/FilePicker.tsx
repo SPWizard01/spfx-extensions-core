@@ -1,11 +1,7 @@
 import { Button } from "@fluentui/react-button";
-import { Badge, Spinner } from "@fluentui/react-components";
-import {
-  CheckmarkCircle24Regular,
-  CloudArrowUpRegular,
-  DismissCircle24Regular,
-} from "@fluentui/react-icons";
+import { Field, ProgressBar } from "@fluentui/react-components";
 import { Body1Strong, Text } from "@fluentui/react-text";
+import { signal } from "@preact/signals";
 import { useState } from "react";
 import Dropzone from "react-dropzone";
 import { MANIFEST_NAME } from "../../../utilities/constants";
@@ -21,7 +17,7 @@ import {
   parseUploadFiles,
 } from "../../services/fileService";
 import { getZipManifestContents } from "../../services/zipService";
-import { useRowStack } from "../../styles/stack";
+import { Stack } from "../@common/Stack";
 import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "../style";
 
 //use-file-picker
@@ -29,19 +25,24 @@ import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "../style";
 interface UploadStatus extends FileContents {
   status: "uploading" | "uploaded" | "error";
 }
-export function FilePicker() {
-  const [filesToUpload, setFilesToUpload] = useState<UploadStatus[]>([]);
-  const row = useRowStack();
 
+export const filesToUpload = signal<UploadStatus[]>([]);
+export const finishedUploadSignal = signal(false);
+
+export function FilePicker() {
+  // const [filesToUpload, setFilesToUpload] = useState<UploadStatus[]>([]);
+  const [uploadedFilesCount, setUploadedFilesCount] = useState(0);
   async function uploadFiles(files: UploadStatus[]) {
-    setFilesToUpload([...files]);
+    filesToUpload.value = [...files];
     const uploadFlow = addFiles(
       configurationWebSP,
       selectedAppItem.value!.name,
       files
     );
     let result = await uploadFlow.next();
+    let uploadedFiles = 1;
     while (!result.done) {
+      setUploadedFilesCount(uploadedFiles++);
       const d = result.value;
       const file = files.find((f) => f.fileName === d.fileName);
       const isManifest = d.fileName.toLowerCase().endsWith(MANIFEST_NAME);
@@ -57,17 +58,18 @@ export function FilePicker() {
         updateApp.manifest = manifestJson;
         updateSelectedApp(updateApp, true);
       }
-      setFilesToUpload([...files]);
+      filesToUpload.value = [...files];
       result = await uploadFlow.next();
     }
     setTimeout(() => {
-      setFilesToUpload([]);
-    }, 5000);
+      finishedUploadSignal.value = true;
+      setUploadedFilesCount(0);
+    }, 3000);
   }
 
   return (
-    <div className={row.stack}>
-      <div className={row.stackItem}>
+    <Stack gap={16}>
+      <Stack>
         <Dropzone
           useFsAccessApi={false}
           onDropAccepted={(files, _event) => {
@@ -115,43 +117,39 @@ export function FilePicker() {
                 },
               })}
             >
-              <input {...getInputProps()} />
-              <CloudArrowUpRegular fontSize={28} />
-              <Text>
-                <Body1Strong>Choose a file(s) </Body1Strong>
-                or drag it here
-              </Text>
-              <Button appearance="primary" onClick={open}>
-                Browse
-              </Button>
+              {filesToUpload.value.some(
+                (file) => file.status === "uploading"
+              ) ? (
+                <Field
+                  validationMessage={`Uploaded ${uploadedFilesCount} of ${filesToUpload.value.length} files `}
+                  validationState="none"
+                  validation
+                  style={{
+                    width: "100%",
+                  }}
+                >
+                  <ProgressBar
+                    max={filesToUpload.value.length - 1}
+                    value={uploadedFilesCount}
+                    thickness="large"
+                  />
+                </Field>
+              ) : (
+                <>
+                  <input {...getInputProps()} />
+                  <Text>
+                    <Body1Strong>Choose a file(s) </Body1Strong>
+                    or drag it here
+                  </Text>
+                  <Button appearance="primary" onClick={open}>
+                    Browse
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </Dropzone>
-      </div>
-      <div className={row.stackItem}>
-        {filesToUpload.map((file) => (
-          <div className={row.stack} key={file.fileName}>
-            <div>{file.fileName}</div>
-            {file.status === "uploaded" && (
-              <Badge
-                size="medium"
-                appearance="ghost"
-                color="success"
-                icon={<CheckmarkCircle24Regular />}
-              />
-            )}
-            {file.status === "error" && (
-              <Badge
-                size="medium"
-                appearance="ghost"
-                color="danger"
-                icon={<DismissCircle24Regular />}
-              />
-            )}
-            {file.status === "uploading" && <Spinner size="tiny" />}
-          </div>
-        ))}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }
