@@ -1,12 +1,13 @@
 import type {
-    SPFxExtensionAppDefinition,
-    SPFxExtensionAppInstance,
+  SPFxExtensionAppDefinition,
+  SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import { logInstanceRequestedError } from "./loggingService";
 
 export function unmountAppInstance(
   appDef: SPFxExtensionAppDefinition,
-  instanceKey: string
+  instanceKey: string,
+  userCleanupFunc?: () => void
 ) {
   const idx = appDef.instances.findIndex((i) => i.key === instanceKey);
   if (idx > -1) {
@@ -16,6 +17,7 @@ export function unmountAppInstance(
     if (instance.isLoaded) {
       instance.executeListeners("onConfigurationClose", undefined);
       instance.allEventListeners.splice(0, instance.allEventListeners.length);
+      userCleanupFunc?.();
     }
   }
 }
@@ -38,11 +40,10 @@ export function loadAppInstance(
     foundApp
       .onInstanceRequested?.(appInstance)
       .then((userCleanupFunc) => {
-        appInstance.instanceLoadPromiseResolver();
         appInstance.unmount = () => {
-          unmountAppInstance(foundApp, appInstance.key);
-          userCleanupFunc();
+          unmountAppInstance(foundApp, appInstance.key, userCleanupFunc);
         };
+        appInstance.instanceLoadPromiseResolver();
       })
       .catch((e) => {
         logInstanceRequestedError(foundApp, e);

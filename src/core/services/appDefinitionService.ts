@@ -1,4 +1,4 @@
-import type { SPFxExtensionAppDefinition, SPFxExtensionEnsuredAppDefinition } from "../../models/appModel";
+import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
 import { loadAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
@@ -17,7 +17,7 @@ function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
 }
 
 export function ensureApp(appId: string) {
-  let foundApp = window.__SPFxExtensions.Apps.find((a) => a.id === appId) as SPFxExtensionEnsuredAppDefinition;
+  let foundApp = window.__SPFxExtensions.Apps.find((a) => a.id === appId);
 
   if (!foundApp) {
     logGenericCoreDebug(`Registering new app`, appId);
@@ -46,9 +46,9 @@ export function registerAppService() {
     window.__SPFxExtensions.RegisterApp = async (newAppDefinition) => {
       const appDefinition = ensureApp(newAppDefinition.id);
       if (appDefinition.registrationCompleted) {
-        appDefinition.instances.filter(i => !i.isLoaded).forEach((appInstance) => {
-          loadAppInstance(appDefinition, appInstance);
-        });
+        // appDefinition.instances.filter(i => !i.isLoaded).forEach((appInstance) => {
+        //   loadAppInstance(appDefinition, appInstance);
+        // });
         return appDefinition;
       }
       appDefinition.registrationCompleted = true;

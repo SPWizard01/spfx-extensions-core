@@ -52,17 +52,18 @@ async function fetchAndCacheManifestTXT(
             return cachedManifest;
         }
     }
+    const fetchUrl = `${fetchLocation}?v=${new Date().getTime()}`;
     try {
-        logGenericCoreDebug(`Fetching ${MANIFEST_NAME} from`, fetchLocation);
+        logGenericCoreDebug(`Fetching ${MANIFEST_NAME} from`, fetchUrl);
         const mnfReq = await fetch(fetchLocation);
         appManifest = await mnfReq.json();
     } catch (err) {
-        logGenericCoreWarning(`Unable to fetch ${MANIFEST_NAME} from`, fetchLocation, err);
+        logGenericCoreWarning(`Unable to fetch ${MANIFEST_NAME} from`, fetchUrl, err);
     }
     try {
         validateManifestTXT(appManifest);
     } catch (err) {
-        logGenericCoreError(`Error while parsing ${MANIFEST_NAME} from`, fetchLocation, err);
+        logGenericCoreError(`Error while parsing ${MANIFEST_NAME} from`, fetchUrl, err);
         appManifest = { ...EMPTY_APP_MANIFEST };
     }
     const hash = await getContentDigest(JSON.stringify(appManifest));

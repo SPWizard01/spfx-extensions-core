@@ -53,10 +53,7 @@ export async function performManifestCheck(
     localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   }
   try {
-    logGenericCoreInfo(
-      new Date().toISOString(),
-      `Checking for manifest updates across all locations...`
-    );
+    logGenericCoreInfo(`Checking for manifest updates across all locations...`);
     await Promise.all([evictAppsTXTCache(), evictManifestTXTCache()]);
     const appLocations = await fetchAppsTXTFromAllLocations(
       site,

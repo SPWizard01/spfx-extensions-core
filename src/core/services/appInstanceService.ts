@@ -9,14 +9,18 @@ import type {
 } from "../../models/events";
 import { ensureApp } from "./appDefinitionService";
 import { loadAppInstance } from "./appServices";
-import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
+import {
+  logGenericCoreDebug,
+  logGenericCoreError,
+  logGenericCoreWarning,
+} from "./loggingService";
 
 const emptyDummy = () => {
-  console.trace("This should not happen");
-  throw new Error("This should not happen");
+  logGenericCoreWarning(
+    "The app instance event was called before app instance was initialized."
+  );
+  return () => {};
 };
-
-
 
 function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   const removeInstanceEventListener = (
@@ -91,7 +95,8 @@ function executeInstanceAddedListeners(
 export function createAppInstance(
   runTimeConfig: SPFxExtensionAppRuntimeConfig
 ) {
-  const { promise: instanceLoadPromise, resolve: instanceLoadPromiseResolver } = Promise.withResolvers<void>()
+  const { promise: instanceLoadPromise, resolve: instanceLoadPromiseResolver } =
+    Promise.withResolvers<void>();
 
   const appInstance: SPFxExtensionAppInstance = {
     key: window.crypto.randomUUID(),
@@ -120,19 +125,18 @@ export function registerAppInstanceService() {
       appId: string,
       runTimeConfig: SPFxExtensionAppRuntimeConfig
     ) => {
-
       const foundApp = ensureApp(appId);
       logGenericCoreDebug(`Creating app instance for app`, appId);
       const appInstance = createAppInstance(runTimeConfig);
       foundApp.instances.push(appInstance);
 
       executeInstanceAddedListeners(foundApp, appInstance);
-      //this will only be available once the app registration passes, ensureApp does not create this property
-      loadAppInstance(foundApp, appInstance);
+      //this will only be available once the app registration passes
+      if (foundApp.registrationCompleted) {
+        loadAppInstance(foundApp, appInstance);
+      }
 
       return appInstance;
     };
   }
 }
-
-

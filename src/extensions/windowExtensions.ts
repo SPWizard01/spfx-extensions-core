@@ -1,8 +1,8 @@
 import type { SPFxExtensionAppRuntimeConfig } from "../models/appConfig";
 import type {
-  SPFxExtensionAppDefinition,
   SPFxExtensionAppInstance,
   SPFxExtensionAppRegistration,
+  SPFxExtensionEnsuredAppDefinition,
 } from "../models/appModel";
 import type { SPFxExtensionAppUtils } from "../models/appUtils";
 import type { ContextChangeEventDetails, HistoryEventDetails } from "../models/customEvents";
@@ -69,7 +69,7 @@ declare global {
       AllAppAssetsLoadedResolver(): void;
 
       Utils: SPFxExtensionAppUtils;
-      Apps: SPFxExtensionAppDefinition[];
+      Apps: SPFxExtensionEnsuredAppDefinition[];
       /**
        * Runs the app, it has to be registered first via `window.__SPFxExtensions.RegisterApp`
        * 
@@ -98,7 +98,7 @@ declare global {
 
       RegisterApp(
         app: SPFxExtensionAppRegistration
-      ): Promise<SPFxExtensionAppDefinition | undefined>;
+      ): Promise<SPFxExtensionEnsuredAppDefinition>;
 
       /**
        * Unregisters app from global registry, removes all instances of the app.
@@ -106,7 +106,7 @@ declare global {
        */
       UnregisterApp(
         appId: string
-      ): Promise<SPFxExtensionAppDefinition | undefined>;
+      ): Promise<SPFxExtensionEnsuredAppDefinition | undefined>;
 
       AppEventListeners: SPFxExtensionAppEventListener[];
       AddAppEventListener<

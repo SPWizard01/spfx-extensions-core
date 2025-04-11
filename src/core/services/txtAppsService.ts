@@ -36,19 +36,20 @@ async function fetchAndCacheAppsTXT(
             return cachedManifest;
         }
     }
+    const fetchUrl = `${fetchLocation}?v=${new Date().getTime()}`;
     try {
-        logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchLocation);
-        const mnfReq = await fetch(fetchLocation);
+        logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
+        const mnfReq = await fetch(fetchUrl);
         const result = await mnfReq.json();
         appCollection = result;
 
     } catch (err) {
-        logGenericCoreWarning(`Unable to fetch ${APPCOLLECTION_MANIFEST_NAME} from`, fetchLocation, err);
+        logGenericCoreWarning(`Unable to fetch ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl, err);
     }
     try {
         validateAppsTXT(appCollection);
     } catch (err) {
-        logGenericCoreError(`Error while parsing ${APPCOLLECTION_MANIFEST_NAME} from`, fetchLocation, err);
+        logGenericCoreError(`Error while parsing ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl, err);
         appCollection = EMPTY_COLLECTION_MANIFEST;
     }
     const hash = await getContentDigest(JSON.stringify(appCollection));

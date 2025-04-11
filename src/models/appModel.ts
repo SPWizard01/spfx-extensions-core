@@ -71,7 +71,7 @@ export interface SPFxExtensionAppInstance {
   /**
    * this should only be called by the core when instance is loaded and the promise is used by spfx
    */
-  instanceLoadPromiseResolver(value?: any): void;
+  instanceLoadPromiseResolver(): void;
 }
 
 export interface SPFxExtensionAppIcon {
