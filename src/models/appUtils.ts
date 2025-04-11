@@ -21,7 +21,6 @@ export interface SPFxExtensionAppUtils {
 
   placeHolderProviderPromise: Promise<SPFxExtensionUtilsPlaceHolderProvider>;
   placeHolderResolver: (plc: SPFxExtensionUtilsPlaceHolderProvider) => void;
-  placeHolderResolved: boolean;
   /**
    * Promise that loads collectionConfig.txt from root, site and web location.
    * 

@@ -30,7 +30,6 @@ async function initClassicCore() {
       ConfiguratorUrl: "",
       placeHolderProviderPromise: promise,
       placeHolderResolver: resolve,
-      placeHolderResolved: false,
       appManifestPromises: [],
       spAppInitializationPromise,
       spAppInitializationPromiseResolver,
