@@ -9,6 +9,7 @@ import {
   configurationWebIsSubsite,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
+import ManageSitesDrawer from "./@common/ManageSitesDrawer";
 import { Stack } from "./@common/Stack";
 import { ToastNotification } from "./@common/ToastNotification";
 import { AppList } from "./AppList/AppList";
@@ -86,6 +87,7 @@ export function Index() {
       </Stack>
       <AppList />
       <SelectedAppConfig />
+      <ManageSitesDrawer />
       <ToastNotification />
     </Stack>
   );

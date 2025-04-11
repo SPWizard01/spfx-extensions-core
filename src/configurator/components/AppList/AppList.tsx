@@ -27,24 +27,29 @@ import {
   getAppCollectionManifest,
   updateAppCollection,
 } from "../../services/appCollection";
+import { ManageSitesDrawerSignal } from "../@common/ManageSitesDrawer";
 import { Stack } from "../@common/Stack";
 import { AddAppDialog } from "./AddAppDialog";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
-import ManageSitesDrawer from "./ManageSitesDrawer";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,
   enabled: boolean
 ) {
   const dataOnServer = await getAppCollectionManifest(configurationWebSP);
-  const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(app.name);
+  const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(
+    app.name
+  );
   if (enabled !== isEnabledOnServer) {
     if (enabled) {
       dataOnServer.data.enabledAppCollections.push(app.name);
     } else {
-      dataOnServer.data.enabledAppCollections.splice(dataOnServer.data.enabledAppCollections.indexOf(app.name), 1);
+      dataOnServer.data.enabledAppCollections.splice(
+        dataOnServer.data.enabledAppCollections.indexOf(app.name),
+        1
+      );
     }
     await updateAppCollection(configurationWebSP, dataOnServer.data);
   }
@@ -74,7 +79,6 @@ interface ApplistProps {
 }
 
 export const AddAppDialogStateSignal = signal<boolean>(false);
-export const ManageSitesDrawerSignal = signal<boolean>(false);
 
 export function AppList(_props: ApplistProps) {
   if (selectedAppItem.value) return null;
@@ -93,7 +97,7 @@ export function AppList(_props: ApplistProps) {
           </ToolbarButton>
           <ToolbarButton
             appearance="secondary"
-            onClick={() => (ManageSitesDrawerSignal.value = true)}
+            onClick={() => (ManageSitesDrawerSignal.value = { open: true })}
             icon={<WebAsset16Regular />}
           >
             Manage sites
@@ -147,7 +151,6 @@ export function AppList(_props: ApplistProps) {
         </TableBody>
       </Table>
       <AddAppDialog />
-      <ManageSitesDrawer />
     </Stack>
   );
 }

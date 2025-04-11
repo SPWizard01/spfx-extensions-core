@@ -1,6 +1,13 @@
-import { Button, Subtitle2 } from "@fluentui/react-components";
+import {
+  Button,
+  Input,
+  Label,
+  Subtitle2,
+  Switch,
+} from "@fluentui/react-components";
 import { Add16Regular } from "@fluentui/react-icons";
-import { selectedAppItem } from "../../runtimeStore";
+import { GetRandomCacheStringAsync } from "../../../core/services/browserCache";
+import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { Stack } from "../@common/Stack";
 import { AppDefinitionGrid } from "./AppDefinitionGrid";
 import EntryPoints from "./EntryPoints";
@@ -17,6 +24,8 @@ export function ManifestConfig() {
           paddingBottom: "20px",
           flexBasis: "240px",
           flexShrink: 0,
+          paddingRight: "20px",
+          borderRight: "1px solid #eaeaea",
         }}
       >
         <EntryPoints />
@@ -26,32 +35,53 @@ export function ManifestConfig() {
           horizontal
           horizontalAlign="space-between"
           verticalAlign="center"
+          style={{ minHeight: "32px" }}
         >
-          <Subtitle2>Applications</Subtitle2>
-          {!app.manifest.isESM && (
-            <Stack horizontal gap={8}>
-              <Button onClick={() => {}} icon={<Add16Regular />}>
-                Add app
-              </Button>
-            </Stack>
-          )}
+          <Stack horizontal gap={16} verticalAlign="center">
+            <Subtitle2>Applications</Subtitle2>
+            {!app.manifest.isESM && (
+              <Stack horizontal gap={8}>
+                <Button onClick={() => {}} icon={<Add16Regular />}>
+                  Add app
+                </Button>
+              </Stack>
+            )}
+          </Stack>
+          <Stack gap={8} horizontal>
+            <Switch
+              checked={app.manifest.enableCaching}
+              label="Enable caching"
+              onChange={(_, d) => {
+                app.manifest.enableCaching = d.checked;
+                updateSelectedApp(app);
+              }}
+            />
+
+            <Input
+              placeholder="Cache string"
+              disabled={!app.manifest.enableCaching}
+              type="text"
+              value={app.manifest.cacheString ?? ""}
+              onChange={(_ev, data) => {
+                app.manifest.cacheString = data.value;
+                updateSelectedApp(app);
+              }}
+            />
+            <Button
+              size="medium"
+              disabled={!app.manifest.enableCaching}
+              onClick={async () => {
+                app.manifest.cacheString = await GetRandomCacheStringAsync();
+                updateSelectedApp(app);
+              }}
+            >
+              Generate
+            </Button>
+          </Stack>
         </Stack>
         <AppDefinitionGrid />
         {/* <StackItem>
           <AppDefinitionConfiguration />
-        </StackItem> */}
-        {/* <StackItem>
-          <Stack verticalAlign="center" horizontal gap={8}>
-            <Label>Is ESM: </Label>
-            <Switch
-              checked={app.manifest.isESM}
-              disabled={!app.manifest.enabled}
-              onChange={(_, d) => {
-                app.manifest.isESM = d.checked;
-                updateSelectedApp(app);
-              }}
-            />
-          </Stack>
         </StackItem> */}
         {/* {!app.manifest.isESM && app.manifest.enabled ? (
           <StackItem shrink>
@@ -127,23 +157,6 @@ export function ManifestConfig() {
           <Label size="small">Cache string: {app.manifest.cacheString}</Label>
         ) : null} */}
       </Stack>
-      {/* <StackItem>
-        <Label>Entry Points: </Label>
-        <Dropdown
-          multiselect={true}
-          placeholder="Select entrypoints to load"
-          disabled={!app.manifest.enabled}
-          onOptionSelect={onOptionSelect}
-          defaultSelectedOptions={app.manifest.appRelativeEntryPointUrls}
-          defaultValue={app.manifest.appRelativeEntryPointUrls.join(", ")}
-        >
-          {allJSFiles.map((ep) => (
-            <Option key={ep} value={ep}>
-              {ep}
-            </Option>
-          ))}
-        </Dropdown>
-      </StackItem> */}
     </Stack>
   );
 }
