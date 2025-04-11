@@ -1,103 +1,26 @@
-import { Divider, Subtitle2, Switch } from "@fluentui/react-components";
-import { useSignalEffect } from "@preact/signals";
-import { useState } from "react";
-import {
-  configurationIsRootHub,
-  configurationWebSP,
-  selectedAppItem,
-  updateSelectedApp,
-} from "../../runtimeStore";
-import { getAllAppJSFiles } from "../../services/fileService";
+import { Divider, Subtitle2 } from "@fluentui/react-components";
+import { configurationIsRootHub, selectedAppItem } from "../../runtimeStore";
 import { Stack } from "../@common/Stack";
 import { StackItem } from "../@common/StackItem";
 import { AddWeb } from "./AddWeb";
 import { AppDefinitionGrid } from "./AppDefinitionGrid";
-import { FilePicker } from "./FilePicker";
+import EntryPoints from "./EntryPoints";
 
 export function ManifestConfig() {
   const app = selectedAppItem.value;
-  const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
-  useSignalEffect(() => {
-    if (!selectedAppItem.value) return;
-    getJsFiles();
-  });
 
-  async function onEPToggleSelect(checked: boolean, checkedEpName: string) {
-    if (checked) {
-      app!.manifest.appRelativeEntryPointUrls.push(checkedEpName);
-    }
-
-    if (!checked) {
-      app!.manifest.appRelativeEntryPointUrls =
-        app!.manifest.appRelativeEntryPointUrls.filter(
-          (epUrl) => epUrl !== checkedEpName
-        );
-    }
-    updateSelectedApp(app!);
-  }
-  // async function onOptionSelect(
-  //   _event: SelectionEvents,
-  //   data: OptionOnSelectData
-  // ) {
-  //   app!.manifest.appRelativeEntryPointUrls = data.selectedOptions;
-  //   updateSelectedApp(app!);
-  //   // for (const element of data.selectedOptions) {
-  //   //   console.log(`Selected: ${element}`);
-
-  //   //   const fullUrl = new URL(
-  //   //     `${cfgWeb}/${SPFX_EXTENSIONS_FOLDER}/${app!.name}/${element}`
-  //   //   );
-  //   //   console.log(`Check: ${fullUrl}`);
-  //   //   isFileAllowedToRun(fullUrl, true);
-  //   //   //if file is allowed to run then import it and set appdefinitions exported by that file to state so we can configure them.
-  //   //   //importEntryPoint(`${fullUrl}`,true);
-  //   // }
-  // }
-
-  // async function onCheckBoxSelected(option: CheckboxOnChangeData) {
-  //   app!.manifest.appRelativeEntryPointUrls = setselectedEP;
-  //   updateSelectedApp(app!);
-  // }
-
-  async function getJsFiles() {
-    if (!selectedAppItem.value) return;
-    const allAvailableJS = await getAllAppJSFiles(
-      configurationWebSP,
-      selectedAppItem.value.name
-    );
-    setAllJSFiles(allAvailableJS);
-  }
   if (!app) return null;
   return (
     <Stack horizontal gap={20} style={{ height: "100%" }}>
       <Stack
-        horizontalAlign="space-between"
+        gap={16}
         style={{
           paddingBottom: "20px",
           flexBasis: "240px",
+          flexShrink: 0,
         }}
       >
-        <Stack>
-          <Subtitle2>Entry points</Subtitle2>
-          {allJSFiles.map((ep) => (
-            <Switch
-              label={ep}
-              labelPosition="before"
-              defaultChecked={app!.manifest.appRelativeEntryPointUrls.some(
-                (selected) => selected === ep
-              )}
-              onChange={(_, data) => {
-                onEPToggleSelect(data.checked, ep);
-              }}
-              root={{
-                style: {
-                  justifyContent: "space-between",
-                },
-              }}
-            />
-          ))}
-        </Stack>
-        <FilePicker />
+        <EntryPoints />
       </Stack>
       <Stack>
         <Divider vertical style={{ height: "100%" }} />
