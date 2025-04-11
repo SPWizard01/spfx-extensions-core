@@ -1,5 +1,6 @@
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
+import { emptyDummy } from "../../utilities/helpers";
 import { loadAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
@@ -30,6 +31,9 @@ export function ensureApp(appId: string) {
       hideConfiguratorButton: false,
       registrationCompleted: false,
       instances: [],
+      async onInstanceRequested() {
+        return emptyDummy;
+      },
     };
     window.__SPFxExtensions.Apps.push(foundApp);
   }
@@ -46,9 +50,6 @@ export function registerAppService() {
     window.__SPFxExtensions.RegisterApp = async (newAppDefinition) => {
       const appDefinition = ensureApp(newAppDefinition.id);
       if (appDefinition.registrationCompleted) {
-        // appDefinition.instances.filter(i => !i.isLoaded).forEach((appInstance) => {
-        //   loadAppInstance(appDefinition, appInstance);
-        // });
         return appDefinition;
       }
       appDefinition.registrationCompleted = true;
@@ -60,10 +61,10 @@ export function registerAppService() {
       appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
       appDefinition.icon = newAppDefinition.icon;
       appDefinition.onInstanceRequested = newAppDefinition.onInstanceRequested;
+      executeAppAddedEvents(appDefinition);
       appDefinition.instances.forEach((appInstance) => {
         loadAppInstance(appDefinition, appInstance);
       });
-      executeAppAddedEvents(appDefinition);
 
       return appDefinition;
     };

@@ -14,18 +14,20 @@ export function unmountAppInstance(
     const splicedInstance = appDef.instances.splice(idx, 1);
     if (splicedInstance.length < 1) return;
     const instance = splicedInstance[0];
-    if (instance.isLoaded) {
-      instance.executeListeners("onConfigurationClose", undefined);
-      instance.allEventListeners.splice(0, instance.allEventListeners.length);
-      userCleanupFunc?.();
-    }
+    instance.executeListeners("onConfigurationClose", undefined);
+    instance.allEventListeners.splice(0, instance.allEventListeners.length);
+    userCleanupFunc?.();
   }
 }
 
-export async function unmountInstancesOnContextChange() {
-  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
+export async function unmountInstancesOnContextChange(contextId: string) {
+  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps.filter(
+    (a) => !a.isWebPartApp
+  )) {
     if (alreadyRegisteredApp.keepOnContextChange) continue;
-    for (const appInstance of alreadyRegisteredApp.instances) {
+    for (const appInstance of alreadyRegisteredApp.instances.filter(
+      (i) => i.contextId !== contextId
+    )) {
       appInstance.unmount();
     }
   }
@@ -35,10 +37,11 @@ export function loadAppInstance(
   foundApp: SPFxExtensionAppDefinition,
   appInstance: SPFxExtensionAppInstance
 ) {
+  if (appInstance.hasBeenRequested) return;
   try {
-    appInstance.isLoaded = true;
+    appInstance.hasBeenRequested = true;
     foundApp
-      .onInstanceRequested?.(appInstance)
+      .onInstanceRequested(appInstance)
       .then((userCleanupFunc) => {
         appInstance.unmount = () => {
           unmountAppInstance(foundApp, appInstance.key, userCleanupFunc);

@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
-import { EMPTY_GUID, getWebAbsoluteUrl } from "../core/services/contextService";
-import { EMPTY_APP_MANIFEST } from "../utilities/constants";
+import { getWebAbsoluteUrl } from "../core/services/contextService";
+import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
   getAllAppCollections,

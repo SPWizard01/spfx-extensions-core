@@ -12,12 +12,15 @@ export type SPFxExtensionAppCleanup = () => void;
 
 export interface SPFxExtensionAppInstance {
   key: string;
+
+  contextId: string;
+
   /**
    * Ensures that subsiquent `onInstanceRequested` are not called for the same instance.
    *
    * Used by context change event where app registration remains but new instances might be created.
    */
-  isLoaded: boolean;
+  hasBeenRequested: boolean;
   element?: HTMLElement;
 
   webpartContext?: any;
@@ -136,7 +139,7 @@ export interface SPFxExtensionAppDefinition {
    *
    * @param newInstance The instance that is created usually by `window.__SPFxExtensions.InstantiateApp` call if you do not own the app.
    */
-  onInstanceRequested?(
+  onInstanceRequested(
     newInstance: SPFxExtensionAppInstance
   ): Promise<SPFxExtensionAppCleanup>;
 }

@@ -1,4 +1,5 @@
-import { EMPTY_GUID, getHubSiteId, getIsHubSite, getSiteAbsoluteUrl, getSiteId } from "./contextService";
+import { EMPTY_GUID } from "../../utilities/constants";
+import { getHubSiteId, getIsHubSite, getSiteAbsoluteUrl, getSiteId } from "./contextService";
 import { addOrUpdateHubDataToCache, evictHubDataCache, getHubData } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 

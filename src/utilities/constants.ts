@@ -24,3 +24,4 @@ export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const IS_SPO = window.location.host.includes(".sharepoint.com");
 export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = { appDefinitionMap: [], appRelativeEntryPointUrls: [], isESM: true }
 export const EMPTY_COLLECTION_MANIFEST: SPFxExtensionCollectionManifest = { enabledAppCollections: [], urlMap: [] };
+export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";

@@ -7,20 +7,10 @@ import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
+import { emptyDummy, getCurrentContextId } from "../../utilities/helpers";
 import { ensureApp } from "./appDefinitionService";
 import { loadAppInstance } from "./appServices";
-import {
-  logGenericCoreDebug,
-  logGenericCoreError,
-  logGenericCoreWarning,
-} from "./loggingService";
-
-const emptyDummy = () => {
-  logGenericCoreWarning(
-    "The app instance event was called before app instance was initialized."
-  );
-  return () => {};
-};
+import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   const removeInstanceEventListener = (
@@ -100,13 +90,14 @@ export function createAppInstance(
 
   const appInstance: SPFxExtensionAppInstance = {
     key: window.crypto.randomUUID(),
+    contextId: getCurrentContextId(),
     element: runTimeConfig.domElement,
     webpartContext: runTimeConfig.webpartContext,
     openPropertyPane: runTimeConfig.openPropertyPane,
     closePropertyPane: runTimeConfig.closePropertyPane,
     saveConfigValue: runTimeConfig.saveConfigValue,
     getConfigValue: runTimeConfig.getConfigValue,
-    isLoaded: false,
+    hasBeenRequested: false,
     unmount: emptyDummy,
     allEventListeners: [],
     addEventListener: emptyDummy,

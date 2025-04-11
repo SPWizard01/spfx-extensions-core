@@ -1,30 +1,31 @@
 import { getContextInfoAsync } from "../../services/spContextService";
-export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+import { EMPTY_GUID } from "../../utilities/constants";
+import { extractGUIDFromString } from "../../utilities/helpers";
 
-export const contextInfo = await getContextInfoAsync();
+const initialContext = await getContextInfoAsync();
 
 export function getWebId(): string {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.web.id.toString() : contextInfo.context.webId.replace("{", "").replace("}", "");
+    return initialContext.contextType === "SPOModernContext" ? initialContext.context.web.id.toString() : extractGUIDFromString(initialContext.context.webId)
 }
 
 export function getWebAbsoluteUrl() {
-    return (contextInfo.contextType === "SPOModernContext" ? contextInfo.context.web.absoluteUrl : contextInfo.context.webAbsoluteUrl) as string;
+    return (initialContext.contextType === "SPOModernContext" ? initialContext.context.web.absoluteUrl : initialContext.context.webAbsoluteUrl) as string;
 }
 
 export function getSiteId() {
-    return contextInfo.contextType === "SPOModernContext" ? (contextInfo.context.site.id.toString() as string) : contextInfo.context.siteId.replace("{", "").replace("}", "");
+    return initialContext.contextType === "SPOModernContext" ? (initialContext.context.site.id.toString() as string) : extractGUIDFromString(initialContext.context.siteId)
 }
 
 export function getSiteAbsoluteUrl(): string {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.site.absoluteUrl : contextInfo.context.siteAbsoluteUrl;
+    return initialContext.contextType === "SPOModernContext" ? initialContext.context.site.absoluteUrl : initialContext.context.siteAbsoluteUrl;
 }
 
 export function getHubSiteId(): string {
-    return (contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.hubSiteId?.toString() : contextInfo.context.hubSiteId) ?? EMPTY_GUID;
+    return (initialContext.contextType === "SPOModernContext" ? initialContext.context.legacyPageContext.hubSiteId?.toString() : initialContext.context.hubSiteId) ?? EMPTY_GUID;
 }
 
 export function getIsHubSite() {
-    return contextInfo.contextType === "SPOModernContext" ? contextInfo.context.legacyPageContext.isHubSite : (contextInfo.context as any).isHubSite;
+    return initialContext.contextType === "SPOModernContext" ? initialContext.context.legacyPageContext.isHubSite : (initialContext.context as any).isHubSite;
 }
 
 export function getIsRootWeb() {

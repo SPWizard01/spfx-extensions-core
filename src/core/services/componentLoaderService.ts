@@ -1,12 +1,17 @@
 import type { SPFxExtensionAppDefinitionMap } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
-import { CONFIGURATOR_APP_ID, MANIFEST_NAME, } from "../../utilities/constants";
-import { isAppInDebug, } from "../../utilities/debug";
+import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
+import { isAppInDebug } from "../../utilities/debug";
 import { isFileAllowedToRun } from "./allowedAppsService";
 import { unmountInstancesOnContextChange } from "./appServices";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
-import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
+import {
+  logGenericCoreDebug,
+  logGenericCoreError,
+  logGenericCoreInfo,
+  logGenericCoreWarning,
+} from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
 
@@ -19,27 +24,29 @@ let isLoaded = false;
 const loadedAssets: string[] = [];
 
 export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
-
   try {
     const appRegistrations = await import(fullJSUrl);
     if (!isESM) {
-      logGenericCoreWarning(`Non ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`, fullJSUrl);
+      logGenericCoreWarning(
+        `Non ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`,
+        fullJSUrl
+      );
       return [];
     }
-    const defaultExport = appRegistrations.default as SPFxExtensionAppRegistration[];
+    const defaultExport =
+      appRegistrations.default as SPFxExtensionAppRegistration[];
     if (!defaultExport) {
       throw `No default export found in ${fullJSUrl}, only ESM modules are supported.`;
     }
     return defaultExport;
-  }
-  catch (e) {
+  } catch (e) {
     logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
-    throw e
+    throw e;
   }
 }
 
 async function parseManifestAndImportEntryPoints(
-  manifestToParse: CacheableAppFolderManifest,
+  manifestToParse: CacheableAppFolderManifest
 ) {
   const returnPromiseArray: AssetPromise[] = [];
   const cdnLoc = manifestToParse.url.replace(MANIFEST_NAME, "");
@@ -55,11 +62,15 @@ async function parseManifestAndImportEntryPoints(
     const ep = entryUrl.replace(/\.\.\/?/g, "./");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
-
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
     const jsUrl = new URL(fullJSUrl);
-    if (manifestToParse.manifest.cacheString && manifestToParse.manifest.enableCaching) {
-      const cacheString = isAppInDebug(manifestToParse.name) ? `${(new Date()).getTime()}` : manifestToParse.manifest.cacheString
+    if (
+      manifestToParse.manifest.cacheString &&
+      manifestToParse.manifest.enableCaching
+    ) {
+      const cacheString = isAppInDebug(manifestToParse.name)
+        ? `${new Date().getTime()}`
+        : manifestToParse.manifest.cacheString;
       jsUrl.searchParams.set("v", `${cacheString}`);
     }
     // if()
@@ -75,14 +86,12 @@ async function parseManifestAndImportEntryPoints(
       returnPromiseArray.push({
         url: urlWithCache,
         promise: importEntryPoint(urlWithCache, manifestToParse.manifest.isESM),
-        manifest: manifestToParse
+        manifest: manifestToParse,
       });
     } else {
       logGenericCoreInfo(`EntryPoint already loaded:`, urlWithCache);
     }
-
   }
-
 
   return returnPromiseArray;
 }
@@ -90,10 +99,11 @@ export async function loadModernApps(
   siteUrl: string,
   webUrl: string,
   hubUrl: string,
+  contextId: string,
   contextChange = false
 ) {
   if (contextChange) {
-    handleContextChange();
+    handleContextChange(contextId);
   }
   if (isLoaded) return;
   isLoaded = true;
@@ -106,13 +116,10 @@ export async function loadModernApps(
   );
   const allManifestTXTs = getManifestTXTFromAllLocations(coreCollection);
 
-  window.__SPFxExtensions.Utils.appManifestPromises =
-    allManifestTXTs
+  window.__SPFxExtensions.Utils.appManifestPromises = allManifestTXTs;
   window.__SPFxExtensions.Utils.spAppInitializationPromiseResolver();
 
-  const allManifestTXTsPromises = await Promise.allSettled(
-    allManifestTXTs
-  );
+  const allManifestTXTsPromises = await Promise.allSettled(allManifestTXTs);
   const resolvedManifestTXTs = allManifestTXTsPromises.filter(
     (p) => p.status === "fulfilled"
   );
@@ -133,24 +140,18 @@ export async function loadModernApps(
 
   for (const rootManifestTXT of resolvedRootAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(
-        rootManifestTXT.value
-      )
+      parseManifestAndImportEntryPoints(rootManifestTXT.value)
     );
   }
   //wait for root stuff to load
-  const rootResults = await Promise.allSettled(
-    entryPointsFromManifestTXTs
-  );
+  const rootResults = await Promise.allSettled(entryPointsFromManifestTXTs);
   await Promise.allSettled(getModulePromises(rootResults));
   logGenericCoreDebug("Root apps loaded.");
 
   //wait for site stuff to load
   for (const siteManifests of resolvedSiteAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(
-        siteManifests.value
-      )
+      parseManifestAndImportEntryPoints(siteManifests.value)
     );
   }
   const rootAndSiteResults = await Promise.allSettled(
@@ -162,9 +163,7 @@ export async function loadModernApps(
   //wait for web stuff to load
   for (const webManifests of resolvedWebAppsManifests) {
     entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(
-        webManifests.value
-      )
+      parseManifestAndImportEntryPoints(webManifests.value)
     );
   }
   const rootAndSiteAndWebResults = await Promise.allSettled(
@@ -180,11 +179,15 @@ export async function loadModernApps(
   //there will be no rejected results as this returns always an array of promises
   const fetchedEntryPoints = entryPointSettledResults.filter(
     (r) => r.status === "fulfilled"
-  )
+  );
 
   const assetPromises = fetchedEntryPoints.flatMap((a) => a.value);
-  const allExportsSettled = await Promise.allSettled(assetPromises.map((a) => a.promise));
-  const allExports = allExportsSettled.filter((a) => a.status === "fulfilled").flatMap((a) => a.value);
+  const allExportsSettled = await Promise.allSettled(
+    assetPromises.map((a) => a.promise)
+  );
+  const allExports = allExportsSettled
+    .filter((a) => a.status === "fulfilled")
+    .flatMap((a) => a.value);
   await unregisterNonApplicable(allExports);
 
   const successfullyRegistered: SPFxExtensionAppRegistration[] = [];
@@ -194,9 +197,10 @@ export async function loadModernApps(
       if (!asset.manifest.manifest.isESM) {
         continue;
       }
-      successfullyRegistered.push(...await executeRegistration(exports, asset.manifest, asset.url));
-    }
-    catch (e) {
+      successfullyRegistered.push(
+        ...(await executeRegistration(exports, asset.manifest, asset.url))
+      );
+    } catch (e) {
       logGenericCoreError(`Could not load or parse manifest.`, e);
     }
   }
@@ -206,47 +210,69 @@ export async function loadModernApps(
   logGenericCoreInfo("SPFx Extensions Core Components Loaded.");
 }
 
-function handleContextChange() {
+function handleContextChange(contextId: string) {
   isLoaded = false;
   loadedAssets.splice(0, loadedAssets.length);
-  unmountInstancesOnContextChange();
-  const { promise: assetPromise, resolve: assetPromiseResolver } = Promise.withResolvers<void>();
+  unmountInstancesOnContextChange(contextId);
+  const { promise: assetPromise, resolve: assetPromiseResolver } =
+    Promise.withResolvers<void>();
   window.__SPFxExtensions.AllAppAssetsLoadedPromise = assetPromise;
   window.__SPFxExtensions.AllAppAssetsLoadedResolver = assetPromiseResolver;
 }
 
-async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[]) {
+async function unregisterNonApplicable(
+  allExports: SPFxExtensionAppRegistration[]
+) {
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
     const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
     if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
       //unregister app as it does not belong to this context
-      const unregistered = await window.__SPFxExtensions.UnregisterApp(alreadyRegisteredApp.id);
+      const unregistered = await window.__SPFxExtensions.UnregisterApp(
+        alreadyRegisteredApp.id
+      );
       if (unregistered) {
-        logGenericCoreWarning(`Unregistered app as it does not belong in this context`, alreadyRegisteredApp.id, alreadyRegisteredApp.name);
+        logGenericCoreWarning(
+          `Unregistered app as it does not belong in this context`,
+          alreadyRegisteredApp.id,
+          alreadyRegisteredApp.name
+        );
       }
     }
   }
 }
 
-
-
-async function executeRegistration(registrations: SPFxExtensionAppRegistration[], manifestToParse: CacheableAppFolderManifest, fullJSUrl: string) {
+async function executeRegistration(
+  registrations: SPFxExtensionAppRegistration[],
+  manifestToParse: CacheableAppFolderManifest,
+  fullJSUrl: string
+) {
   // const isHub = getIsHubSite();
   const currentWebId = getWebId().toLowerCase();
   const currentSiteId = getSiteId().toLowerCase();
   const currentHubId = getHubSiteId().toLowerCase();
 
   if (!Array.isArray(registrations)) {
-    logGenericCoreError(`Default export of entry point should be an array of App definitions. TODO: add documentation url`, fullJSUrl);
+    logGenericCoreError(
+      `Default export of entry point should be an array of App definitions. TODO: add documentation url`,
+      fullJSUrl
+    );
   }
   const successfullyRegistered: SPFxExtensionAppRegistration[] = [];
   for (const appReg of registrations) {
     if (!appReg.id) {
-      logGenericCoreError(`App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`, fullJSUrl, appReg);
+      logGenericCoreError(
+        `App definition does not have an id. Make sure that returned array is in proper format. TODO: add documentation url`,
+        fullJSUrl,
+        appReg
+      );
       continue;
     }
-    const foundMapItem = manifestToParse.manifest.appDefinitionMap.find((a) => a.appId.toLowerCase() === appReg.id.toLowerCase());
-    const foundAllItem = manifestToParse.manifest.appDefinitionMap.find((a) => a.appId === "*");
+    const foundMapItem = manifestToParse.manifest.appDefinitionMap.find(
+      (a) => a.appId.toLowerCase() === appReg.id.toLowerCase()
+    );
+    const foundAllItem = manifestToParse.manifest.appDefinitionMap.find(
+      (a) => a.appId === "*"
+    );
     const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
     const relatedApps: SPFxExtensionAppDefinitionMap[] = [];
     if (foundMapItem) {
@@ -262,23 +288,33 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
 
     const appEnabled = relatedApps.some((ea) => {
       //any of the related apps has matching web id
-      const hasMatchingHubId = ea.config.hubObjectIds.some(wid => wid.toLowerCase() === currentHubId);
+      const hasMatchingHubId = ea.config.hubObjectIds.some(
+        (wid) => wid.toLowerCase() === currentHubId
+      );
 
-      const hasMatchingEnabledId = ea.config.includedIds.some(wid => {
+      const hasMatchingEnabledId = ea.config.includedIds.some((wid) => {
         const objectId = wid.toLowerCase();
         if (hasMatchingHubId) {
-          return objectId === currentWebId || objectId === currentSiteId || objectId === currentHubId;
+          return (
+            objectId === currentWebId ||
+            objectId === currentSiteId ||
+            objectId === currentHubId
+          );
         }
         return objectId === currentWebId || objectId === currentSiteId;
-      })
-      const hasDisabledId = ea.config.excludedIds.some(wid => {
+      });
+      const hasDisabledId = ea.config.excludedIds.some((wid) => {
         const objectId = wid.toLowerCase();
-        return objectId === currentWebId || objectId === currentSiteId || objectId === currentHubId;
-      })
+        return (
+          objectId === currentWebId ||
+          objectId === currentSiteId ||
+          objectId === currentHubId
+        );
+      });
       //any of the related apps has wildcard web id
       const allWebsEnabled = ea.config.enabledEverywhere;
       return (hasMatchingEnabledId || allWebsEnabled) && !hasDisabledId;
-    }) //|| isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
+    }); //|| isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
 
     if (!appEnabled) {
       logGenericCoreInfo(notEnabledMSG);
@@ -293,7 +329,6 @@ async function executeRegistration(registrations: SPFxExtensionAppRegistration[]
   return successfullyRegistered;
 }
 
-
 function getModulePromises(
   manifestResults: PromiseSettledResult<AssetPromise[]>[]
 ) {
@@ -307,4 +342,3 @@ function getModulePromises(
   }
   return modulePromises;
 }
-
