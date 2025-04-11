@@ -40,8 +40,8 @@ async function fetchAndCacheAppsTXT(
     try {
         logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
         const mnfReq = await fetch(fetchUrl);
-        const result = await mnfReq.json();
-        appCollection = result;
+        const result = await mnfReq.text();
+        appCollection = JSON.parse(result);
 
     } catch (err) {
         logGenericCoreWarning(`Unable to fetch ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl, err);
