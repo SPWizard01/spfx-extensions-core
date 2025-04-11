@@ -45,7 +45,9 @@ export interface SPFxExtensionFolderManifest {
     appRelativeEntryPointUrls: string[];
     appDefinitionMap: SPFxExtensionAppDefinitionMap[];
     /**
-     * If set to false, the app will not be loaded as ESM module meaning that app owner is responsible for loading the app by calling `window.__SPFxExtensions.RegisterApp` and/or `window.__SPFxExtensions.LoadApp` methods.
+     * If set to false, the app will not be loaded as ESM module.
+     * 
+     * This means that app owner is responsible for loading the app by calling `window.__SPFxExtensions.RegisterApp` and/or `window.__SPFxExtensions.InstantiateApp` methods.
      * 
      * If set to true, the app will be loaded as ESM module and the app owner is responsible for providing a default export in the entry point as `SPFxExtensionAppRegistration[]`.
      */

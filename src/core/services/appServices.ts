@@ -1,41 +1,53 @@
-import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
+import type {
+    SPFxExtensionAppDefinition,
+    SPFxExtensionAppInstance,
+} from "../../models/appModel";
 import { logInstanceRequestedError } from "./loggingService";
 
 export function unmountAppInstance(
-    appDef: SPFxExtensionAppDefinition,
-    appInstance: SPFxExtensionAppInstance
+  appDef: SPFxExtensionAppDefinition,
+  instanceKey: string
 ) {
-    appInstance.executeListeners("onConfigurationClose", undefined);
-    appInstance.allEventListeners.splice(0, appInstance.allEventListeners.length);
-    const idx = appDef.instances.findIndex((i) => i.key === appInstance.key);
-    if (idx > -1) {
-        appDef.instances.splice(idx, 1);
+  const idx = appDef.instances.findIndex((i) => i.key === instanceKey);
+  if (idx > -1) {
+    const splicedInstance = appDef.instances.splice(idx, 1);
+    if (splicedInstance.length < 1) return;
+    const instance = splicedInstance[0];
+    if (instance.isLoaded) {
+      instance.executeListeners("onConfigurationClose", undefined);
+      instance.allEventListeners.splice(0, instance.allEventListeners.length);
     }
+  }
 }
 
 export async function unmountInstancesOnContextChange() {
-    for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
-        if (alreadyRegisteredApp.keepOnContextChange) continue;
-        for (const appInstance of alreadyRegisteredApp.instances) {
-            appInstance.unmount?.();
-        }
+  for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
+    if (alreadyRegisteredApp.keepOnContextChange) continue;
+    for (const appInstance of alreadyRegisteredApp.instances) {
+      appInstance.unmount();
     }
+  }
 }
 
-export function loadAppInstance(foundApp: SPFxExtensionAppDefinition, appInstance: SPFxExtensionAppInstance) {
-    try {
-        appInstance.isLoaded = true;
-        foundApp.onInstanceRequested?.(appInstance).then((cleanup) => {
-            appInstance.instanceLoadPromiseResolver();
-            appInstance.unmount = () => {
-                cleanup();
-                unmountAppInstance(foundApp, appInstance);
-            }
-        }).catch((e) => {
-            logInstanceRequestedError(foundApp, e);
-        });
-    }
-    catch (e) {
+export function loadAppInstance(
+  foundApp: SPFxExtensionAppDefinition,
+  appInstance: SPFxExtensionAppInstance
+) {
+  try {
+    appInstance.isLoaded = true;
+    foundApp
+      .onInstanceRequested?.(appInstance)
+      .then((userCleanupFunc) => {
+        appInstance.instanceLoadPromiseResolver();
+        appInstance.unmount = () => {
+          unmountAppInstance(foundApp, appInstance.key);
+          userCleanupFunc();
+        };
+      })
+      .catch((e) => {
         logInstanceRequestedError(foundApp, e);
-    }
+      });
+  } catch (e) {
+    logInstanceRequestedError(foundApp, e);
+  }
 }

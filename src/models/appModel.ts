@@ -5,7 +5,6 @@ import type {
   SPFxExtensionAppInstanceEvents,
 } from "./events";
 
-
 /**
  * A method that will be called by Core when app is unmounted
  */
@@ -15,7 +14,7 @@ export interface SPFxExtensionAppInstance {
   key: string;
   /**
    * Ensures that subsiquent `onInstanceRequested` are not called for the same instance.
-   * 
+   *
    * Used by context change event where app registration remains but new instances might be created.
    */
   isLoaded: boolean;
@@ -35,7 +34,7 @@ export interface SPFxExtensionAppInstance {
 
   /**
    * Calls cleanup function provided by `onInstanceRequested` method of the app definition.
-   * 
+   *
    * Removes all app event listeners.
    */
   unmount(): void;
@@ -96,9 +95,9 @@ export interface SPFxExtensionAppDefinition {
   description: string;
   /**
    * If set to false or undefined the app wont show in webpart picker
-   * 
+   *
    * This also means it wont be automatically executed by spfx.
-   * 
+   *
    * You will have to call `window.__SPFxExtensions.InstantiateApp` method to run the app.
    */
   isWebPartApp: boolean;
@@ -114,9 +113,9 @@ export interface SPFxExtensionAppDefinition {
 
   /**
    * If set to true, the app will not be unmounted when the SPO context changes and app belongs to that context.
-   * 
+   *
    * Usefull for apps that do not need to be unmounted when the context changes. i.e. styles/footer etc.
-   * 
+   *
    * It will still be unmounted regardless of this flag if the app does not belong (not allowed) to the new context.
    */
   keepOnContextChange?: boolean;
@@ -132,11 +131,22 @@ export interface SPFxExtensionAppDefinition {
 
   /**
    * Called once an instance of the app was created and app is registered.
-   * @param newInstance The instance that is created usually by `window.__SPFxExtensions.LoadApp` call if you do not own the app.
    *
    * This method is also called by the SPFx and Core solutions.
+   *
+   * @param newInstance The instance that is created usually by `window.__SPFxExtensions.InstantiateApp` call if you do not own the app.
    */
-  onInstanceRequested?(newInstance: SPFxExtensionAppInstance): Promise<SPFxExtensionAppCleanup>;
+  onInstanceRequested?(
+    newInstance: SPFxExtensionAppInstance
+  ): Promise<SPFxExtensionAppCleanup>;
 }
 
-export type SPFxExtensionAppRegistration = Omit<SPFxExtensionAppDefinition, "instances">;
+export type SPFxExtensionAppRegistration = Omit<
+  SPFxExtensionAppDefinition,
+  "instances"
+>;
+
+export interface SPFxExtensionEnsuredAppDefinition
+  extends SPFxExtensionAppDefinition {
+  registrationCompleted: boolean;
+}
