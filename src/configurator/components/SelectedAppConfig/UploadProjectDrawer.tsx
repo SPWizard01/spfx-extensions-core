@@ -5,6 +5,7 @@ import {
   DrawerBody,
   DrawerHeader,
   DrawerHeaderTitle,
+  MessageBar,
   Spinner,
   Switch,
   useRestoreFocusSource,
@@ -43,6 +44,8 @@ export default function UploadProjectDrawer({
     updateSelectedApp(app!);
   }
 
+  if (!app) return null;
+
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
@@ -71,6 +74,17 @@ export default function UploadProjectDrawer({
       </DrawerHeader>
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
+          <Switch
+            checked={app.manifest.isESM}
+            label={"ESM"}
+            onChange={(_, d) => {
+              app.manifest.isESM = d.checked;
+              updateSelectedApp(app);
+            }}
+          />
+          <MessageBar>
+            Turn on if your entry point(s) export ESM modules.
+          </MessageBar>
           <FilePicker />
           <Stack gap={4}>
             {jsFiles.map((ep) => (

@@ -6,7 +6,9 @@ import {
   DataGridHeader,
   DataGridHeaderCell,
   DataGridRow,
+  Label,
   TableCellLayout,
+  TableRow,
   createTableColumn,
   type TableColumnDefinition,
 } from "@fluentui/react-components";
@@ -16,6 +18,8 @@ import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { selectedAppItem } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
+import { Stack } from "../@common/Stack";
+import { StackItem } from "../@common/StackItem";
 
 const columns: TableColumnDefinition<AppIdName>[] = [
   createTableColumn<AppIdName>({
@@ -99,38 +103,80 @@ export const AppDefinitionGrid = () => {
   });
   if (!app) return null;
 
-  console.log(appDefinitions, "app");
-
   return (
-    <DataGrid
-      items={appDefinitions}
-      columns={columns}
-      getRowId={(item: AppIdName) => item.id}
+    <Stack
       style={{
-        minWidth: "100%",
-      }}
-      columnSizingOptions={{
-        actions: {
-          maxWidth: 100,
-        },
+        marginTop: "10px",
       }}
     >
-      <DataGridHeader>
-        <DataGridRow>
-          {({ renderHeaderCell }) => (
-            <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-          )}
-        </DataGridRow>
-      </DataGridHeader>
-      <DataGridBody<AppIdName>>
-        {({ item, rowId }) => (
-          <DataGridRow<AppIdName> key={rowId}>
-            {({ renderCell }) => (
-              <DataGridCell>{renderCell(item)}</DataGridCell>
+      {appDefinitions.map((appDef) => (
+        <Stack
+          horizontal
+          gap={8}
+          horizontalAlign="space-between"
+          verticalAlign="center"
+          style={{
+            borderTop: "1px solid #eaeaea",
+            borderBottom: "1px solid #eaeaea",
+            padding: "10px 6px",
+          }}
+        >
+          <StackItem>
+            <Label size="large" weight="semibold">
+              {appDef.name}
+            </Label>
+          </StackItem>
+          <Stack gap={8} horizontal>
+            <Button
+              aria-label="Edit sites"
+              icon={<EditRegular />}
+              onClick={() => {
+                console.log("Edit clicked");
+              }}
+            />
+            {!app.manifest.isESM && (
+              <Button
+                aria-label="Delete"
+                icon={<DeleteRegular />}
+                onClick={() => {
+                  console.log("Delete clicked");
+                }}
+              />
             )}
-          </DataGridRow>
-        )}
-      </DataGridBody>
-    </DataGrid>
+          </Stack>
+        </Stack>
+      ))}
+    </Stack>
+    // <DataGrid
+    //   items={appDefinitions}
+    //   columns={columns}
+    //   getRowId={(item: AppIdName) => item.id}
+    //   style={{
+    //     minWidth: "100%",
+    //   }}
+    //   columnSizingOptions={{
+    //     actions: {
+    //       maxWidth: 100,
+    //       idealWidth: 100,
+    //     },
+    //   }}
+    // >
+    //   <DataGridHeader>
+    //     <DataGridRow>
+    //       {({ renderHeaderCell }) => (
+    //         <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+    //       )}
+    //     </DataGridRow>
+    //   </DataGridHeader>
+    //   <DataGridBody<AppIdName>>
+    //     {({ item, rowId }) => (
+    //       <DataGridRow<AppIdName> key={rowId}>
+    //         {({ renderCell }) => (
+    //           <DataGridCell>{renderCell(item)}</DataGridCell>
+    //         )}
+    //       </DataGridRow>
+    //     )}
+    //   </DataGridBody>
+    // </DataGrid>
   );
 };

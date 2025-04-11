@@ -28,11 +28,13 @@ export function ManifestConfig() {
           verticalAlign="center"
         >
           <Subtitle2>Applications</Subtitle2>
-          <Stack horizontal gap={8}>
-            <Button onClick={() => {}} icon={<Add16Regular />}>
-              Add app
-            </Button>
-          </Stack>
+          {!app.manifest.isESM && (
+            <Stack horizontal gap={8}>
+              <Button onClick={() => {}} icon={<Add16Regular />}>
+                Add app
+              </Button>
+            </Stack>
+          )}
         </Stack>
         <AppDefinitionGrid />
         {/* <StackItem>
