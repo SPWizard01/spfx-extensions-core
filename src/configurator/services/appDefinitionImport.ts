@@ -5,14 +5,14 @@ import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { configrationWebUrl } from "../runtimeStore";
 
+interface AllAppsProps {
+  name: string;
+  id: string;
+  resolved: boolean;
+}
+
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
-  const allApps = [
-    {
-      name: "All",
-      id: "*",
-      resolved: true,
-    },
-  ];
+  const allApps: AllAppsProps[] = [];
   console.log(app, "from appDefinitionImports.ts");
   if (!app.manifest.isESM) {
     const set = new Set(app.manifest.appDefinitionMap.flatMap((a) => a.appId));

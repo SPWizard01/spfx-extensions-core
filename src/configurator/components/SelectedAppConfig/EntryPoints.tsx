@@ -38,7 +38,12 @@ export default function EntryPoints() {
   }
   return (
     <>
-      <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
+      <Stack
+        horizontal
+        horizontalAlign="space-between"
+        verticalAlign="center"
+        style={{ borderBottom: "1px solid #eaeaea", paddingBottom: "10px" }}
+      >
         <Subtitle2>Entry points</Subtitle2>
         <Stack horizontal gap={8}>
           <Button

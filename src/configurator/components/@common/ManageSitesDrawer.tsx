@@ -7,6 +7,7 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
+  Switch,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
 import {
@@ -14,10 +15,11 @@ import {
   Delete16Regular,
   Dismiss24Regular,
 } from "@fluentui/react-icons";
+import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
-import { Stack } from "../@common/Stack";
-import { StackItem } from "../@common/StackItem";
-import { ManageSitesDrawerSignal } from "./AppList";
+import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
+import { Stack } from "./Stack";
+import { StackItem } from "./StackItem";
 
 const URL_VALIDATION_ERROR = {
   invalid: {
@@ -32,6 +34,14 @@ interface SiteCollectionInfo {
   webId: string;
   url: string;
 }
+
+export const ManageSitesDrawerSignal = signal<{
+  open: boolean;
+  appDefinition?: AppIdName | undefined;
+}>({
+  open: false,
+  appDefinition: undefined,
+});
 
 export default function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
@@ -97,11 +107,14 @@ export default function ManageSitesDrawer() {
     <Drawer
       {...restoreFocusSourceAttributes}
       separator
-      open={ManageSitesDrawerSignal.value}
+      open={ManageSitesDrawerSignal.value.open}
       onOpenChange={(_: any, { open }: { open: boolean }) => {
         setUrlInputError(undefined);
         setUrlInput(undefined);
-        ManageSitesDrawerSignal.value = open;
+        ManageSitesDrawerSignal.value = {
+          ...ManageSitesDrawerSignal.value,
+          open,
+        };
       }}
       position="end"
       size="medium"
@@ -113,17 +126,25 @@ export default function ManageSitesDrawer() {
               appearance="subtle"
               aria-label="Close"
               icon={<Dismiss24Regular />}
-              onClick={() => (ManageSitesDrawerSignal.value = false)}
+              onClick={() =>
+                (ManageSitesDrawerSignal.value = {
+                  open: false,
+                })
+              }
             />
           }
         >
-          Manage sites
+          {ManageSitesDrawerSignal.value.appDefinition
+            ? "Enable app on sites"
+            : "Manage sites"}
         </DrawerHeaderTitle>
       </DrawerHeader>
       <Stack style={{ padding: "12px 24px", width: "100%" }} gap={8}>
         <MessageBar intent="info">
           <MessageBarBody>
-            Add applicable site collections and hub child sites.
+            {ManageSitesDrawerSignal.value.appDefinition
+              ? "Enable app on sites."
+              : "Add site collections and hub child sites."}
           </MessageBarBody>
         </MessageBar>
         <Stack horizontal gap={8}>
@@ -168,10 +189,14 @@ export default function ManageSitesDrawer() {
                 key={site.webId}
               >
                 <StackItem>{site.url}</StackItem>
-                <Button
-                  onClick={() => deleteSite(site)}
-                  icon={<Delete16Regular />}
-                />
+                {ManageSitesDrawerSignal.value.appDefinition ? (
+                  <Switch />
+                ) : (
+                  <Button
+                    onClick={() => deleteSite(site)}
+                    icon={<Delete16Regular />}
+                  />
+                )}
               </Stack>
             ))}
           </Stack>

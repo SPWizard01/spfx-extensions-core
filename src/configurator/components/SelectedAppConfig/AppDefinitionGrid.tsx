@@ -1,54 +1,17 @@
+import { Button, Label } from "@fluentui/react-components";
 import {
-  Button,
-  DataGrid,
-  DataGridBody,
-  DataGridCell,
-  DataGridHeader,
-  DataGridHeaderCell,
-  DataGridRow,
-  Label,
-  TableCellLayout,
-  TableRow,
-  createTableColumn,
-  type TableColumnDefinition,
-} from "@fluentui/react-components";
-import { DeleteRegular, EditRegular } from "@fluentui/react-icons";
+  AppFolder20Regular,
+  DeleteRegular,
+  EditRegular,
+} from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { selectedAppItem } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
+import { ManageSitesDrawerSignal } from "../@common/ManageSitesDrawer";
 import { Stack } from "../@common/Stack";
-import { StackItem } from "../@common/StackItem";
-
-const columns: TableColumnDefinition<AppIdName>[] = [
-  createTableColumn<AppIdName>({
-    columnId: "name",
-    renderHeaderCell: () => {
-      return "Name";
-    },
-    renderCell: (item) => {
-      return <TableCellLayout>{item.name}</TableCellLayout>;
-    },
-  }),
-  createTableColumn<AppIdName>({
-    columnId: "actions",
-    renderHeaderCell: () => {
-      return "Actions";
-    },
-
-    renderCell: () => {
-      return (
-        <>
-          <Button aria-label="Edit" icon={<EditRegular />} />
-          <Button aria-label="Delete" icon={<DeleteRegular />} />
-        </>
-      );
-    },
-  }),
-];
-
-interface AppIdName {
+export interface AppIdName {
   id: string;
   name: string;
 }
@@ -79,20 +42,20 @@ export const AppDefinitionGrid = () => {
     //     enabledApps: [],
     //   }))
     // );
-    downloadDataApp.manifest.appDefinitionMap?.forEach((w) => {
-      // const web = allWebIds.find((w1) => w1.Id === w.webId);
-      // if (web) {
-      //   web.enabledApps = w.enabledAppIds;
-      // } else {
-      //   allWebIds.push({
-      //     Id: w.webId,
-      //     Name: "Unknown",
-      //     Url: `Unknown_${w.webId}`,
-      //     isSubWeb: false,
-      //     enabledApps: w.enabledAppIds,
-      //   });
-      // }
-    });
+    // downloadDataApp.manifest.appDefinitionMap?.forEach((w: ) => {
+    //   // const web = allWebIds.find((w1) => w1.Id === w.webId);
+    //   // if (web) {
+    //   //   web.enabledApps = w.enabledAppIds;
+    //   // } else {
+    //   //   allWebIds.push({
+    //   //     Id: w.webId,
+    //   //     Name: "Unknown",
+    //   //     Url: `Unknown_${w.webId}`,
+    //   //     isSubWeb: false,
+    //   //     enabledApps: w.enabledAppIds,
+    //   //   });
+    //   // }
+    // });
     // setWebIdMap(allWebIds);
     setAppDefinitions(allAppDefinitions);
   }
@@ -107,6 +70,7 @@ export const AppDefinitionGrid = () => {
     <Stack
       style={{
         marginTop: "10px",
+        borderBottom: "1px solid #eaeaea",
       }}
     >
       {appDefinitions.map((appDef) => (
@@ -117,21 +81,21 @@ export const AppDefinitionGrid = () => {
           verticalAlign="center"
           style={{
             borderTop: "1px solid #eaeaea",
-            borderBottom: "1px solid #eaeaea",
             padding: "10px 6px",
           }}
         >
-          <StackItem>
-            <Label size="large" weight="semibold">
-              {appDef.name}
-            </Label>
-          </StackItem>
+          <Stack horizontal verticalAlign="center" gap={8}>
+            <AppFolder20Regular /> <Label size="medium">{appDef.name}</Label>
+          </Stack>
           <Stack gap={8} horizontal>
             <Button
               aria-label="Edit sites"
               icon={<EditRegular />}
               onClick={() => {
-                console.log("Edit clicked");
+                ManageSitesDrawerSignal.value = {
+                  open: true,
+                  appDefinition: appDef,
+                };
               }}
             />
             {!app.manifest.isESM && (
