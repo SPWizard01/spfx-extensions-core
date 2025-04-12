@@ -1,19 +1,19 @@
 import {
-  Button,
-  Dropdown,
-  Label,
-  Option,
-  type OptionOnSelectData,
-  type SelectionEvents,
+    Button,
+    Dropdown,
+    Label,
+    Option,
+    type OptionOnSelectData,
+    type SelectionEvents,
 } from "@fluentui/react-components";
 
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
-  selectedAppItem,
-  selectedWebAvailableWebs,
-  updateSelectedApp,
+    configurationWebSubWebs,
+    selectedAppItem,
+    updateSelectedApp,
 } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
 import { Stack } from "../@common/Stack";
@@ -72,7 +72,7 @@ export function AppDefinitionConfiguration(
     const allWebIds: WebIdAppIdMap[] = [allWebs];
 
     allWebIds.push(
-      ...selectedWebAvailableWebs.map((w) => ({
+      ...configurationWebSubWebs.map((w) => ({
         Id: w.Id,
         Name: w.Title,
         Url: w.ServerRelativeUrl,

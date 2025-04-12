@@ -22,8 +22,8 @@ import {
   configurationIsGlobal,
   configurationIsRootHub,
   configurationWebIsSubsite,
+  configurationWebSubWebs,
   contextCollectionConfig,
-  selectedWebAvailableWebs,
 } from "../../runtimeStore";
 import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
 import { Stack } from "./Stack";
@@ -51,9 +51,10 @@ export default function ManageSitesDrawer() {
   const [urlInputError, setUrlInputError] = useState<string>();
   const list: SPFxExtensionUrlMapItem[] =
     !configurationIsGlobal && !configurationIsRootHub
-      ? selectedWebAvailableWebs.map((w) => {
+      ? configurationWebSubWebs.map((w) => {
           return {
             id: w.Id,
+            
             url: w.Url,
             type: configurationWebIsSubsite ? "web" : "site",
           };
@@ -106,7 +107,7 @@ export default function ManageSitesDrawer() {
     };
   }
 
-  function deleteSite(site: SPFxExtensionUrlMapItem) {
+  function deleteSite(_site: SPFxExtensionUrlMapItem) {
     // Delete site from site list
   }
 

@@ -12,6 +12,7 @@ import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 import { getAllWebInfos } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
+export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
 export const configurationSite = await configurationWebSP.site();
@@ -27,8 +28,7 @@ export const configurationBelongsToHub =
 export const configurationWebIsSubsite =
   configurationRootWeb.Id !== configurationWeb.Id;
 
-export const configrationWebUrl = queryWeb ?? getWebAbsoluteUrl();
-export const selectedWebAvailableWebs = await getAllWebInfos(
+export const configurationWebSubWebs = await getAllWebInfos(
   configurationWebSP
 );
 
