@@ -19,12 +19,14 @@ import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
 import {
+  configrationWebUrl,
   configurationIsGlobal,
   configurationIsRootHub,
   configurationWebIsSubsite,
   configurationWebSubWebs,
   contextCollectionConfig,
 } from "../../runtimeStore";
+import { resolveWebStructure } from "../../services/webInfoService";
 import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
 import { Stack } from "./Stack";
 import { StackItem } from "./StackItem";
@@ -46,20 +48,29 @@ export const ManageSitesDrawerSignal = signal<{
   appDefinition: undefined,
 });
 
+const currentWebStructure = signal(await resolveWebStructure(configrationWebUrl));
+
+
+
 export default function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [urlInputError, setUrlInputError] = useState<string>();
-  const list: SPFxExtensionUrlMapItem[] =
+  const defaultList: SPFxExtensionUrlMapItem[] =
     !configurationIsGlobal && !configurationIsRootHub
       ? configurationWebSubWebs.map((w) => {
           return {
             id: w.Id,
-            
+            isRootWeb: !configurationWebIsSubsite,
+            siteId: w.Id,
             url: w.Url,
-            type: configurationWebIsSubsite ? "web" : "site",
           };
         })
-      : contextCollectionConfig.value.urlMap;
+      : [];
+  contextCollectionConfig.value.urlMap.forEach((item) => {
+    if (!defaultList.some((s) => s.id === item.id)) {
+      defaultList.push(item);
+    }
+  });
   const [urlInput, setUrlInput] = useState<string>();
 
   function addSite() {
@@ -192,7 +203,7 @@ export default function ManageSitesDrawer() {
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
           <Stack gap={8}>
-            {list.map((site) => (
+            {defaultList.map((site) => (
               <Stack
                 horizontalAlign="space-between"
                 verticalAlign="center"

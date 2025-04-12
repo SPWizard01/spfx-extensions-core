@@ -1,22 +1,22 @@
 import {
-  Badge,
-  Button,
-  Drawer,
-  DrawerBody,
-  DrawerHeader,
-  DrawerHeaderTitle,
-  MessageBar,
-  Spinner,
-  Switch,
-  useRestoreFocusSource,
+    Badge,
+    Button,
+    Drawer,
+    DrawerBody,
+    DrawerHeader,
+    DrawerHeaderTitle,
+    MessageBar,
+    Spinner,
+    Switch,
+    useRestoreFocusSource,
 } from "@fluentui/react-components";
 import {
-  CheckmarkCircle24Regular,
-  Dismiss24Regular,
-  DismissCircle24Regular,
+    CheckmarkCircle24Regular,
+    Dismiss24Regular,
+    DismissCircle24Regular,
 } from "@fluentui/react-icons";
 import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
-import { Stack } from "../@common/Stack";
+import { Stack } from "../common/Stack";
 import { UploadProjectDrawerSignal } from "./EntryPoints";
 import { FilePicker, filesToUpload } from "./FilePicker";
 

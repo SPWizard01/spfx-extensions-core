@@ -1,13 +1,13 @@
 import { Button, Subtitle1 } from "@fluentui/react-components";
 import { ArrowLeft16Regular, Folder24Regular } from "@fluentui/react-icons";
 import {
-  configurationWebSP,
-  selectedAppItem,
-  updateSelectedApp,
+    configurationWebSP,
+    selectedAppItem,
+    updateSelectedApp,
 } from "../../runtimeStore";
 import { updateAppManifest } from "../../services/appManifest";
-import { Stack } from "../@common/Stack";
-import { StackItem } from "../@common/StackItem";
+import { Stack } from "../common/Stack";
+import { StackItem } from "../common/StackItem";
 import { ManifestConfig } from "./ManifestConfig";
 
 export function SelectedAppConfig() {

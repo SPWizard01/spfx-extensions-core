@@ -16,7 +16,7 @@ import {
     updateSelectedApp,
 } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
-import { Stack } from "../@common/Stack";
+import { Stack } from "../common/Stack";
 import { AddWeb } from "./AddWeb";
 
 interface AppDefinitionConfigurationProps {

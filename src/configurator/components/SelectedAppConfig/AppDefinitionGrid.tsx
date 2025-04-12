@@ -1,16 +1,16 @@
 import { Button, Label } from "@fluentui/react-components";
 import {
-  AppFolder20Regular,
-  DeleteRegular,
-  EditRegular,
+    AppFolder20Regular,
+    DeleteRegular,
+    EditRegular,
 } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { selectedAppItem } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
-import { ManageSitesDrawerSignal } from "../@common/ManageSitesDrawer";
-import { Stack } from "../@common/Stack";
+import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
+import { Stack } from "../common/Stack";
 export interface AppIdName {
   id: string;
   name: string;

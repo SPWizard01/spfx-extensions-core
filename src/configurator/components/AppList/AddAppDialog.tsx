@@ -1,26 +1,26 @@
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogBody,
-  DialogContent,
-  DialogSurface,
-  DialogTitle,
-  DialogTrigger,
-  Input,
-  Spinner,
-  Toast,
-  ToastTitle,
-  useToastController,
-  type DialogOpenChangeData,
-  type DialogOpenChangeEvent,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    DialogTrigger,
+    Input,
+    Spinner,
+    Toast,
+    ToastTitle,
+    useToastController,
+    type DialogOpenChangeData,
+    type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../../runtimeStore";
 import { addAppCollection } from "../../services/appCollection";
-import { toasterId } from "../@common/ToastNotification";
+import { toasterId } from "../common/ToastNotification";
 import { AddAppDialogStateSignal } from "./AppList";
 
 export function AddAppDialog() {

@@ -3,16 +3,16 @@ import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
-  configurationBelongsToHub,
-  configurationIsGlobal,
-  configurationIsRootHub,
-  configurationWebIsSubsite,
+    configurationBelongsToHub,
+    configurationIsGlobal,
+    configurationIsRootHub,
+    configurationWebIsSubsite,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
-import ManageSitesDrawer from "./@common/ManageSitesDrawer";
-import { Stack } from "./@common/Stack";
-import { ToastNotification } from "./@common/ToastNotification";
 import { AppList } from "./AppList/AppList";
+import ManageSitesDrawer from "./common/ManageSitesDrawer";
+import { Stack } from "./common/Stack";
+import { ToastNotification } from "./common/ToastNotification";
 import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();

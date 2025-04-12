@@ -7,17 +7,17 @@ import Dropzone from "react-dropzone";
 import { MANIFEST_NAME } from "../../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
-  configurationWebSP,
-  selectedAppItem,
-  updateSelectedApp,
+    configurationWebSP,
+    selectedAppItem,
+    updateSelectedApp,
 } from "../../runtimeStore";
 import {
-  type FileContents,
-  addFiles,
-  parseUploadFiles,
+    type FileContents,
+    addFiles,
+    parseUploadFiles,
 } from "../../services/fileService";
 import { getZipManifestContents } from "../../services/zipService";
-import { Stack } from "../@common/Stack";
+import { Stack } from "../common/Stack";
 import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "../style";
 
 //use-file-picker

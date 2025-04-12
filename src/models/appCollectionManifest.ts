@@ -8,7 +8,7 @@ export interface SPFxExtensionUrlMapItem {
      * Url of the site/web/hub to display in the UI instead of the id.
      */
     url: string;
-    type: "site" | "web";
+    isRootWeb: boolean;
 }
 
 export interface SPFxExtensionCollectionManifest {
