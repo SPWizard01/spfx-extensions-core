@@ -49,27 +49,28 @@ export async function resolveWebStructure(webUrl: URL) {
     try {
         const site = await getSite(sp);
         if (site.isError) {
-            webStructure.isError = true;
-            webStructure.error = `${site.error}`
-            logGenericCoreError("Unable to get site info", webUrl.href, site.error);
-            return webStructure;
+            const siteErr = `Unable to get site info ${site.error}`;
+            webStructure.warnings.push(siteErr);
+            logGenericCoreError(siteErr, webUrl.href);
         }
         const rootWeb = await getWebRoot(sp);
         if (rootWeb.isError) {
-            webStructure.isError = true;
-            webStructure.error = `${rootWeb.error}`
-            logGenericCoreError("Unable to get root web info", webUrl.href, rootWeb.error);
-            return webStructure;
+            const rwErr = `Unable to get root web info ${rootWeb.error}`;
+            webStructure.warnings.push(rwErr);
+            logGenericCoreError(rwErr, webUrl.href);
         }
         const webInfos = await getAllWebInfos(sp);
-        webStructure.data.push({
-            id: rootWeb.data.Id,
-            siteId: site.data.Id,
-            url: rootWeb.data.Url,
-            isRootWeb: true,
-        })
+        if (!rootWeb.isError) {
+            webStructure.data.push({
+                id: rootWeb.data.Id,
+                siteId: site.data.Id,
+                url: rootWeb.data.Url,
+                isRootWeb: true,
+            })
+        }
+
         webInfos.forEach(webInfo => {
-            if (webInfo.Id !== rootWeb.data.Id) {
+            if (webInfo.Id !== rootWeb.data?.Id) {
                 webStructure.data.push({
                     id: webInfo.Id,
                     siteId: site.data.Id,
