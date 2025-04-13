@@ -64,6 +64,8 @@ export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
+export const appCollectionUpdating = signal<boolean>(false);
+
 
 export function getEmptyAppItem(appName: string) {
   return {

@@ -6,6 +6,7 @@ import {
   DrawerHeader,
   DrawerHeaderTitle,
   Input,
+  Label,
   MessageBar,
   MessageBarBody,
   Switch,
@@ -24,12 +25,16 @@ import type {
 } from "../../../models/appCollectionManifest";
 import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
 import {
+  appCollectionUpdating,
   configurationIsGlobal,
   configurationRootWeb,
+  configurationWebSP,
   configurationWebSubWebs,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
+  selectedAppItem,
 } from "../../runtimeStore";
+import { updateAppCollection } from "../../services/appCollection";
 import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
 import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
@@ -210,6 +215,16 @@ export default function ManageSitesDrawer() {
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
           <Stack gap={8}>
+            {ManageSitesDrawerSignal.value.appDefinition ? (
+              <Stack
+                horizontal
+                horizontalAlign="space-between"
+                verticalAlign="center"
+              >
+                <Label>Enable everywhere</Label>
+                <Switch />
+              </Stack>
+            ) : null}
             {urlList.value.map((site) => (
               <Stack
                 horizontalAlign="space-between"
@@ -221,8 +236,13 @@ export default function ManageSitesDrawer() {
                 <StackItem>{site.url}</StackItem>
                 {ManageSitesDrawerSignal.value.appDefinition ? (
                   <>
+                    {site.isRootWeb ? (
+                      <>
+                        <Label>Enable for all collection</Label>
+                        <Switch />
+                      </>
+                    ) : null}
                     <Switch />
-                    {site.isRootWeb ? <Switch /> : null}
                   </>
                 ) : (
                   <Button
@@ -250,11 +270,16 @@ export default function ManageSitesDrawer() {
           </Button>
           <Button
             appearance="primary"
-            onClick={() =>
-              (ManageSitesDrawerSignal.value = {
+            disabled={appCollectionUpdating.value}
+            onClick={async () => {
+              await updateAppCollection(
+                configurationWebSP,
+                contextCollectionConfig.value
+              );
+              ManageSitesDrawerSignal.value = {
                 open: false,
-              })
-            }
+              };
+            }}
           >
             Save
           </Button>

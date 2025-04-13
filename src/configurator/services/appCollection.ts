@@ -3,7 +3,7 @@ import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/log
 import type { SPFxExtensionCollectionManifest } from "../../models/appCollectionManifest";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_COLLECTION_MANIFEST, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
-import { allAppItems, configurationWeb } from "../runtimeStore";
+import { allAppItems, appCollectionUpdating, configurationWeb } from "../runtimeStore";
 import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 import { getAllAppItems } from "./renderedAppCollection";
@@ -61,6 +61,7 @@ export async function getAllAppCollections(sp: SPFI) {
 
 
 export async function updateAppCollection(sp: SPFI, appCollection: SPFxExtensionCollectionManifest) {
+    appCollectionUpdating.value = true;
     await getAppCollectionManifest(sp);
     const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
@@ -71,6 +72,9 @@ export async function updateAppCollection(sp: SPFI, appCollection: SPFxExtension
     catch (error) {
         logGenericCoreError(`Error while updating ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}`, error);
         return false;
+    }
+    finally {
+        appCollectionUpdating.value = true;
     }
 }
 
