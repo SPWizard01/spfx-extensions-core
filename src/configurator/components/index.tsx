@@ -3,10 +3,10 @@ import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import {
-    configurationBelongsToHub,
-    configurationIsGlobal,
-    configurationIsRootHub,
-    configurationWebIsSubsite,
+  configurationIsGlobal,
+  getConfigurationWebIsHubChild,
+  getConfigurationWebIsRootHub,
+  getConfigurationWebIsSubsite,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
@@ -28,28 +28,28 @@ function getBadges() {
     );
     return badges;
   }
-  if (configurationIsRootHub) {
+  if (getConfigurationWebIsRootHub()) {
     badges.push(
       <Badge key="root" size="extra-large" color="success">
         Hub root site
       </Badge>
     );
   }
-  if (configurationBelongsToHub && !configurationIsRootHub) {
+  if (getConfigurationWebIsHubChild() && !getConfigurationWebIsRootHub()) {
     badges.push(
       <Badge key="child" size="extra-large" color="warning">
         Hub child site
       </Badge>
     );
   }
-  if (!configurationIsRootHub && !configurationBelongsToHub) {
+  if (!getConfigurationWebIsRootHub() && !getConfigurationWebIsHubChild()) {
     badges.push(
       <Badge key="nonhub" size="extra-large" color="brand">
         Non hub site
       </Badge>
     );
   }
-  if (configurationWebIsSubsite) {
+  if (getConfigurationWebIsSubsite()) {
     badges.push(
       <Badge key="subsite" size="extra-large" color="informative">
         Sub site

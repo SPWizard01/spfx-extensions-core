@@ -3,7 +3,7 @@ import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/log
 import type { SPFxExtensionCollectionManifest } from "../../models/appCollectionManifest";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_COLLECTION_MANIFEST, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
-import { allAppItems } from "../runtimeStore";
+import { allAppItems, configurationWeb } from "../runtimeStore";
 import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 import { getAllAppItems } from "./renderedAppCollection";
@@ -39,7 +39,7 @@ export async function removeAppCollection(sp: SPFI, collectionName: string) {
     const rootFolderQuery = extList.rootFolder;
     try {
         const _folder = await rootFolderQuery.folders.getByUrl(collectionName)();
-        await deleteRootFolderRecursively(sp, collectionName);
+        await deleteRootFolderRecursively(sp, configurationWeb.data.ServerRelativeUrl, collectionName);
     }
     catch (error) {
         // if (error instanceof HttpRequestError) {

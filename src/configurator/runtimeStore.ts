@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
-import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
+import type { SPFxExtensionCollectionManifest, SPFxExtensionUrlMapItem } from "../models/appCollectionManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
@@ -10,27 +10,44 @@ import {
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
-import { getAllWebInfos } from "./services/webInfoService";
+import { getAllWebInfos, getSite, getWeb, getWebRoot } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
 export const configrationWebUrl = new URL(queryWeb ?? getWebAbsoluteUrl());
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
-export const configurationSite = await configurationWebSP.site();
-export const configurationWeb = await configurationWebSP.web();
-export const configurationRootWeb = await configurationWebSP.site.rootWeb();
+export const configurationSite = await getSite(configurationWebSP);
+export const configurationWeb = await getWeb(configurationWebSP);
+export const configurationRootWeb = await getWebRoot(configurationWebSP);
 export const configurationIsGlobal = !queryWeb
-export const configurationIsRootHub =
-  configurationSite.IsHubSite &&
-  configurationRootWeb.Id === configurationWeb.Id;
-export const configurationBelongsToHub =
-  configurationSite.HubSiteId !== EMPTY_GUID;
 
-export const configurationWebIsSubsite =
-  configurationRootWeb.Id !== configurationWeb.Id;
+export function getConfigurationWebIsRootHub() {
+  if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError) return false;
+  return configurationSite.data.IsHubSite &&
+    configurationRootWeb.data.Id === configurationWeb.data.Id;
+}
+export function getConfigurationWebIsHubChild() {
+  if (configurationSite.isError) return false;
+  return configurationSite.data.HubSiteId !== EMPTY_GUID;
+}
+
+export function getConfigurationWebIsSubsite() {
+  if (configurationWeb.isError || configurationRootWeb.isError) return true;
+  return configurationRootWeb.data.Id !== configurationWeb.data.Id;
+}
 
 export const configurationWebSubWebs = await getAllWebInfos(
   configurationWebSP
 );
+
+export const configurationWebStructure: SPFxExtensionUrlMapItem[] = configurationWebSubWebs.map((w) => {
+  return {
+    id: w.Id,
+    siteId: configurationSite.data.Id,
+    url: w.Url,
+    isRootWeb: configurationRootWeb.data.Id === w.Id,
+  }
+});
+
 
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getAppCollectionManifest(configurationWebSP);

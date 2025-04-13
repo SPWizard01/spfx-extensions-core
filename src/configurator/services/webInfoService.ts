@@ -1,15 +1,24 @@
 import { Caching } from "@pnp/queryable";
 import type { SPFI } from "@pnp/sp";
+import type { ISiteInfo } from "@pnp/sp/sites/types";
 import type { IWebInfo } from "@pnp/sp/webs";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { getPnPSP } from "./pnpService";
 export async function getAllWebInfos(sp: SPFI) {
-    const thisWeb = await sp.using(Caching()).web();
-    const allSubwebs = await sp.using(Caching()).web.webs();
-    const recursiveWebs = await getWebInfoRecursive(allSubwebs);
-    return [thisWeb, ...allSubwebs, ...recursiveWebs];
+    const thisWeb = await getWeb(sp);
+    if (thisWeb.isError) {
+        logGenericCoreError("Unable to get web info", thisWeb.error);
+        return [];
+    }
+    const allSubwebs = await getWebs(sp);
+    if (allSubwebs.isError) {
+        logGenericCoreError("Unable to get web info", allSubwebs.error);
+        return [];
+    }
+    const recursiveWebs = await getWebInfoRecursive(allSubwebs.data);
+    return [thisWeb.data, ...allSubwebs.data, ...recursiveWebs];
 }
 async function getWebInfoRecursive(webs: IWebInfo[]) {
     const webInfos = new Set<IWebInfo>();
@@ -38,20 +47,32 @@ export async function resolveWebStructure(webUrl: URL) {
         isError: false,
     }
     try {
-        const site = await sp.using(Caching()).site();
-        const rootWeb = await sp.site.rootWeb();
+        const site = await getSite(sp);
+        if (site.isError) {
+            webStructure.isError = true;
+            webStructure.error = `${site.error}`
+            logGenericCoreError("Unable to get site info", webUrl.href, site.error);
+            return webStructure;
+        }
+        const rootWeb = await getWebRoot(sp);
+        if (rootWeb.isError) {
+            webStructure.isError = true;
+            webStructure.error = `${rootWeb.error}`
+            logGenericCoreError("Unable to get root web info", webUrl.href, rootWeb.error);
+            return webStructure;
+        }
         const webInfos = await getAllWebInfos(sp);
         webStructure.data.push({
-            id: rootWeb.Id,
-            siteId: site.Id,
-            url: rootWeb.Url,
+            id: rootWeb.data.Id,
+            siteId: site.data.Id,
+            url: rootWeb.data.Url,
             isRootWeb: true,
         })
         webInfos.forEach(webInfo => {
-            if (webInfo.Id !== rootWeb.Id) {
+            if (webInfo.Id !== rootWeb.data.Id) {
                 webStructure.data.push({
                     id: webInfo.Id,
-                    siteId: site.Id,
+                    siteId: site.data.Id,
                     url: webInfo.Url,
                     isRootWeb: false,
                 });
@@ -65,4 +86,43 @@ export async function resolveWebStructure(webUrl: URL) {
     }
     return webStructure;
 
+}
+
+
+
+
+
+
+
+export async function getWebRoot(sp: SPFI) {
+    return fetchSPData(() => sp.site.using(Caching()).rootWeb(), {} as IWebInfo);
+}
+
+export async function getSite(sp: SPFI) {
+    return fetchSPData(() => sp.using(Caching()).site(), {} as ISiteInfo);
+}
+
+export async function getWeb(sp: SPFI) {
+    return fetchSPData(() => sp.using(Caching()).web(), {} as IWebInfo);
+}
+
+export async function getWebs(sp: SPFI) {
+    return fetchSPData(() => sp.using(Caching()).web.webs(), [] as IWebInfo[]);
+}
+
+async function fetchSPData<T>(fetchFn: () => Promise<T>, defaultValue: T): Promise<ApiCallResult<T>> {
+    const result: ApiCallResult<T> = {
+        data: defaultValue,
+        error: "",
+        warnings: [],
+        isError: false,
+    };
+    try {
+        const data = await fetchFn();
+        result.data = data;
+    } catch (error) {
+        result.isError = true;
+        result.error = `${error}`;
+    }
+    return result;
 }

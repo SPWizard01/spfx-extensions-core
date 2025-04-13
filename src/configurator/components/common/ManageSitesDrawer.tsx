@@ -2,6 +2,7 @@ import {
   Button,
   Drawer,
   DrawerBody,
+  DrawerFooter,
   DrawerHeader,
   DrawerHeaderTitle,
   Input,
@@ -15,30 +16,25 @@ import {
   Delete16Regular,
   Dismiss24Regular,
 } from "@fluentui/react-icons";
-import { signal } from "@preact/signals";
+import { signal, useComputed } from "@preact/signals";
 import { useState } from "preact/hooks";
-import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
+import type {
+  SPFxExtensionCollectionManifest,
+  SPFxExtensionUrlMapItem,
+} from "../../../models/appCollectionManifest";
+import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
 import {
-  configrationWebUrl,
   configurationIsGlobal,
-  configurationIsRootHub,
-  configurationWebIsSubsite,
+  configurationRootWeb,
   configurationWebSubWebs,
   contextCollectionConfig,
+  getConfigurationWebIsRootHub,
 } from "../../runtimeStore";
+import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
 import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
 import { Stack } from "./Stack";
 import { StackItem } from "./StackItem";
-
-const URL_VALIDATION_ERROR = {
-  invalid: {
-    message: "Invalid URL",
-  },
-  duplicate: {
-    message: "URL already exists",
-  },
-};
 
 export const ManageSitesDrawerSignal = signal<{
   open: boolean;
@@ -48,32 +44,35 @@ export const ManageSitesDrawerSignal = signal<{
   appDefinition: undefined,
 });
 
-const currentWebStructure = signal(await resolveWebStructure(configrationWebUrl));
-
-
-
 export default function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const [urlInputError, setUrlInputError] = useState<string>();
-  const defaultList: SPFxExtensionUrlMapItem[] =
-    !configurationIsGlobal && !configurationIsRootHub
+  const [urlInputError, setUrlInputError] = useState<string>("");
+  const [urlInput, setUrlInput] = useState<string>("");
+  const [isResolving, setIsResolving] = useState(false);
+  const urlList = useComputed(() => {
+    const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
       ? configurationWebSubWebs.map((w) => {
           return {
             id: w.Id,
-            isRootWeb: !configurationWebIsSubsite,
+            isRootWeb: w.Id === configurationRootWeb.data.Id,
             siteId: w.Id,
             url: w.Url,
+            canDelete: false,
           };
         })
       : [];
-  contextCollectionConfig.value.urlMap.forEach((item) => {
-    if (!defaultList.some((s) => s.id === item.id)) {
-      defaultList.push(item);
-    }
+    contextCollectionConfig.value.urlMap.forEach((item) => {
+      if (!defaultList.some((s) => s.id === item.id)) {
+        defaultList.push({
+          ...item,
+          canDelete: true,
+        });
+      }
+    });
+    return defaultList;
   });
-  const [urlInput, setUrlInput] = useState<string>();
 
-  function addSite() {
+  async function addSite() {
     if (!urlInput) return;
 
     const validatedSite = validateUrl(urlInput);
@@ -84,42 +83,45 @@ export default function ManageSitesDrawer() {
       return;
     }
 
-    setUrlInputError(undefined);
-    setUrlInput(undefined);
-  }
-  function validateUrl(urlInput: string) {
-    let error;
-    let siteCollectionInfo;
-
-    // Validate if URL is valid site collection and is not already in the list
-    const isValidUrl =
-      urlInput.startsWith("https://") && urlInput.includes(".sharepoint.com");
-
-    if (!isValidUrl) {
-      error = URL_VALIDATION_ERROR.invalid;
+    const urlToResolve = urlInput.startsWith("/")
+      ? new URL(urlInput, window.location.origin)
+      : new URL(urlInput);
+    setIsResolving(true);
+    const structureResult = await resolveWebStructure(urlToResolve);
+    if (structureResult.isError) {
+      setUrlInputError(structureResult.error);
+      setIsResolving(false);
+      return;
     }
-    const isDuplicate = contextCollectionConfig.value.urlMap.some(
-      (site) => site.url === urlInput
+    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
+      JSON.stringify(contextCollectionConfig.value)
     );
 
-    if (isDuplicate) {
-      error = URL_VALIDATION_ERROR.duplicate;
-    }
+    structureResult.data.forEach((item) => {
+      if (!collectionCopy.urlMap.some((s) => s.id === item.id)) {
+        collectionCopy.urlMap.push(item);
+      }
+    });
 
-    if (isValidUrl && !isDuplicate) {
-      siteCollectionInfo = {
-        webId: crypto.randomUUID(),
-        url: urlInput,
-      };
-    }
-    return {
-      siteCollectionInfo,
-      error,
-    };
+    contextCollectionConfig.value = collectionCopy;
+
+    setUrlInputError("");
+    setUrlInput("");
+    setIsResolving(false);
   }
 
-  function deleteSite(_site: SPFxExtensionUrlMapItem) {
-    // Delete site from site list
+  function deleteSite(web: SPFxExtensionUrlMapItem) {
+    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
+      JSON.stringify(contextCollectionConfig.value)
+    );
+
+    const itemIndex = collectionCopy.urlMap.findIndex((s) => s.id === web.id);
+
+    if (itemIndex < 0) {
+      return;
+    }
+    collectionCopy.urlMap.splice(itemIndex, 1);
+    contextCollectionConfig.value = collectionCopy;
   }
 
   return (
@@ -128,8 +130,8 @@ export default function ManageSitesDrawer() {
       separator
       open={ManageSitesDrawerSignal.value.open}
       onOpenChange={(_: any, { open }: { open: boolean }) => {
-        setUrlInputError(undefined);
-        setUrlInput(undefined);
+        setUrlInputError("");
+        setUrlInput("");
         ManageSitesDrawerSignal.value = {
           ...ManageSitesDrawerSignal.value,
           open,
@@ -158,7 +160,7 @@ export default function ManageSitesDrawer() {
             : "Manage sites"}
         </DrawerHeaderTitle>
       </DrawerHeader>
-      {configurationIsGlobal || configurationIsRootHub ? (
+      {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
         <Stack style={{ padding: "12px 24px", width: "100%" }} gap={8}>
           <MessageBar intent="info">
             <MessageBarBody>
@@ -184,7 +186,7 @@ export default function ManageSitesDrawer() {
               placeholder="Site/Web URL"
             />
             <Button
-              disabled={!urlInput}
+              disabled={!urlInput || isResolving}
               onClick={() => addSite()}
               icon={<Add16Regular />}
             >
@@ -197,13 +199,18 @@ export default function ManageSitesDrawer() {
               <MessageBarBody>{urlInputError}</MessageBarBody>
             </MessageBar>
           )}
+          {isResolving && (
+            <MessageBar intent="info">
+              <MessageBarBody>Resolving...</MessageBarBody>
+            </MessageBar>
+          )}
         </Stack>
       ) : null}
 
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
           <Stack gap={8}>
-            {defaultList.map((site) => (
+            {urlList.value.map((site) => (
               <Stack
                 horizontalAlign="space-between"
                 verticalAlign="center"
@@ -213,9 +220,13 @@ export default function ManageSitesDrawer() {
               >
                 <StackItem>{site.url}</StackItem>
                 {ManageSitesDrawerSignal.value.appDefinition ? (
-                  <Switch />
+                  <>
+                    <Switch />
+                    {site.isRootWeb ? <Switch /> : null}
+                  </>
                 ) : (
                   <Button
+                    disabled={!site.canDelete}
                     onClick={() => deleteSite(site)}
                     icon={<Delete16Regular />}
                   />
@@ -225,6 +236,30 @@ export default function ManageSitesDrawer() {
           </Stack>
         </Stack>
       </DrawerBody>
+      <DrawerFooter>
+        <Stack horizontal gap={8} horizontalAlign="center">
+          <Button
+            appearance="secondary"
+            onClick={() =>
+              (ManageSitesDrawerSignal.value = {
+                open: false,
+              })
+            }
+          >
+            Cancel
+          </Button>
+          <Button
+            appearance="primary"
+            onClick={() =>
+              (ManageSitesDrawerSignal.value = {
+                open: false,
+              })
+            }
+          >
+            Save
+          </Button>
+        </Stack>
+      </DrawerFooter>
     </Drawer>
   );
 }

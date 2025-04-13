@@ -18,6 +18,10 @@ const thm = window.__globalSettings__.customizations.settings.theme.isInverted
   ? createDarkTheme(variants)
   : createLightTheme(variants);
 
+document
+  .querySelector("#spCommandBar button[name='Edit']")
+  ?.setAttribute("style", "display:none;");
+
 // const thm = createV9Theme(window.__themeState__.theme)
 export function App(_props: AppProps) {
   return (

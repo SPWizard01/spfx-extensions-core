@@ -1,34 +1,34 @@
 import {
-    Link,
-    Table,
-    TableBody,
-    TableCell,
-    TableCellLayout,
-    TableHeader,
-    TableHeaderCell,
-    TableRow,
-    Toolbar,
-    ToolbarButton,
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableCellLayout,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  Toolbar,
+  ToolbarButton,
 } from "@fluentui/react-components";
 import {
-    Add16Regular,
-    FolderRegular,
-    WebAsset16Regular,
+  Add16Regular,
+  FolderRegular,
+  WebAsset16Regular,
 } from "@fluentui/react-icons";
 import { signal } from "@preact/signals";
 import { getIsHubSite } from "../../../core/services/contextService";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
-    allAppItems,
-    configurationIsGlobal,
-    configurationIsRootHub,
-    configurationWebSP,
-    selectedAppItem,
-    updateApp,
+  allAppItems,
+  configurationIsGlobal,
+  configurationWebSP,
+  getConfigurationWebIsRootHub,
+  selectedAppItem,
+  updateApp,
 } from "../../runtimeStore";
 import {
-    getAppCollectionManifest,
-    updateAppCollection,
+  getAppCollectionManifest,
+  updateAppCollection,
 } from "../../services/appCollection";
 import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
@@ -99,7 +99,7 @@ export function AppList(_props: ApplistProps) {
           >
             Create collection
           </ToolbarButton>
-          {configurationIsGlobal || configurationIsRootHub ? (
+          {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
             <ToolbarButton
               appearance="secondary"
               onClick={() => (ManageSitesDrawerSignal.value = { open: true })}
