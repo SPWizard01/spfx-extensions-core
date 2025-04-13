@@ -7,7 +7,11 @@ import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/cons
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
-
+export interface PNPCacheValue<T = any> {
+    expires: string;
+    indexedDBCache: number;
+    data: T;
+}
 
 interface SPFxExtensionSchema {
     AppFolderManifestCache: {
@@ -30,6 +34,10 @@ interface SPFxExtensionSchema {
         key: string;
         value: ConfigurationListData;
     };
+    PNP_CACHE: {
+        key: string;
+        value: PNPCacheValue;
+    };
 }
 
 export interface SPFxExtensionCoreDB extends DBSchema, SPFxExtensionSchema {
@@ -45,6 +53,7 @@ export const StoreNames: Stores = {
     AllowedApps: "AllowedApps",
     HubSiteData: "HubSiteData",
     SPFxExtensionConfig: "SPFxExtensionConfig",
+    PNP_CACHE: "PNP_CACHE",
 } as const;
 
 
@@ -64,6 +73,7 @@ const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
             database.createObjectStore(StoreNames.AllowedApps, { keyPath: "Id" });
             database.createObjectStore(StoreNames.HubSiteData, { keyPath: "SiteId" });
             database.createObjectStore(StoreNames.SPFxExtensionConfig, { keyPath: "Title" });
+            database.createObjectStore(StoreNames.PNP_CACHE, { keyPath: "Url" });
         }
         //diff between 0 and 1 just delete the old database and let it be repopulated
         // if (oldVersion === 1) {
