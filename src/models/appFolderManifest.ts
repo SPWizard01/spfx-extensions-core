@@ -27,7 +27,7 @@ export interface SPFxExtensionAppMapItemConfig {
     enabledEverywhere: boolean;
 }
 
-export interface SPFxExtensionAppDefinitionMap {
+export interface SPFxExtensionAppDefinitionMapItem {
     /**
      * Id of app definition item.
      */
@@ -43,7 +43,7 @@ export interface SPFxExtensionFolderManifest {
      * Relative path from manifest to the app entry point i.e. `./app.js` or `./somefolder/app.js?v=hash`
      */
     appRelativeEntryPointUrls: string[];
-    appDefinitionMap: SPFxExtensionAppDefinitionMap[];
+    appDefinitionMap: SPFxExtensionAppDefinitionMapItem[];
     /**
      * If set to false, the app will not be loaded as ESM module.
      * 

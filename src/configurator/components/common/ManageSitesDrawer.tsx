@@ -23,6 +23,7 @@ import type {
   SPFxExtensionCollectionManifest,
   SPFxExtensionUrlMapItem,
 } from "../../../models/appCollectionManifest";
+import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
 import {
   appCollectionUpdating,
@@ -32,18 +33,16 @@ import {
   configurationWebSubWebs,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
-  selectedAppItem,
 } from "../../runtimeStore";
 import { updateAppCollection } from "../../services/appCollection";
 import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
-import type { AppIdName } from "../SelectedAppConfig/AppDefinitionGrid";
 import { Stack } from "./Stack";
 import { StackItem } from "./StackItem";
 
 export const ManageSitesDrawerSignal = signal<{
   open: boolean;
-  appDefinition?: AppIdName | undefined;
+  appDefinition?: SPFxExtensionAppDefinitionMapItem | undefined;
 }>({
   open: false,
   appDefinition: undefined,
@@ -222,7 +221,12 @@ export default function ManageSitesDrawer() {
                 verticalAlign="center"
               >
                 <Label>Enable everywhere</Label>
-                <Switch />
+                <Switch
+                  defaultChecked={
+                    ManageSitesDrawerSignal.value.appDefinition?.config
+                      .enabledEverywhere
+                  }
+                />
               </Stack>
             ) : null}
             {urlList.value.map((site) => (
@@ -239,10 +243,26 @@ export default function ManageSitesDrawer() {
                     {site.isRootWeb ? (
                       <>
                         <Label>Enable for all collection</Label>
-                        <Switch />
+                        <Switch
+                          defaultChecked={
+                            ManageSitesDrawerSignal.value.appDefinition?.config
+                              .enabledEverywhere &&
+                            !ManageSitesDrawerSignal.value.appDefinition?.config.excludedIds.some(
+                              (s) => s === site.id
+                            )
+                          }
+                        />
                       </>
                     ) : null}
-                    <Switch />
+                    <Switch
+                      defaultChecked={
+                        ManageSitesDrawerSignal.value.appDefinition?.config
+                          .enabledEverywhere &&
+                        !ManageSitesDrawerSignal.value.appDefinition?.config.excludedIds.some(
+                          (s) => s === site.id
+                        )
+                      }
+                    />
                   </>
                 ) : (
                   <Button

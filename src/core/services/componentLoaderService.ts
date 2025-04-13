@@ -1,4 +1,4 @@
-import type { SPFxExtensionAppDefinitionMap } from "../../models/appFolderManifest";
+import type { SPFxExtensionAppDefinitionMapItem } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
@@ -7,10 +7,10 @@ import { isFileAllowedToRun } from "./allowedAppsService";
 import { unmountInstancesOnContextChange } from "./appServices";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
 import {
-  logGenericCoreDebug,
-  logGenericCoreError,
-  logGenericCoreInfo,
-  logGenericCoreWarning,
+    logGenericCoreDebug,
+    logGenericCoreError,
+    logGenericCoreInfo,
+    logGenericCoreWarning,
 } from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
@@ -274,7 +274,7 @@ async function executeRegistration(
       (a) => a.appId === "*"
     );
     const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
-    const relatedApps: SPFxExtensionAppDefinitionMap[] = [];
+    const relatedApps: SPFxExtensionAppDefinitionMapItem[] = [];
     if (foundMapItem) {
       relatedApps.push(foundMapItem);
     }

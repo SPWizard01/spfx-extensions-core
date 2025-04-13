@@ -1,8 +1,8 @@
 import { Button, Label } from "@fluentui/react-components";
 import {
-    AppFolder20Regular,
-    DeleteRegular,
-    EditRegular,
+  AppFolder20Regular,
+  DeleteRegular,
+  EditRegular,
 } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
@@ -73,7 +73,7 @@ export const AppDefinitionGrid = () => {
         borderBottom: "1px solid #eaeaea",
       }}
     >
-      {appDefinitions.map((appDef) => (
+      {selectedAppItem.value?.manifest.appDefinitionMap.map((appDef) => (
         <Stack
           horizontal
           gap={8}
@@ -85,7 +85,11 @@ export const AppDefinitionGrid = () => {
           }}
         >
           <Stack horizontal verticalAlign="center" gap={8}>
-            <AppFolder20Regular /> <Label size="medium">{appDef.name}</Label>
+            <AppFolder20Regular />{" "}
+            <Label size="medium">
+              {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
+                `Unknown_${appDef.appId}`}
+            </Label>
           </Stack>
           <Stack gap={8} horizontal>
             <Button
