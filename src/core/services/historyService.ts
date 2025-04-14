@@ -33,7 +33,6 @@ function interceptHistoryPushState() {
     unused: string,
     newUrl?: string | URL
   ) {
-    updateEditMode(newUrl);
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
     originalPushState.call(this, newState, unused, newUrl);
@@ -49,8 +48,6 @@ function interceptHistoryReplaceState() {
     unused: string,
     newUrl?: string | URL
   ) {
-    updateEditMode(newUrl);
-
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
     originalReplaceState.call(this, newState, unused, newUrl);
@@ -65,7 +62,6 @@ function interceptHistoryBack() {
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
     originalHistoryBack.call(this);
-    updateEditMode(window.location.href);
     dispatchEvent("historyBack", {});
   }
   window.history.back = _goBack;
@@ -77,7 +73,6 @@ function interceptHistoryForward() {
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
     originalHistoryForward.call(this);
-    updateEditMode(window.location.href);
     dispatchEvent("historyForward", {});
   }
   window.history.forward = _goForward;
@@ -88,27 +83,10 @@ function interceptHistoryGo() {
     // Call the original function with the provided arguments
     // This context is necessary for the context of the history change
     originalHistoryGo.call(this, delta);
-    updateEditMode(window.location.href);
     dispatchEvent("historyGo", { delta });
   }
   window.history.go = _go;
 }
-
-function updateEditMode(url: string | URL | undefined | null) {
-  let isEditMode = false;
-
-  if (!url) {
-    isEditMode = window.location.href.indexOf("Mode=Edit") !== -1;
-  } else if (typeof url === "string") {
-    isEditMode = url.indexOf("Mode=Edit") !== -1;
-  } else {
-    isEditMode = url.search.indexOf("Mode=Edit") !== -1;
-  }
-  window.__SPFxExtensions.Utils.displayMode = isEditMode
-    ? "Edit"
-    : "Read";
-}
-
 
 let historyInterceptionInited = false;
 export function initHistoryInterception() {

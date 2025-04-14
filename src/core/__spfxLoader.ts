@@ -1,14 +1,13 @@
+import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
+import type { CompatibleEnvironmentType } from "../models/environment";
 
 
 const SPFXPREFIX = "[SPFxExtensions/Core]";
 
-interface UrlReturn {
-  default: string;
-}
 
 interface SuggestedUrls {
-  coreUrl: UrlReturn;
-  configuratorUrl: UrlReturn;
+  coreUrl: string;
+  configuratorUrl: string;
 }
 
 type SuggestedUrlResolver = () => Promise<SuggestedUrls>;
@@ -35,31 +34,57 @@ async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
 
   const { coreUrl, configuratorUrl } = await suggestedUrlResolver();
 
-  if (!coreUrl.default) {
+  if (!coreUrl) {
     const msg = "Unable to resolve SPFx Core location";
     throw new Error(`${SPFXPREFIX} ${msg}`);
   }
-  if (!configuratorUrl.default) {
+  if (!configuratorUrl) {
     const msg = "Unable to resolve SPFx Core Configurator location";
     throw new Error(`${SPFXPREFIX} ${msg}`);
   }
-  coreUrls.core = coreUrl.default;
-  coreUrls.configuratorUrl = configuratorUrl.default;
+  coreUrls.core = coreUrl;
+  coreUrls.configuratorUrl = configuratorUrl;
   console.info(SPFXPREFIX, "Core location resolved to", coreUrls);
   return coreUrls;
+}
+
+function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThroughSPFX: boolean) {
+  if (!window.__SPFxExtensions) {
+    const { promise: corePromise, resolve: coreResolver } = Promise.withResolvers<void>();
+    (window.__SPFxExtensions as any) = {
+      __CorePromise: corePromise,
+      __CorePromiseResolver: coreResolver,
+    };
+  }
+
+  if (!window.__SPFxExtensions.Utils) {
+    const { promise: placeHolderProviderPromise, resolve: placeHolderResolver } = Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
+    const { promise: spAppInitializationPromise, resolve: spAppInitializationPromiseResolver } = Promise.withResolvers<void>();
+
+    window.__SPFxExtensions.Utils = {
+      environmentType,
+      initializedThroughSPFX,
+      placeHolderProviderPromise,
+      placeHolderResolver,
+      appManifestPromises: [],
+      spAppInitializationPromise,
+      spAppInitializationPromiseResolver,
+      fluentIconsInitialized: false,
+      ConfiguratorPageUrl: "/sites/appcatalog/SPFxExtensionsData/SitePages/SPFxExtensionsConfigurator.aspx",
+    };
+  }
 }
 
 /**
  * Should only be used inside of SPFx or content script in classic pages on SP
  * @returns Singleton promise that resolves once the core is loaded
  */
-export async function loadCoreForSPFxOrClassic(suggestedUrlResolver: SuggestedUrlResolver) {
-  if (window.__SPFxExtensions.__CorePromise) {
+export async function loadCoreForSPFxOrClassic(suggestedUrlResolver: SuggestedUrlResolver, envType: CompatibleEnvironmentType, initializedThroughSPFX: boolean) {
+  if (window.__SPFxExtensions?.__CorePromise) {
     return window.__SPFxExtensions.__CorePromise;
   }
-  const { promise: corePromise, resolve: coreResolver } = Promise.withResolvers<void>();
-  window.__SPFxExtensions.__CorePromise = corePromise;
-  window.__SPFxExtensions.__CorePromiseResolver = coreResolver;
+
+  prepareEnv(envType, initializedThroughSPFX);
 
   const coreAddress = await getRootCoreLocation(suggestedUrlResolver);
   window.__SPFxExtensions.__ConfiguratorUrl = coreAddress.configuratorUrl;

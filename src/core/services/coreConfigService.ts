@@ -18,7 +18,7 @@ async function initializeCoreConfigurationInternal() {
     await ensureSPFxWeb();
     await ensureAppWhiteList();
     await ensureConfiguratorPage();
-    window.__SPFxExtensions.Utils.ConfiguratorUrl = `${SPFX_EXTENSIONS_SITE_URL}/${CONFIGURATOR_PAGE_URL}`;
+    window.__SPFxExtensions.Utils.ConfiguratorPageUrl = `${SPFX_EXTENSIONS_SITE_URL}/${CONFIGURATOR_PAGE_URL}`;
 }
 
 export async function getCoreConfig(fresh = false): Promise<ConfigurationListData[]> {

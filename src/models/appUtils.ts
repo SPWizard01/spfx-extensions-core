@@ -1,4 +1,4 @@
-import type { CompatibleDisplayMode, CompatibleEnvironmentType } from "./environment";
+import type { CompatibleEnvironmentType } from "./environment";
 
 export interface SPFxExtensionUtilsPlaceHolderProvider {
   /**
@@ -13,11 +13,7 @@ export interface SPFxExtensionUtilsPlaceHolderProvider {
 
 export interface SPFxExtensionAppUtils {
   environmentType: CompatibleEnvironmentType;
-  initedThroughModern: boolean;
-  /**
-   * Will update when display mode changes in modern pages
-   */
-  displayMode: CompatibleDisplayMode;
+  initializedThroughSPFX: boolean;
 
   placeHolderProviderPromise: Promise<SPFxExtensionUtilsPlaceHolderProvider>;
   placeHolderResolver: (plc: SPFxExtensionUtilsPlaceHolderProvider) => void;
@@ -36,5 +32,10 @@ export interface SPFxExtensionAppUtils {
    */
   appManifestPromises: Promise<any>[];
   fluentIconsInitialized: boolean;
-  ConfiguratorUrl: string;
+  /**
+   * Url to the configurator page.
+   * 
+   * Defaults to `{APP_CATALOG_URL}/SPFxExtensionsData/SitePages/SPFxExtensionsConfigurator.aspx`
+   */
+  ConfiguratorPageUrl: string;
 }

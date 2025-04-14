@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -35,6 +35,7 @@
     ".": "./dist/index.js",
     "./spfxCoreEntry": "./dist/core/__spfxCore.js",
     "./spfxLoader": "./dist/core/__spfxLoader.js",
+    "./classicWrapper": "./dist/core/__spfxWrapperClassic.js",
     "./configurator": "./dist/configurator/__spfxCoreConfigurator.js",
     "./plugins/bun": "./dist/plugins/bun/index.js",
     "./plugins/esbuild": "./dist/plugins/esbuild/index.js",

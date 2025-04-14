@@ -13,6 +13,7 @@ const result = await build({
     },
     drop: ["console.debug", "console.log"],
     minify: prod,
+    emitDCEAnnotations: true,
     splitting: false,
 })
 const pluginResult = await build({
