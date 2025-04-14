@@ -1,6 +1,15 @@
-import { CONFIGURATOR_APP_ID, CONFIGURATOR_APP_INSTANCEID, CONFIGURATOR_PAGE_NAME, CONFIGURATOR_PAGE_URL, CORE_APP_ID, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
+import {
+    CONFIGURATOR_APP_ID,
+    CONFIGURATOR_PAGE_NAME,
+    CONFIGURATOR_PAGE_URL,
+    SPFX_EXTENSIONS_DATA_SITE,
+    SPFX_WEBPART_ID
+} from "../../utilities/constants";
 import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
+
+// random guid to track instance of the configurator app
+const CONFIGURATOR_APP_INSTANCEID = "f3ab710f-2c08-422e-a7ad-5d93eb51e7a3";
 
 const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
 
@@ -85,7 +94,7 @@ const canvas = [
         webPartData: {
             dataVersion: "1.0",
             description: "Allows you to add a custom developed app",
-            id: CORE_APP_ID,
+            id: SPFX_WEBPART_ID,
             instanceId: CONFIGURATOR_APP_INSTANCEID,
             properties: {
                 description: "Select an app to load from the dropdown below",
@@ -94,7 +103,7 @@ const canvas = [
             },
             title: "SPFx Extension Loader"
         },
-        webPartId: CORE_APP_ID
+        webPartId: SPFX_WEBPART_ID
     },
     {
         controlType: 0,
