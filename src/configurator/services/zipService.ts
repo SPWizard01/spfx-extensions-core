@@ -35,7 +35,6 @@ export async function getZipManifestContents(data: File): Promise<ApiCallResult<
     Object.keys(unzippedFiles).forEach((key: string) => {
         fileNames.push(key);
     });
-    console.log(fileNames);
     // dist/somdir/manifest.txt
     let manifestFile = fileNames.find((fileName) => fileName.toLowerCase().endsWith(MANIFEST_NAME));
 

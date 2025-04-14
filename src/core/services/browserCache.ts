@@ -1,6 +1,7 @@
 import { getContentDigest } from "../../utilities/digest";
 import { getCoreConfig } from "./coreConfigService";
 import { addOrUpdateExtensionConfig } from "./coreIdbService";
+import { logGenericCoreDebug } from "./loggingService";
 export async function cleanCacheOnUpgrade() {
     let coreConfig = await getCoreConfig();
     const keyParts = [
@@ -19,7 +20,7 @@ export async function cleanCacheOnUpgrade() {
             for (const key of allKeys) {
                 const url = key.url.toLowerCase();
                 if (keyParts.some(k => url.indexOf(k) > -1)) {
-                    console.log("Deleting cache key", key);
+                    logGenericCoreDebug("Deleting cache key", key);
                     somethingDeleted = true;
                     allPromises.push(storage.delete(key, { ignoreMethod: true, ignoreSearch: true }));
                 }

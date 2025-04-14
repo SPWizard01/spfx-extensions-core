@@ -13,7 +13,7 @@ export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptio
     }
     const manifestToWrite: SPFxExtensionFolderManifest = {
         appRelativeEntryPointUrls: options.appRelativeEntryPointUrls ?? [],
-        appDefinitionMap: options.appDefinitionMap ?? [{ appId: "*", config: { includedIds: [], excludedIds: [], hubObjectIds: [], enabledEverywhere: true } }],
+        appDefinitionMap: options.appDefinitionMap ?? [],
         isESM: options.isESM,
         enableCaching: options.enableCaching ?? false,
         cacheString: options.cacheString ?? "",

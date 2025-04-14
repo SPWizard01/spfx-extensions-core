@@ -1,30 +1,27 @@
 export interface SPFxExtensionAppMapItemConfig {
     /**
-     * WebId or siteid or hubid of the sp site where the app should be enabled;
+     * If enabled `excludedIds` and `excludedHubIds` will be scanned for exclusion.
+     * 
+     * Else `includedIds` and `includedHubIds` will be scanned for inclusion.
+     */
+    enabledEverywhere: boolean;
+    /**
+     * WebId or SiteId of the sp site where the app should be enabled;
      */
     includedIds: string[];
     /**
-     * WebId or siteid or hubid of the sp site where the app should be disabled.
-     * 
-     * Takes precendence over `includedIds`.
-     * 
-     * If the app is enabled on a site and disabled on the same site, it will be disabled.
+     * HubId (which is site collection id) of the sp site where the app should be enabled.
+     */
+    includedHubIds: string[];
+    /**
+     * WebId or SiteId of the sp site where the app should be disabled;
      */
     excludedIds: string[];
     /**
-     * A subset of `includedIds` that will be used to determine if the app should be enabled on all hub children.
-     * 
-     * Only applicable to `includedIds` that refer to a hub root.
-     * 
-     * This implies that the `includedIds` item is treated as hub root instead of site collection.
+     * HubId (which is site collection id) of the sp site where the app should be disabled.
      */
-    hubObjectIds: string[];
-    /**
-     * If enabled takes precedence over `includedIds` and `hubObjectIds`
-     * 
-     * `excludedIds` will still take precedence over this flag.
-     */
-    enabledEverywhere: boolean;
+    excludedHubIds: string[];
+
 }
 
 export interface SPFxExtensionAppDefinitionMapItem {

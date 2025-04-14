@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
-import type { SPFxExtensionCollectionManifest, SPFxExtensionUrlMapItem } from "../models/appCollectionManifest";
+import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
@@ -31,23 +31,13 @@ export function getConfigurationWebIsHubChild() {
 }
 
 export function getConfigurationWebIsSubsite() {
-  if (configurationWeb.isError || configurationRootWeb.isError) return true;
+  if (configurationSite.isError || configurationRootWeb.isError) return true;
   return configurationRootWeb.data.Id !== configurationWeb.data.Id;
 }
 
 export const configurationWebSubWebs = await getAllWebInfos(
   configurationWebSP
 );
-
-export const configurationWebStructure: SPFxExtensionUrlMapItem[] = configurationWebSubWebs.map((w) => {
-  return {
-    id: w.Id,
-    siteId: configurationSite.data.Id,
-    url: w.Url,
-    isRootWeb: configurationRootWeb.data.Id === w.Id,
-  }
-});
-
 
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getAppCollectionManifest(configurationWebSP);

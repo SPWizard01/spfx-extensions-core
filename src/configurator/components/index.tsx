@@ -2,6 +2,7 @@ import { Badge, Link, Title2 } from "@fluentui/react-components";
 import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
+import { logGenericCoreError } from "../../core/services/loggingService";
 import {
   configurationIsGlobal,
   getConfigurationWebIsHubChild,
@@ -68,7 +69,7 @@ function getBadges() {
 export function Index() {
   const [error] = useErrorBoundary();
   if (error) {
-    console.error("Error in App component:", error);
+    logGenericCoreError("Error in App component:", error);
     return <div>Error: {error.message}</div>;
   }
   return (

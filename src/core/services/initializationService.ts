@@ -58,8 +58,6 @@ export async function initCoreServices() {
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
   const hubSiteUrl = await getHubSiteUrl();
-  // const webId = getWebId();
-  console.log("InitialContext", getCurrentContextId());
   await loadModernApps(siteUrl, webUrl, hubSiteUrl, getCurrentContextId());
   window.addEventListener(
     "contextChange",
@@ -68,7 +66,6 @@ export async function initCoreServices() {
       const webUrl = getWebAbsoluteUrl();
       const hubSiteUrl = await getHubSiteUrl();
       const newCtx = getNewContext();
-      console.log("Context changed", newCtx);
       await loadModernApps(
         siteUrl,
         webUrl,

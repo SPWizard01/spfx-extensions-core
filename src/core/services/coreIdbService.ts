@@ -7,12 +7,6 @@ import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/cons
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
-export interface PNPCacheValue<T = any> {
-    expires: string;
-    indexedDBCache: number;
-    data: T;
-}
-
 interface SPFxExtensionSchema {
     AppFolderManifestCache: {
         key: string;
@@ -34,10 +28,10 @@ interface SPFxExtensionSchema {
         key: string;
         value: ConfigurationListData;
     };
-    PNP_CACHE: {
-        key: string;
-        value: PNPCacheValue;
-    };
+    // PNP_CACHE: {
+    //     key: string;
+    //     value: PNPCacheItem;
+    // };
 }
 
 export interface SPFxExtensionCoreDB extends DBSchema, SPFxExtensionSchema {
@@ -53,7 +47,7 @@ export const StoreNames: Stores = {
     AllowedApps: "AllowedApps",
     HubSiteData: "HubSiteData",
     SPFxExtensionConfig: "SPFxExtensionConfig",
-    PNP_CACHE: "PNP_CACHE",
+    // PNP_CACHE: "PNP_CACHE",
 } as const;
 
 
@@ -73,7 +67,7 @@ const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
             database.createObjectStore(StoreNames.AllowedApps, { keyPath: "Id" });
             database.createObjectStore(StoreNames.HubSiteData, { keyPath: "SiteId" });
             database.createObjectStore(StoreNames.SPFxExtensionConfig, { keyPath: "Title" });
-            database.createObjectStore(StoreNames.PNP_CACHE, { keyPath: "Url" });
+            // database.createObjectStore(StoreNames.PNP_CACHE, { keyPath: "keyHash" });
         }
         //diff between 0 and 1 just delete the old database and let it be repopulated
         // if (oldVersion === 1) {
@@ -95,11 +89,9 @@ export const spfxExtensionsCoreDB = await openDBPromise;
 
 function getCacheItemBase(cacheTimeMinutes: number) {
     const dateNow = new Date();
-    const date = dateNow.toISOString();
     dateNow.setMinutes(dateNow.getMinutes() + cacheTimeMinutes);
     const expires = dateNow.toISOString();
     return {
-        date,
         // domain: window.location.host,
         expires,
     };
@@ -150,6 +142,7 @@ export function addOrUpdateExtensionConfigs(items: ConfigurationListData[], cach
     items.forEach((u) => txStore.put({ ...u, ...getCacheItemBase(cacheTimeMinutes) }));
     return tx.done;
 }
+
 
 
 export async function getAllAllowedAppsFromDB() {
@@ -235,6 +228,8 @@ export async function evictAllowedAppsCache() {
 export async function evictHubDataCache() {
     return evictItemsFromStore(StoreNames.HubSiteData, "SiteId");
 }
+
+
 
 
 export async function evictManifestTXTCache(
@@ -323,3 +318,32 @@ export async function getAppCollectionTXTFromCache(
     }
     return getAppsTXTCacheItem(url)
 }
+
+// export async function evictPNPDataCache() {
+//     return evictItemsFromStore(StoreNames.PNP_CACHE, "keyHash");
+// }
+
+// export async function addOrUpdatePNPCacheItem(
+//     item: PNPValue,
+//     expires: Date
+// ) {
+//     await spfxExtensionsCoreDB.put(StoreNames.PNP_CACHE, {
+//         ...item,
+//         expires: expires.toISOString(),
+//     });
+// }
+// export async function getPNPCacheItem<T = any>(key: string): Promise<T | undefined> {
+//     const idbData = await spfxExtensionsCoreDB.get("PNP_CACHE", key);
+//     if (idbData) {
+//         const isExpired = new Date(idbData.expires) <= new Date();
+//         if (isExpired) {
+//             await deletePNPCacheItem(key);
+//             return;
+//         } else {
+//             return idbData.data as T;
+//         }
+//     }
+// }
+// async function deletePNPCacheItem(key: string) {
+//     return spfxExtensionsCoreDB.delete("PNP_CACHE", key);
+// }

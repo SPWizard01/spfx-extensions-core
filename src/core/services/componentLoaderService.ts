@@ -1,4 +1,3 @@
-import type { SPFxExtensionAppDefinitionMapItem } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
@@ -7,10 +6,10 @@ import { isFileAllowedToRun } from "./allowedAppsService";
 import { unmountInstancesOnContextChange } from "./appServices";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
 import {
-    logGenericCoreDebug,
-    logGenericCoreError,
-    logGenericCoreInfo,
-    logGenericCoreWarning,
+  logGenericCoreDebug,
+  logGenericCoreError,
+  logGenericCoreInfo,
+  logGenericCoreWarning,
 } from "./loggingService";
 import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
@@ -270,51 +269,16 @@ async function executeRegistration(
     const foundMapItem = manifestToParse.manifest.appDefinitionMap.find(
       (a) => a.appId.toLowerCase() === appReg.id.toLowerCase()
     );
-    const foundAllItem = manifestToParse.manifest.appDefinitionMap.find(
-      (a) => a.appId === "*"
-    );
     const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
-    const relatedApps: SPFxExtensionAppDefinitionMapItem[] = [];
-    if (foundMapItem) {
-      relatedApps.push(foundMapItem);
-    }
-    if (foundAllItem) {
-      relatedApps.push(foundAllItem);
-    }
-    if (relatedApps.length === 0) {
+    if (!foundMapItem) {
       logGenericCoreInfo(notEnabledMSG);
       continue;
     }
-
-    const appEnabled = relatedApps.some((ea) => {
-      //any of the related apps has matching web id
-      const hasMatchingHubId = ea.config.hubObjectIds.some(
-        (wid) => wid.toLowerCase() === currentHubId
-      );
-
-      const hasMatchingEnabledId = ea.config.includedIds.some((wid) => {
-        const objectId = wid.toLowerCase();
-        if (hasMatchingHubId) {
-          return (
-            objectId === currentWebId ||
-            objectId === currentSiteId ||
-            objectId === currentHubId
-          );
-        }
-        return objectId === currentWebId || objectId === currentSiteId;
-      });
-      const hasDisabledId = ea.config.excludedIds.some((wid) => {
-        const objectId = wid.toLowerCase();
-        return (
-          objectId === currentWebId ||
-          objectId === currentSiteId ||
-          objectId === currentHubId
-        );
-      });
-      //any of the related apps has wildcard web id
-      const allWebsEnabled = ea.config.enabledEverywhere;
-      return (hasMatchingEnabledId || allWebsEnabled) && !hasDisabledId;
-    }); //|| isHub || (manifestToParse.isHubFetch && manifestToParse.appManifest.enabledOnAllHubSites);
+    const isEnabledEverywhere = foundMapItem.config.enabledEverywhere;
+    const appEnabled = isEnabledEverywhere ? 
+    foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
+    foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
+    foundMapItem.config.excludedIds.indexOf(currentHubId) === -1 : true;
 
     if (!appEnabled) {
       logGenericCoreInfo(notEnabledMSG);
@@ -322,7 +286,7 @@ async function executeRegistration(
     }
     window.__SPFxExtensions.RegisterApp(appReg);
     successfullyRegistered.push(appReg);
-    if (!appReg.isWebPartApp) {
+    if (!appReg.isWebPartApp && appReg.autoExecute) {
       window.__SPFxExtensions.InstantiateApp(appReg.id, {});
     }
   }

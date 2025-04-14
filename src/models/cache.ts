@@ -10,8 +10,6 @@ interface ManifestBase {
   isHubFetch?: boolean;
 }
 export interface CacheItemBase {
-  date: string;
-  // domain: string;
   expires: string;
 }
 
@@ -27,3 +25,11 @@ export interface CacheableAppCollectionManifest extends ManifestBase {
 export type AppFolderManifestCacheItem = CacheItemBase & CacheableAppFolderManifest;
 export type AppCollectionManifestCacheItem = CacheItemBase &
   CacheableAppCollectionManifest;
+
+
+export interface PNPValue<T = any> {
+  keyHash: string;
+  url: string;
+  data: T;
+}
+export type PNPCacheItem<T = any> = CacheItemBase & PNPValue<T>;

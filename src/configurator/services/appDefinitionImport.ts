@@ -13,7 +13,6 @@ interface AllAppsProps {
 
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
   const allApps: AllAppsProps[] = [];
-  console.log(app, "from appDefinitionImports.ts");
   if (!app.manifest.isESM) {
     const set = new Set(app.manifest.appDefinitionMap.flatMap((a) => a.appId));
     allApps.push(
@@ -42,7 +41,6 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     }
     try {
       const module = await import(`${fullUrl}`);
-      console.log(module, "module");
       if (!module.default) {
         logGenericCoreError(
           `Invalid app definition file ${fullUrl}, default export not available.`
@@ -65,7 +63,6 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         );
         continue;
       }
-      console.log(module.default);
       module.default.forEach((appDef: SPFxExtensionAppDefinition) => {
         allApps.push({
           id: appDef.id,

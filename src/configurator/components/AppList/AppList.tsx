@@ -16,7 +16,6 @@ import {
   WebAsset16Regular,
 } from "@fluentui/react-icons";
 import { signal } from "@preact/signals";
-import { getIsHubSite } from "../../../core/services/contextService";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
@@ -85,7 +84,6 @@ export const AddAppDialogStateSignal = signal<boolean>(false);
 
 export function AppList(_props: ApplistProps) {
   if (selectedAppItem.value) return null;
-  console.log(configurationIsGlobal, getIsHubSite());
   return (
     <Stack gap={16}>
       <Toolbar>

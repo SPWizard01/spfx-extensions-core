@@ -90,7 +90,7 @@ export async function getAppCollectionManifest(sp: SPFI) {
     }
     if (!fileExists) {
         await ensureSPFxExtensionsFolder(sp);
-        await sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).rootFolder.files.addUsingPath(APPCOLLECTION_MANIFEST_NAME, JSON.stringify([]));
+        await sp.web.lists.getByTitle(SPFX_EXTENSIONS_FOLDER).rootFolder.files.addUsingPath(APPCOLLECTION_MANIFEST_NAME, JSON.stringify(EMPTY_COLLECTION_MANIFEST));
         logGenericCoreInfo(`Created ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}`);
         return result;
     }

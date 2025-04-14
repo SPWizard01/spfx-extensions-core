@@ -1,4 +1,3 @@
-import { Caching } from "@pnp/queryable";
 import type { SPFI } from "@pnp/sp";
 import type { ISiteInfo } from "@pnp/sp/sites/types";
 import type { IWebInfo } from "@pnp/sp/webs";
@@ -25,7 +24,7 @@ async function getWebInfoRecursive(webs: IWebInfo[]) {
 
     const promises = webs.map(async (element) => {
         try {
-            const subWebInfos = await getPnPSP(element.Url).using(Caching()).web.webs();
+            const subWebInfos = await getPnPSP(element.Url).web.webs();
             subWebInfos.forEach(info => webInfos.add(info));
             const sub = await getWebInfoRecursive(subWebInfos);
             sub.forEach(info => webInfos.add(info));
@@ -60,24 +59,15 @@ export async function resolveWebStructure(webUrl: URL) {
             logGenericCoreError(rwErr, webUrl.href);
         }
         const webInfos = await getAllWebInfos(sp);
-        if (!rootWeb.isError) {
-            webStructure.data.push({
-                id: rootWeb.data.Id,
-                siteId: site.data.Id,
-                url: rootWeb.data.Url,
-                isRootWeb: true,
-            })
-        }
-
         webInfos.forEach(webInfo => {
-            if (webInfo.Id !== rootWeb.data?.Id) {
-                webStructure.data.push({
-                    id: webInfo.Id,
-                    siteId: site.data.Id,
-                    url: webInfo.Url,
-                    isRootWeb: false,
-                });
-            }
+            webStructure.data.push({
+                id: webInfo.Id,
+                siteId: site.data?.Id,
+                hubid: site.data?.HubSiteId,
+                url: webInfo.Url,
+                isRootWeb: webInfo.Id === rootWeb.data?.Id,
+                isHubRoot: site.data?.IsHubSite && webInfo.Id === site.data?.Id,
+            });
         });
     }
     catch (error) {
@@ -96,19 +86,19 @@ export async function resolveWebStructure(webUrl: URL) {
 
 
 export async function getWebRoot(sp: SPFI) {
-    return fetchSPData(() => sp.site.using(Caching()).rootWeb(), {} as IWebInfo);
+    return fetchSPData(() => sp.site.rootWeb(), {} as IWebInfo);
 }
 
 export async function getSite(sp: SPFI) {
-    return fetchSPData(() => sp.using(Caching()).site(), {} as ISiteInfo);
+    return fetchSPData(() => sp.site(), {} as ISiteInfo);
 }
 
 export async function getWeb(sp: SPFI) {
-    return fetchSPData(() => sp.using(Caching()).web(), {} as IWebInfo);
+    return fetchSPData(() => sp.web(), {} as IWebInfo);
 }
 
 export async function getWebs(sp: SPFI) {
-    return fetchSPData(() => sp.using(Caching()).web.webs(), [] as IWebInfo[]);
+    return fetchSPData(() => sp.web.webs(), [] as IWebInfo[]);
 }
 
 async function fetchSPData<T>(fetchFn: () => Promise<T>, defaultValue: T): Promise<ApiCallResult<T>> {

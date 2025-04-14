@@ -29,6 +29,7 @@ import {
   appCollectionUpdating,
   configurationIsGlobal,
   configurationRootWeb,
+  configurationSite,
   configurationWebSP,
   configurationWebSubWebs,
   contextCollectionConfig,
@@ -58,14 +59,19 @@ export default function ManageSitesDrawer() {
       ? configurationWebSubWebs.map((w) => {
           return {
             id: w.Id,
-            isRootWeb: w.Id === configurationRootWeb.data.Id,
             siteId: w.Id,
+            hubid: configurationSite.data?.HubSiteId ?? "",
             url: w.Url,
+            isRootWeb: w.Id === configurationRootWeb.data?.Id,
+            isHubRoot:
+              w.Id === configurationRootWeb.data?.Id &&
+              getConfigurationWebIsRootHub(),
             canDelete: false,
           };
         })
       : [];
     contextCollectionConfig.value.urlMap.forEach((item) => {
+      // not in default list
       if (!defaultList.some((s) => s.id === item.id)) {
         defaultList.push({
           ...item,
@@ -97,10 +103,22 @@ export default function ManageSitesDrawer() {
       setIsResolving(false);
       return;
     }
+    if (getConfigurationWebIsRootHub()) {
+      if (
+        !structureResult.data.every(
+          (s) => s.hubid === configurationSite.data.HubSiteId
+        )
+      ) {
+        setUrlInputError(
+          "You can only add child hub sites when configuring a hub root."
+        );
+        setIsResolving(false);
+        return;
+      }
+    }
     const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
       JSON.stringify(contextCollectionConfig.value)
     );
-
     structureResult.data.forEach((item) => {
       if (!collectionCopy.urlMap.some((s) => s.id === item.id)) {
         collectionCopy.urlMap.push(item);

@@ -99,9 +99,9 @@ export interface SPFxExtensionAppDefinition {
   /**
    * If set to false or undefined the app wont show in webpart picker
    *
-   * This also means it wont be automatically executed by spfx.
-   *
    * You will have to call `window.__SPFxExtensions.InstantiateApp` method to run the app.
+   * 
+   * Or set `autoExecute` to true;
    */
   isWebPartApp: boolean;
   /**
@@ -118,10 +118,19 @@ export interface SPFxExtensionAppDefinition {
    * If set to true, the app will not be unmounted when the SPO context changes and app belongs to that context.
    *
    * Usefull for apps that do not need to be unmounted when the context changes. i.e. styles/footer etc.
+   * 
+   * Only applicable for apps that have `isWebPartApp` set to `false`.
    *
    * It will still be unmounted regardless of this flag if the app does not belong (not allowed) to the new context.
    */
   keepOnContextChange?: boolean;
+
+  /**
+   * If set to true, the app will be automatically executed when the app is registered.
+   * 
+   * Only applicable when `isESM` is set to true is set in the manifest
+   */
+  autoExecute?: boolean;
 
   /**
    * Internal registry of all the instances of this app

@@ -4,11 +4,13 @@ export interface SPFxExtensionUrlMapItem {
      */
     id: string;
     siteId: string;
+    hubid: string;
     /**
      * Url of the site/web/hub to display in the UI instead of the id.
      */
     url: string;
     isRootWeb: boolean;
+    isHubRoot: boolean;
 }
 
 export interface SPFxExtensionCollectionManifest {
