@@ -1,4 +1,5 @@
 import {
+  Badge,
   Body1,
   Button,
   Drawer,
@@ -148,7 +149,8 @@ export default function ManageSitesDrawer() {
     collectionCopy.urlMap.splice(itemIndex, 1);
     contextCollectionConfig.value = collectionCopy;
   }
-  console.log(urlInputError);
+
+  console.log(urlList.value);
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
@@ -263,7 +265,15 @@ export default function ManageSitesDrawer() {
                 gap={8}
                 key={site.id}
               >
-                <StackItem>{site.url}</StackItem>
+                <Stack horizontal gap={8} verticalAlign="center">
+                  {site.isRootWeb && <Badge size="small">Hub root</Badge>}
+                  {!site.isHubRoot && site.hubid && (
+                    <Badge color="warning" size="small">
+                      Hub child
+                    </Badge>
+                  )}
+                  <StackItem>{site.url}</StackItem>
+                </Stack>
                 {ManageSitesDrawerSignal.value.appDefinition ? (
                   <>
                     {site.isRootWeb ? (

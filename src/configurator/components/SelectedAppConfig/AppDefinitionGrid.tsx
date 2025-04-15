@@ -1,4 +1,9 @@
-import { Button, Link } from "@fluentui/react-components";
+import {
+  Button,
+  Link,
+  Skeleton,
+  SkeletonItem,
+} from "@fluentui/react-components";
 import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
@@ -16,9 +21,12 @@ export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
 
   const [appDefinitions, setAppDefinitions] = useState<AppIdName[]>([]);
+  const [appDefinitionsDownloaded, setAppDefinitionsDownloaded] =
+    useState(false);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
+    setAppDefinitionsDownloaded(true);
     setAppDefinitions(allAppDefinitions);
   }
 
@@ -27,7 +35,6 @@ export const AppDefinitionGrid = () => {
     downloadData(app);
   });
   if (!app) return null;
-
   return (
     <Stack
       style={{
@@ -36,7 +43,6 @@ export const AppDefinitionGrid = () => {
       }}
     >
       {selectedAppItem.value?.manifest.appDefinitionMap.map((appDef) => {
-        console.log(appDefinitions, appDef);
         return (
           <Stack
             horizontal
@@ -46,35 +52,44 @@ export const AppDefinitionGrid = () => {
             style={{
               borderTop: "1px solid #eaeaea",
               padding: "10px 6px",
+              minHeight: "53px",
             }}
           >
-            <Stack horizontal verticalAlign="center" gap={8}>
-              <AppFolder20Regular />{" "}
-              <Link
-                size="medium"
-                onClick={() => {
-                  ManageSitesDrawerSignal.value = {
-                    open: true,
-                    appDefinition: appDef,
-                  };
-                }}
-              >
-                {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
-                  `Unknown_${appDef.appId}`}
-              </Link>
-            </Stack>
-            <Stack gap={8} horizontal>
-              <Button
-                aria-label="Edit sites"
-                icon={<EditRegular />}
-                onClick={() => {
-                  ManageSitesDrawerSignal.value = {
-                    open: true,
-                    appDefinition: appDef,
-                  };
-                }}
-              />
-            </Stack>
+            {!appDefinitionsDownloaded ? (
+              <Skeleton aria-label="Loading Content" style={{ width: "100%" }}>
+                <SkeletonItem />
+              </Skeleton>
+            ) : (
+              <>
+                <Stack horizontal verticalAlign="center" gap={8} grow>
+                  <AppFolder20Regular />{" "}
+                  <Link
+                    size="medium"
+                    onClick={() => {
+                      ManageSitesDrawerSignal.value = {
+                        open: true,
+                        appDefinition: appDef,
+                      };
+                    }}
+                  >
+                    {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
+                      `Unknown_${appDef.appId}`}
+                  </Link>
+                </Stack>
+                <Stack gap={8} horizontal>
+                  <Button
+                    aria-label="Edit sites"
+                    icon={<EditRegular />}
+                    onClick={() => {
+                      ManageSitesDrawerSignal.value = {
+                        open: true,
+                        appDefinition: appDef,
+                      };
+                    }}
+                  />
+                </Stack>
+              </>
+            )}
           </Stack>
         );
       })}
