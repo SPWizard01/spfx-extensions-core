@@ -36,7 +36,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
       config: def.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
     }
   })
-
+  console.log("Manifest definitions", manifestDefinitions);
   for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "").replace(/\.\//g, "");
     const fullUrl = new URL(

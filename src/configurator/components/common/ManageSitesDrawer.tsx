@@ -27,7 +27,10 @@ import type {
   SPFxExtensionCollectionManifest,
   SPFxExtensionUrlMapItem,
 } from "../../../models/appCollectionManifest";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
+import type {
+  SPFxExtensionAppDefinitionMapItem,
+  SPFxExtensionFolderManifest,
+} from "../../../models/appFolderManifest";
 import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
 import {
   appCollectionUpdating,
@@ -38,8 +41,10 @@ import {
   configurationWebSubWebs,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
+  selectedAppItem,
 } from "../../runtimeStore";
 import { updateAppCollection } from "../../services/appCollection";
+import { updateAppManifest } from "../../services/appManifest";
 import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
 import { Stack } from "./Stack";
@@ -150,7 +155,6 @@ export default function ManageSitesDrawer() {
     contextCollectionConfig.value = collectionCopy;
   }
 
-  console.log(urlList.value);
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
@@ -324,21 +328,58 @@ export default function ManageSitesDrawer() {
           >
             Cancel
           </Button>
-          <Button
-            appearance="primary"
-            disabled={appCollectionUpdating.value}
-            onClick={async () => {
-              await updateAppCollection(
-                configurationWebSP,
-                contextCollectionConfig.value
-              );
-              ManageSitesDrawerSignal.value = {
-                open: false,
-              };
-            }}
-          >
-            Save
-          </Button>
+          {contextCollectionConfig.value ? (
+            <Button
+              appearance="primary"
+              disabled={appCollectionUpdating.value}
+              onClick={async () => {
+                await updateAppCollection(
+                  configurationWebSP,
+                  contextCollectionConfig.value
+                );
+                ManageSitesDrawerSignal.value = {
+                  open: false,
+                };
+              }}
+            >
+              Save
+            </Button>
+          ) : null}
+          {ManageSitesDrawerSignal.value.appDefinition &&
+          selectedAppItem.value ? (
+            <Button
+              appearance="primary"
+              disabled={!ManageSitesDrawerSignal.value.appDefinition}
+              onClick={async () => {
+                const newDef: SPFxExtensionFolderManifest = JSON.parse(
+                  JSON.stringify(selectedAppItem.value!.manifest)
+                );
+                const foundItem = newDef.appDefinitionMap.findIndex(
+                  (a) =>
+                    a.appId ===
+                    ManageSitesDrawerSignal.value.appDefinition?.appId
+                );
+                if (foundItem < 0) {
+                  newDef.appDefinitionMap.push(
+                    ManageSitesDrawerSignal.value.appDefinition!
+                  );
+                } else {
+                  newDef.appDefinitionMap[foundItem] =
+                    ManageSitesDrawerSignal.value.appDefinition!;
+                }
+                await updateAppManifest(
+                  configurationWebSP,
+                  selectedAppItem.value!.name,
+                  newDef
+                );
+                ManageSitesDrawerSignal.value = {
+                  open: false,
+                };
+              }}
+            >
+              Save
+            </Button>
+          ) : null}
         </Stack>
       </DrawerFooter>
     </Drawer>

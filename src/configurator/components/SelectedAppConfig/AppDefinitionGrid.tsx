@@ -15,14 +15,8 @@ import {
 } from "../../services/appDefinitionImport";
 import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
-export interface AppIdName {
-  id: string;
-  name: string;
-}
 
-export const AppDefinitionGrid = () => {
-  const app = selectedAppItem.value;
-
+export function AppDefinitionGrid() {
   const [appDefinitions, setAppDefinitions] = useState<
     ResolvedAppDefinitionMapItem[]
   >([]);
@@ -30,6 +24,7 @@ export const AppDefinitionGrid = () => {
     useState(false);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
+    setAppDefinitionsDownloaded(false);
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
     setAppDefinitionsDownloaded(true);
     setAppDefinitions(allAppDefinitions);
@@ -39,7 +34,7 @@ export const AppDefinitionGrid = () => {
     if (!selectedAppItem.value) return;
     downloadData(selectedAppItem.value);
   });
-  if (!app) return null;
+  if (!selectedAppItem.value) return null;
   return (
     <Stack
       style={{
@@ -73,7 +68,10 @@ export const AppDefinitionGrid = () => {
                     onClick={() => {
                       ManageSitesDrawerSignal.value = {
                         open: true,
-                        appDefinition: appDef,
+                        appDefinition: {
+                          appId: appDef.appId,
+                          config: appDef.config,
+                        },
                       };
                     }}
                   >
@@ -87,7 +85,10 @@ export const AppDefinitionGrid = () => {
                     onClick={() => {
                       ManageSitesDrawerSignal.value = {
                         open: true,
-                        appDefinition: appDef,
+                        appDefinition: {
+                          appId: appDef.appId,
+                          config: appDef.config,
+                        },
                       };
                     }}
                   />
@@ -99,4 +100,4 @@ export const AppDefinitionGrid = () => {
       })}
     </Stack>
   );
-};
+}
