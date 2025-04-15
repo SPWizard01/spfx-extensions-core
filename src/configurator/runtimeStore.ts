@@ -13,7 +13,7 @@ import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 import { getAllWebInfos, getSite, getWeb, getWebRoot } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
-export const configrationWebUrl = new URL(queryWeb ?? getWebAbsoluteUrl());
+export const configrationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
 export const configurationSite = await getSite(configurationWebSP);
