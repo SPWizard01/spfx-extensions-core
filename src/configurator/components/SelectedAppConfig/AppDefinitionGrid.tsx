@@ -1,9 +1,5 @@
-import { Button, Label } from "@fluentui/react-components";
-import {
-  AppFolder20Regular,
-  DeleteRegular,
-  EditRegular,
-} from "@fluentui/react-icons";
+import { Button, Link } from "@fluentui/react-components";
+import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
@@ -16,47 +12,13 @@ export interface AppIdName {
   name: string;
 }
 
-// interface WebIdName {
-//   Id: string;
-//   Name: string;
-//   Url: string;
-//   isSubWeb: boolean;
-// }
-
 export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
 
   const [appDefinitions, setAppDefinitions] = useState<AppIdName[]>([]);
-  // const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
-    // const allWebIds: WebIdAppIdMap[] = [];
-
-    // allWebIds.push(
-    //   ...selectedWebAvailableWebs.map((w) => ({
-    //     Id: w.Id,
-    //     Name: w.Title,
-    //     Url: w.ServerRelativeUrl,
-    //     isSubWeb: true,
-    //     enabledApps: [],
-    //   }))
-    // );
-    // downloadDataApp.manifest.appDefinitionMap?.forEach((w: ) => {
-    //   // const web = allWebIds.find((w1) => w1.Id === w.webId);
-    //   // if (web) {
-    //   //   web.enabledApps = w.enabledAppIds;
-    //   // } else {
-    //   //   allWebIds.push({
-    //   //     Id: w.webId,
-    //   //     Name: "Unknown",
-    //   //     Url: `Unknown_${w.webId}`,
-    //   //     isSubWeb: false,
-    //   //     enabledApps: w.enabledAppIds,
-    //   //   });
-    //   // }
-    // });
-    // setWebIdMap(allWebIds);
     setAppDefinitions(allAppDefinitions);
   }
 
@@ -73,78 +35,49 @@ export const AppDefinitionGrid = () => {
         borderBottom: "1px solid #eaeaea",
       }}
     >
-      {selectedAppItem.value?.manifest.appDefinitionMap.map((appDef) => (
-        <Stack
-          horizontal
-          gap={8}
-          horizontalAlign="space-between"
-          verticalAlign="center"
-          style={{
-            borderTop: "1px solid #eaeaea",
-            padding: "10px 6px",
-          }}
-        >
-          <Stack horizontal verticalAlign="center" gap={8}>
-            <AppFolder20Regular />{" "}
-            <Label size="medium">
-              {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
-                `Unknown_${appDef.appId}`}
-            </Label>
-          </Stack>
-          <Stack gap={8} horizontal>
-            <Button
-              aria-label="Edit sites"
-              icon={<EditRegular />}
-              onClick={() => {
-                ManageSitesDrawerSignal.value = {
-                  open: true,
-                  appDefinition: appDef,
-                };
-              }}
-            />
-            {!app.manifest.isESM && (
-              <Button
-                aria-label="Delete"
-                icon={<DeleteRegular />}
+      {selectedAppItem.value?.manifest.appDefinitionMap.map((appDef) => {
+        console.log(appDefinitions, appDef);
+        return (
+          <Stack
+            horizontal
+            gap={8}
+            horizontalAlign="space-between"
+            verticalAlign="center"
+            style={{
+              borderTop: "1px solid #eaeaea",
+              padding: "10px 6px",
+            }}
+          >
+            <Stack horizontal verticalAlign="center" gap={8}>
+              <AppFolder20Regular />{" "}
+              <Link
+                size="medium"
                 onClick={() => {
-                  console.log("Delete clicked");
+                  ManageSitesDrawerSignal.value = {
+                    open: true,
+                    appDefinition: appDef,
+                  };
+                }}
+              >
+                {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
+                  `Unknown_${appDef.appId}`}
+              </Link>
+            </Stack>
+            <Stack gap={8} horizontal>
+              <Button
+                aria-label="Edit sites"
+                icon={<EditRegular />}
+                onClick={() => {
+                  ManageSitesDrawerSignal.value = {
+                    open: true,
+                    appDefinition: appDef,
+                  };
                 }}
               />
-            )}
+            </Stack>
           </Stack>
-        </Stack>
-      ))}
+        );
+      })}
     </Stack>
-    // <DataGrid
-    //   items={appDefinitions}
-    //   columns={columns}
-    //   getRowId={(item: AppIdName) => item.id}
-    //   style={{
-    //     minWidth: "100%",
-    //   }}
-    //   columnSizingOptions={{
-    //     actions: {
-    //       maxWidth: 100,
-    //       idealWidth: 100,
-    //     },
-    //   }}
-    // >
-    //   <DataGridHeader>
-    //     <DataGridRow>
-    //       {({ renderHeaderCell }) => (
-    //         <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-    //       )}
-    //     </DataGridRow>
-    //   </DataGridHeader>
-    //   <DataGridBody<AppIdName>>
-    //     {({ item, rowId }) => (
-    //       <DataGridRow<AppIdName> key={rowId}>
-    //         {({ renderCell }) => (
-    //           <DataGridCell>{renderCell(item)}</DataGridCell>
-    //         )}
-    //       </DataGridRow>
-    //     )}
-    //   </DataGridBody>
-    // </DataGrid>
   );
 };

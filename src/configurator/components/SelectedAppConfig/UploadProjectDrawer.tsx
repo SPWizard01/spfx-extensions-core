@@ -1,19 +1,18 @@
 import {
-    Badge,
-    Button,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerHeaderTitle,
-    MessageBar,
-    Spinner,
-    Switch,
-    useRestoreFocusSource,
+  Badge,
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerHeaderTitle,
+  Spinner,
+  Switch,
+  useRestoreFocusSource,
 } from "@fluentui/react-components";
 import {
-    CheckmarkCircle24Regular,
-    Dismiss24Regular,
-    DismissCircle24Regular,
+  CheckmarkCircle24Regular,
+  Dismiss24Regular,
+  DismissCircle24Regular,
 } from "@fluentui/react-icons";
 import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { Stack } from "../common/Stack";
@@ -74,17 +73,6 @@ export default function UploadProjectDrawer({
       </DrawerHeader>
       <DrawerBody>
         <Stack gap={16} style={{ padding: "12px 0px" }}>
-          <Switch
-            checked={app.manifest.isESM}
-            label={"ESM"}
-            onChange={(_, d) => {
-              app.manifest.isESM = d.checked;
-              updateSelectedApp(app);
-            }}
-          />
-          <MessageBar>
-            Turn on if your entry point(s) export ESM modules.
-          </MessageBar>
           <FilePicker />
           <Stack gap={4}>
             {jsFiles.map((ep) => (

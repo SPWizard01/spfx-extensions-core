@@ -1,4 +1,5 @@
 import {
+  Body1,
   Button,
   Drawer,
   DrawerBody,
@@ -9,8 +10,10 @@ import {
   Label,
   MessageBar,
   MessageBarBody,
+  Spinner,
   Switch,
   useRestoreFocusSource,
+  webLightTheme,
 } from "@fluentui/react-components";
 import {
   Add16Regular,
@@ -145,7 +148,7 @@ export default function ManageSitesDrawer() {
     collectionCopy.urlMap.splice(itemIndex, 1);
     contextCollectionConfig.value = collectionCopy;
   }
-
+  console.log(urlInputError);
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
@@ -183,55 +186,60 @@ export default function ManageSitesDrawer() {
         </DrawerHeaderTitle>
       </DrawerHeader>
       {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
-        <Stack style={{ padding: "12px 24px", width: "100%" }} gap={8}>
+        <Stack style={{ padding: "8px 24px", width: "100%" }} gap={8}>
           <MessageBar intent="info">
             <MessageBarBody>
               {ManageSitesDrawerSignal.value.appDefinition
-                ? "Enable app on sites."
+                ? `Choose sites where to enable app ${ManageSitesDrawerSignal.value.appDefinition.appId}`
                 : "Add site collections and hub child sites."}
             </MessageBarBody>
           </MessageBar>
-          <Stack horizontal gap={8}>
-            <Input
-              style={{
-                width: "100%",
-              }}
-              onChange={(_, d) => {
-                setUrlInput(d.value);
-              }}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter") {
-                  addSite();
-                }
-              }}
-              value={urlInput}
-              placeholder="Site/Web URL"
-            />
-            <Button
-              disabled={!urlInput || isResolving}
-              onClick={() => addSite()}
-              icon={<Add16Regular />}
-            >
-              Add
-            </Button>
-          </Stack>
-
-          {urlInputError && (
-            <MessageBar intent="error">
-              <MessageBarBody>{urlInputError}</MessageBarBody>
-            </MessageBar>
-          )}
-          {isResolving && (
-            <MessageBar intent="info">
-              <MessageBarBody>Resolving...</MessageBarBody>
-            </MessageBar>
+          {!ManageSitesDrawerSignal.value.appDefinition && (
+            <>
+              <Stack horizontal gap={8}>
+                <Input
+                  style={{
+                    width: "100%",
+                  }}
+                  onChange={(_, d) => {
+                    setUrlInput(d.value);
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") {
+                      addSite();
+                    }
+                  }}
+                  onFocus={() => {
+                    setUrlInputError("");
+                  }}
+                  value={urlInput}
+                  placeholder="Site/Web URL"
+                />
+                <Button
+                  disabled={!urlInput || isResolving}
+                  onClick={() => addSite()}
+                  icon={
+                    isResolving ? <Spinner size="tiny" /> : <Add16Regular />
+                  }
+                >
+                  Add
+                </Button>
+              </Stack>
+              {urlInputError && (
+                <Body1
+                  style={{ color: webLightTheme.colorPaletteRedForeground1 }}
+                >
+                  {urlInputError}
+                </Body1>
+              )}
+            </>
           )}
         </Stack>
       ) : null}
 
       <DrawerBody>
-        <Stack gap={16} style={{ padding: "12px 0px" }}>
-          <Stack gap={8}>
+        <Stack gap={16} style={{ padding: "8px 0px" }}>
+          <Stack gap={4}>
             {ManageSitesDrawerSignal.value.appDefinition ? (
               <Stack
                 horizontal
