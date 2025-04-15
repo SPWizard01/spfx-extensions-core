@@ -26,8 +26,8 @@ import {
   updateApp,
 } from "../../runtimeStore";
 import {
-  getAppCollectionManifest,
-  updateAppCollection,
+  getAppCollectionConfig,
+  updateAppCollectionConfig,
 } from "../../services/appCollection";
 import { Stack } from "../common/Stack";
 import { AddAppDialog } from "./AddAppDialog";
@@ -40,7 +40,7 @@ async function updateCollection(
   app: AppCollectionConfigurationItem,
   enabled: boolean
 ) {
-  const dataOnServer = await getAppCollectionManifest(configurationWebSP);
+  const dataOnServer = await getAppCollectionConfig(configurationWebSP);
   const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(
     app.name
   );
@@ -53,7 +53,7 @@ async function updateCollection(
         1
       );
     }
-    await updateAppCollection(configurationWebSP, dataOnServer.data);
+    await updateAppCollectionConfig(configurationWebSP, dataOnServer.data);
   }
   app.activated = enabled;
   updateApp(app);
@@ -100,7 +100,9 @@ export function AppList(_props: ApplistProps) {
           {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
             <ToolbarButton
               appearance="secondary"
-              onClick={() => (ManageSitesDrawerSignal.value = { open: true })}
+              onClick={() => {
+                ManageSitesDrawerSignal.value = true;
+              }}
               icon={<WebAsset16Regular />}
             >
               Manage sites

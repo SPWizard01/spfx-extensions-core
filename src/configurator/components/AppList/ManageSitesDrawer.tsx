@@ -19,19 +19,14 @@ import {
   Delete16Regular,
   Dismiss24Regular,
 } from "@fluentui/react-icons";
-import { signal, useComputed } from "@preact/signals";
+import { signal, useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type {
   SPFxExtensionCollectionManifest,
   SPFxExtensionUrlMapItem,
 } from "../../../models/appCollectionManifest";
-import type {
-  SPFxExtensionAppDefinitionMapItem,
-  SPFxExtensionFolderManifest,
-} from "../../../models/appFolderManifest";
 import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
 import {
-  appCollectionUpdating,
   configurationIsGlobal,
   configurationRootWeb,
   configurationSite,
@@ -39,29 +34,26 @@ import {
   configurationWebSubWebs,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
-  selectedAppItem,
 } from "../../runtimeStore";
-import { updateAppCollection } from "../../services/appCollection";
-import { updateAppManifest } from "../../services/appManifest";
+import { updateAppCollectionConfig } from "../../services/appCollection";
 import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
 import { Stack } from "../common/Stack";
 import { StackItem } from "../common/StackItem";
 
-export const ManageSitesDrawerSignal = signal<{
-  open: boolean;
-  appDefinition?: SPFxExtensionAppDefinitionMapItem | undefined;
-}>({
-  open: false,
-  appDefinition: undefined,
-});
+export const ManageSitesDrawerSignal = signal(false);
 
 export function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const [urlInputError, setUrlInputError] = useState<string>("");
-  const [urlInput, setUrlInput] = useState<string>("");
+  const [urlInputError, setUrlInputError] = useState("");
+  const [urlInput, setUrlInput] = useState("");
   const [isResolving, setIsResolving] = useState(false);
-  const urlList = useComputed(() => {
+  const [modified, setModified] = useState(false);
+  const [collectionUrlMap, setCollectionUrlMap] = useState<
+    ConfiguratorURLMapItem[]
+  >([]);
+
+  useSignalEffect(() => {
     const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
       ? configurationWebSubWebs.map((w) => {
           return {
@@ -86,7 +78,7 @@ export function ManageSitesDrawer() {
         });
       }
     });
-    return defaultList;
+    setCollectionUrlMap(defaultList);
   });
 
   async function addSite() {
@@ -123,48 +115,79 @@ export function ManageSitesDrawer() {
         return;
       }
     }
-    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
-      JSON.stringify(contextCollectionConfig.value)
+    const collectionUrlMapCopy: ConfiguratorURLMapItem[] = JSON.parse(
+      JSON.stringify(collectionUrlMap)
     );
+    let somethingAdded = false;
     structureResult.data.forEach((item) => {
-      if (!collectionCopy.urlMap.some((s) => s.id === item.id)) {
-        collectionCopy.urlMap.push(item);
+      if (!collectionUrlMapCopy.some((s) => s.id === item.id)) {
+        collectionUrlMapCopy.push({
+          ...item,
+          canDelete: true,
+        });
+        somethingAdded = true;
       }
     });
-
-    contextCollectionConfig.value = collectionCopy;
-
+    setCollectionUrlMap(collectionUrlMapCopy);
     setUrlInputError("");
     setUrlInput("");
     setIsResolving(false);
+    if (somethingAdded) {
+      setModified(true);
+    }
   }
 
   function deleteSite(web: SPFxExtensionUrlMapItem) {
-    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
-      JSON.stringify(contextCollectionConfig.value)
+    const collectionCopy: ConfiguratorURLMapItem[] = JSON.parse(
+      JSON.stringify(collectionUrlMap)
     );
 
-    const itemIndex = collectionCopy.urlMap.findIndex((s) => s.id === web.id);
+    const itemIndex = collectionCopy.findIndex((s) => s.id === web.id);
 
     if (itemIndex < 0) {
       return;
     }
-    collectionCopy.urlMap.splice(itemIndex, 1);
-    contextCollectionConfig.value = collectionCopy;
+    collectionCopy.splice(itemIndex, 1);
+    setModified(true);
+    setCollectionUrlMap(collectionCopy);
+  }
+
+  async function updateCollection() {
+    setIsResolving(true);
+    const contextCopy: SPFxExtensionCollectionManifest = JSON.parse(
+      JSON.stringify(contextCollectionConfig.value)
+    );
+    try {
+      contextCopy.urlMap = collectionUrlMap.map((item) => {
+        return {
+          id: item.id,
+          siteId: item.siteId,
+          hubid: item.hubid,
+          url: item.url,
+          isRootWeb: item.isRootWeb,
+          isHubRoot: item.isHubRoot,
+        };
+      });
+      await updateAppCollectionConfig(configurationWebSP, contextCopy);
+    } finally {
+      setIsResolving(false);
+      setUrlInputError("");
+      setUrlInput("");
+      setModified(false);
+      setCollectionUrlMap([]);
+      ManageSitesDrawerSignal.value = false;
+      contextCollectionConfig.value = contextCopy;
+    }
   }
 
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
       separator
-      open={ManageSitesDrawerSignal.value.open}
-      onOpenChange={(_: any, { open }: { open: boolean }) => {
+      open={ManageSitesDrawerSignal.value}
+      onOpenChange={() => {
         setUrlInputError("");
         setUrlInput("");
-        ManageSitesDrawerSignal.value = {
-          ...ManageSitesDrawerSignal.value,
-          open,
-        };
       }}
       position="end"
       size="medium"
@@ -176,11 +199,9 @@ export function ManageSitesDrawer() {
               appearance="subtle"
               aria-label="Close"
               icon={<Dismiss24Regular />}
-              onClick={() =>
-                (ManageSitesDrawerSignal.value = {
-                  open: false,
-                })
-              }
+              onClick={() => {
+                ManageSitesDrawerSignal.value = false;
+              }}
             />
           }
         >
@@ -230,7 +251,7 @@ export function ManageSitesDrawer() {
       <DrawerBody>
         <Stack gap={16} style={{ padding: "8px 0px" }}>
           <Stack gap={4}>
-            {urlList.value.map((site) => (
+            {collectionUrlMap.map((site) => (
               <Stack
                 horizontalAlign="space-between"
                 verticalAlign="center"
@@ -261,66 +282,21 @@ export function ManageSitesDrawer() {
         <Stack horizontal gap={8} horizontalAlign="center">
           <Button
             appearance="secondary"
-            onClick={() =>
-              (ManageSitesDrawerSignal.value = {
-                open: false,
-              })
-            }
+            onClick={() => {
+              ManageSitesDrawerSignal.value = false;
+            }}
           >
             Cancel
           </Button>
-          {contextCollectionConfig.value ? (
-            <Button
-              appearance="primary"
-              disabled={appCollectionUpdating.value}
-              onClick={async () => {
-                await updateAppCollection(
-                  configurationWebSP,
-                  contextCollectionConfig.value
-                );
-                ManageSitesDrawerSignal.value = {
-                  open: false,
-                };
-              }}
-            >
-              Save
-            </Button>
-          ) : null}
-          {ManageSitesDrawerSignal.value.appDefinition &&
-          selectedAppItem.value ? (
-            <Button
-              appearance="primary"
-              disabled={!ManageSitesDrawerSignal.value.appDefinition}
-              onClick={async () => {
-                const newDef: SPFxExtensionFolderManifest = JSON.parse(
-                  JSON.stringify(selectedAppItem.value!.manifest)
-                );
-                const foundItem = newDef.appDefinitionMap.findIndex(
-                  (a) =>
-                    a.appId ===
-                    ManageSitesDrawerSignal.value.appDefinition?.appId
-                );
-                if (foundItem < 0) {
-                  newDef.appDefinitionMap.push(
-                    ManageSitesDrawerSignal.value.appDefinition!
-                  );
-                } else {
-                  newDef.appDefinitionMap[foundItem] =
-                    ManageSitesDrawerSignal.value.appDefinition!;
-                }
-                await updateAppManifest(
-                  configurationWebSP,
-                  selectedAppItem.value!.name,
-                  newDef
-                );
-                ManageSitesDrawerSignal.value = {
-                  open: false,
-                };
-              }}
-            >
-              Save
-            </Button>
-          ) : null}
+          <Button
+            disabled={!modified || isResolving}
+            appearance="primary"
+            onClick={() => {
+              updateCollection();
+            }}
+          >
+            Save
+          </Button>
         </Stack>
       </DrawerFooter>
     </Drawer>

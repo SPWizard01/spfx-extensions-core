@@ -3,7 +3,7 @@ import { logGenericCoreError, logGenericCoreInfo } from "../../core/services/log
 import type { SPFxExtensionCollectionManifest } from "../../models/appCollectionManifest";
 import { APPCOLLECTION_MANIFEST_NAME, EMPTY_COLLECTION_MANIFEST, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
-import { allAppItems, appCollectionUpdating, configurationWeb } from "../runtimeStore";
+import { allAppItems, configurationWeb, contextCollectionConfigUpdating } from "../runtimeStore";
 import { deleteRootFolderRecursively, ensureSPFxExtensionsFolder } from "./folderService";
 import { getWebUrlFromSP } from "./pnpService";
 import { getAllAppItems } from "./renderedAppCollection";
@@ -17,7 +17,7 @@ export async function addAppCollection(sp: SPFI, collectionName: string) {
             SPFX_EXTENSIONS_FOLDER
         ).rootFolder;
         const allAppCollectionsData = await getAllAppCollections(sp);
-        const appCollectionManifest = await getAppCollectionManifest(sp);
+        const appCollectionManifest = await getAppCollectionConfig(sp);
         if (!allAppCollectionsData.some((f) => f === collectionName)) {
             await rootFolderQuery.folders.addUsingPath(collectionName);
             allAppCollectionsData.push(collectionName);
@@ -60,9 +60,9 @@ export async function getAllAppCollections(sp: SPFI) {
 }
 
 
-export async function updateAppCollection(sp: SPFI, appCollection: SPFxExtensionCollectionManifest) {
-    appCollectionUpdating.value = true;
-    await getAppCollectionManifest(sp);
+export async function updateAppCollectionConfig(sp: SPFI, appCollection: SPFxExtensionCollectionManifest) {
+    contextCollectionConfigUpdating.value = true;
+    await getAppCollectionConfig(sp);
     const webUrl = getWebUrlFromSP(sp);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
     try {
@@ -74,11 +74,11 @@ export async function updateAppCollection(sp: SPFI, appCollection: SPFxExtension
         return false;
     }
     finally {
-        appCollectionUpdating.value = true;
+        contextCollectionConfigUpdating.value = true;
     }
 }
 
-export async function getAppCollectionManifest(sp: SPFI) {
+export async function getAppCollectionConfig(sp: SPFI) {
     const appsQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${APPCOLLECTION_MANIFEST_NAME}`);
     const webUrl = getWebUrlFromSP(sp);
     const fileExists = await appsQuery.exists();
@@ -103,6 +103,7 @@ export async function getAppCollectionManifest(sp: SPFI) {
             logGenericCoreError(msg);
             result.error = msg;
             result.isError = true;
+            result.data = EMPTY_COLLECTION_MANIFEST;
             return result;
         }
         result.data = data;
@@ -112,6 +113,7 @@ export async function getAppCollectionManifest(sp: SPFI) {
         logGenericCoreError(msg, error);
         result.error = msg;
         result.isError = true;
+        result.data = EMPTY_COLLECTION_MANIFEST;
         return result;
     }
 }

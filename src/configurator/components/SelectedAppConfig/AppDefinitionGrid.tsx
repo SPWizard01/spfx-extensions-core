@@ -14,7 +14,6 @@ import {
   selectedAppItem,
 } from "../../runtimeStore";
 import { getAppDefinitions } from "../../services/appDefinitionImport";
-import { ManageSitesDrawerSignal } from "../AppList/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
 import { ManageAppDefinitionMapItemDrawer } from "./ManageAppDefinitionMapItemDrawer";
 
@@ -68,12 +67,9 @@ export function AppDefinitionGrid() {
                   <Link
                     size="medium"
                     onClick={() => {
-                      ManageSitesDrawerSignal.value = {
-                        open: true,
-                        appDefinition: {
-                          appId: appDef.appId,
-                          config: appDef.config,
-                        },
+                      selectedAppDeinitionMapItem.value = {
+                        appId: appDef.appId,
+                        config: appDef.config,
                       };
                     }}
                   >

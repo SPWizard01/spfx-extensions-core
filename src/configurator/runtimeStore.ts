@@ -6,7 +6,7 @@ import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
   getAllAppCollections,
-  getAppCollectionManifest,
+  getAppCollectionConfig,
 } from "./services/appCollection";
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
@@ -41,7 +41,7 @@ export const configurationWebSubWebs = await getAllWebInfos(
 );
 
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
-const enabledAppsData = await getAppCollectionManifest(configurationWebSP);
+const enabledAppsData = await getAppCollectionConfig(configurationWebSP);
 
 // export const selectedManifest = signal<SPFxExtensionAppManifest>(EMPTY_APP_MANIFEST);
 const allApiAppItems = await getAllAppItems(
@@ -51,12 +51,12 @@ const allApiAppItems = await getAllAppItems(
 );
 
 export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(enabledAppsData.data);
+export const contextCollectionConfigUpdating = signal<boolean>(false);
 export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppDeinitionMapItem = signal<SPFxExtensionAppDefinitionMapItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
-export const appCollectionUpdating = signal<boolean>(false);
 
 
 export function getEmptyAppItem(appName: string) {
