@@ -80,7 +80,7 @@ async function parseManifestAndImportEntryPoints(
 
     // if non esm do additional checks here
     if(!manifestToParse.manifest.isESM) {
-      const foundNonESMAppConfig = manifestToParse.manifest.appDefinitionMap.find(a=>a.appRelativeEntryPointUrl === entryUrl);
+      const foundNonESMAppConfig = manifestToParse.manifest.appDefinitionMap.find(a=>a.appId === entryUrl);
       if(!foundNonESMAppConfig) {
         logGenericCoreError(`Could not find app configuration item for non ESM app`, manifestToParse.name, entryUrl);
         continue;
