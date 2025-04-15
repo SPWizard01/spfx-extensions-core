@@ -259,6 +259,9 @@ export function ManageSitesDrawer() {
                 gap={8}
                 key={site.id}
               >
+                <>
+                  TODO: Split me and ManageAppDefinitionMapItemDrawer part so I can be reused
+                </>
                 <Stack horizontal gap={8} verticalAlign="center">
                   {site.isRootWeb && <Badge size="small">Hub root</Badge>}
                   {!site.isHubRoot && site.hubid && (

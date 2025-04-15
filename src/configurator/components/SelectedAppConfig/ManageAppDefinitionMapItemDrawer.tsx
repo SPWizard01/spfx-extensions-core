@@ -123,8 +123,16 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                 gap={8}
                 key={site.id}
               >
+                <>
+                  TODO: Split me and ManageSitesDrawer part so I can be reused
+                </>
                 <Stack horizontal gap={8} verticalAlign="center">
-                  {site.isRootWeb && <Badge size="small">Hub root</Badge>}
+                  {site.isHubRoot && <Badge size="small">Hub Root</Badge>}
+                  {site.isRootWeb && (
+                    <Badge size="small" color="success">
+                      Site Collection
+                    </Badge>
+                  )}
                   {!site.isHubRoot && site.hubid && (
                     <Badge color="warning" size="small">
                       Hub child
