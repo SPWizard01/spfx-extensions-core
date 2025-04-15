@@ -1,6 +1,7 @@
 import { signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
+import type { SPFxExtensionAppDefinitionMapItem } from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
@@ -53,6 +54,7 @@ export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(e
 export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
+export const selectedAppDeinitionMapItem = signal<SPFxExtensionAppDefinitionMapItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 export const appCollectionUpdating = signal<boolean>(false);
 

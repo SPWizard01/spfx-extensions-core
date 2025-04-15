@@ -29,12 +29,12 @@ import {
   getAppCollectionManifest,
   updateAppCollection,
 } from "../../services/appCollection";
-import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
 import { AddAppDialog } from "./AddAppDialog";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
+import { ManageSitesDrawerSignal } from "./ManageSitesDrawer";
 
 async function updateCollection(
   app: AppCollectionConfigurationItem,

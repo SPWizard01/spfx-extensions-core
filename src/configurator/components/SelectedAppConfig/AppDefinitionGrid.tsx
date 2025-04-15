@@ -8,17 +8,19 @@ import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
-import { selectedAppItem } from "../../runtimeStore";
+import type { AppFolderManifestDefinitionItem } from "../../models/AppFolderManifestDefinitionItem";
 import {
-  getAppDefinitions,
-  type ResolvedAppDefinitionMapItem,
-} from "../../services/appDefinitionImport";
-import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
+  selectedAppDeinitionMapItem,
+  selectedAppItem,
+} from "../../runtimeStore";
+import { getAppDefinitions } from "../../services/appDefinitionImport";
+import { ManageSitesDrawerSignal } from "../AppList/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
+import { ManageAppDefinitionMapItemDrawer } from "./ManageAppDefinitionMapItemDrawer";
 
 export function AppDefinitionGrid() {
   const [appDefinitions, setAppDefinitions] = useState<
-    ResolvedAppDefinitionMapItem[]
+    AppFolderManifestDefinitionItem[]
   >([]);
   const [appDefinitionsDownloaded, setAppDefinitionsDownloaded] =
     useState(false);
@@ -83,12 +85,9 @@ export function AppDefinitionGrid() {
                     aria-label="Edit sites"
                     icon={<EditRegular />}
                     onClick={() => {
-                      ManageSitesDrawerSignal.value = {
-                        open: true,
-                        appDefinition: {
-                          appId: appDef.appId,
-                          config: appDef.config,
-                        },
+                      selectedAppDeinitionMapItem.value = {
+                        appId: appDef.appId,
+                        config: appDef.config,
                       };
                     }}
                   />
@@ -98,6 +97,7 @@ export function AppDefinitionGrid() {
           </Stack>
         );
       })}
+      <ManageAppDefinitionMapItemDrawer appDefinitions={appDefinitions} />
     </Stack>
   );
 }

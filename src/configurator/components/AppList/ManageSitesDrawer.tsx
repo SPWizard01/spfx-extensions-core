@@ -8,11 +8,9 @@ import {
   DrawerHeader,
   DrawerHeaderTitle,
   Input,
-  Label,
   MessageBar,
   MessageBarBody,
   Spinner,
-  Switch,
   useRestoreFocusSource,
   webLightTheme,
 } from "@fluentui/react-components";
@@ -47,8 +45,8 @@ import { updateAppCollection } from "../../services/appCollection";
 import { updateAppManifest } from "../../services/appManifest";
 import { validateUrl } from "../../services/urlService";
 import { resolveWebStructure } from "../../services/webInfoService";
-import { Stack } from "./Stack";
-import { StackItem } from "./StackItem";
+import { Stack } from "../common/Stack";
+import { StackItem } from "../common/StackItem";
 
 export const ManageSitesDrawerSignal = signal<{
   open: boolean;
@@ -58,7 +56,7 @@ export const ManageSitesDrawerSignal = signal<{
   appDefinition: undefined,
 });
 
-export default function ManageSitesDrawer() {
+export function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [urlInputError, setUrlInputError] = useState<string>("");
   const [urlInput, setUrlInput] = useState<string>("");
@@ -186,81 +184,52 @@ export default function ManageSitesDrawer() {
             />
           }
         >
-          {ManageSitesDrawerSignal.value.appDefinition
-            ? "Enable app on sites"
-            : "Manage sites"}
+          Manage sites
         </DrawerHeaderTitle>
       </DrawerHeader>
-      {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
-        <Stack style={{ padding: "8px 24px", width: "100%" }} gap={8}>
-          <MessageBar intent="info">
-            <MessageBarBody>
-              {ManageSitesDrawerSignal.value.appDefinition
-                ? `Choose sites where to enable app ${ManageSitesDrawerSignal.value.appDefinition.appId}`
-                : "Add site collections and hub child sites."}
-            </MessageBarBody>
-          </MessageBar>
-          {!ManageSitesDrawerSignal.value.appDefinition && (
-            <>
-              <Stack horizontal gap={8}>
-                <Input
-                  style={{
-                    width: "100%",
-                  }}
-                  onChange={(_, d) => {
-                    setUrlInput(d.value);
-                  }}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === "Enter") {
-                      addSite();
-                    }
-                  }}
-                  onFocus={() => {
-                    setUrlInputError("");
-                  }}
-                  value={urlInput}
-                  placeholder="Site/Web URL"
-                />
-                <Button
-                  disabled={!urlInput || isResolving}
-                  onClick={() => addSite()}
-                  icon={
-                    isResolving ? <Spinner size="tiny" /> : <Add16Regular />
-                  }
-                >
-                  Add
-                </Button>
-              </Stack>
-              {urlInputError && (
-                <Body1
-                  style={{ color: webLightTheme.colorPaletteRedForeground1 }}
-                >
-                  {urlInputError}
-                </Body1>
-              )}
-            </>
-          )}
+      <Stack style={{ padding: "8px 24px", width: "100%" }} gap={8}>
+        <MessageBar intent="info">
+          <MessageBarBody>
+            Add site collections and hub child sites.
+          </MessageBarBody>
+        </MessageBar>
+        <Stack horizontal gap={8}>
+          <Input
+            style={{
+              width: "100%",
+            }}
+            onChange={(_, d) => {
+              setUrlInput(d.value);
+            }}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                addSite();
+              }
+            }}
+            onFocus={() => {
+              setUrlInputError("");
+            }}
+            value={urlInput}
+            placeholder="Site/Web URL"
+          />
+          <Button
+            disabled={!urlInput || isResolving}
+            onClick={() => addSite()}
+            icon={isResolving ? <Spinner size="tiny" /> : <Add16Regular />}
+          >
+            Add
+          </Button>
         </Stack>
-      ) : null}
+        {urlInputError ? (
+          <Body1 style={{ color: webLightTheme.colorPaletteRedForeground1 }}>
+            {urlInputError}
+          </Body1>
+        ) : null}
+      </Stack>
 
       <DrawerBody>
         <Stack gap={16} style={{ padding: "8px 0px" }}>
           <Stack gap={4}>
-            {ManageSitesDrawerSignal.value.appDefinition ? (
-              <Stack
-                horizontal
-                horizontalAlign="space-between"
-                verticalAlign="center"
-              >
-                <Label>Enable everywhere</Label>
-                <Switch
-                  defaultChecked={
-                    ManageSitesDrawerSignal.value.appDefinition?.config
-                      .enabledEverywhere
-                  }
-                />
-              </Stack>
-            ) : null}
             {urlList.value.map((site) => (
               <Stack
                 horizontalAlign="space-between"
@@ -278,39 +247,11 @@ export default function ManageSitesDrawer() {
                   )}
                   <StackItem>{site.url}</StackItem>
                 </Stack>
-                {ManageSitesDrawerSignal.value.appDefinition ? (
-                  <>
-                    {site.isRootWeb ? (
-                      <>
-                        <Label>Enable for all collection</Label>
-                        <Switch
-                          defaultChecked={
-                            ManageSitesDrawerSignal.value.appDefinition?.config
-                              .enabledEverywhere &&
-                            !ManageSitesDrawerSignal.value.appDefinition?.config.excludedIds.some(
-                              (s) => s === site.id
-                            )
-                          }
-                        />
-                      </>
-                    ) : null}
-                    <Switch
-                      defaultChecked={
-                        ManageSitesDrawerSignal.value.appDefinition?.config
-                          .enabledEverywhere &&
-                        !ManageSitesDrawerSignal.value.appDefinition?.config.excludedIds.some(
-                          (s) => s === site.id
-                        )
-                      }
-                    />
-                  </>
-                ) : (
-                  <Button
-                    disabled={!site.canDelete}
-                    onClick={() => deleteSite(site)}
-                    icon={<Delete16Regular />}
-                  />
-                )}
+                <Button
+                  disabled={!site.canDelete}
+                  onClick={() => deleteSite(site)}
+                  icon={<Delete16Regular />}
+                />
               </Stack>
             ))}
           </Stack>

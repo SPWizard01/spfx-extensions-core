@@ -1,20 +1,17 @@
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { logGenericCoreError } from "../../core/services/loggingService";
-import type { SPFxExtensionAppDefinitionMapItem, SPFxExtensionAppMapItemConfig } from "../../models/appFolderManifest";
+import type { SPFxExtensionAppMapItemConfig } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
+import type { AppFolderManifestDefinitionItem } from "../models/AppFolderManifestDefinitionItem";
 import { configrationWebUrl } from "../runtimeStore";
 
-export interface ResolvedAppDefinitionMapItem extends SPFxExtensionAppDefinitionMapItem {
-  name: string;
-  resolved: boolean;
-}
 const EMPTY_DEF_CONFIG: SPFxExtensionAppMapItemConfig = { enabledEverywhere: false, excludedHubIds: [], excludedIds: [], includedHubIds: [], includedIds: [] };
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
 
   if (!app.manifest.isESM) {
-    const nonEsmDefs: ResolvedAppDefinitionMapItem[] = [];
+    const nonEsmDefs: AppFolderManifestDefinitionItem[] = [];
     for (const element of app.manifest.appRelativeEntryPointUrls) {
       const nonEsmEPConfig: SPFxExtensionAppMapItemConfig =
         app.manifest.appDefinitionMap.find(a => a.appId === element)?.config ??
@@ -28,7 +25,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     }
     return nonEsmDefs;
   }
-  const manifestDefinitions: ResolvedAppDefinitionMapItem[] = app.manifest.appDefinitionMap.map((def) => {
+  const manifestDefinitions: AppFolderManifestDefinitionItem[] = app.manifest.appDefinitionMap.map((def) => {
     return {
       appId: def.appId,
       name: `Unknown_${def.appId}`,

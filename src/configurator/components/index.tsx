@@ -19,7 +19,7 @@ import {
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
-import ManageSitesDrawer from "./common/ManageSitesDrawer";
+import { ManageSitesDrawer } from "./AppList/ManageSitesDrawer";
 import { Stack } from "./common/Stack";
 import { toasterId, ToastNotification } from "./common/ToastNotification";
 import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
