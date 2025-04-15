@@ -1,9 +1,9 @@
 import { Button, Subtitle1 } from "@fluentui/react-components";
-import { ArrowLeft16Regular, Folder24Regular } from "@fluentui/react-icons";
+import { ArrowLeft16Regular } from "@fluentui/react-icons";
 import {
-    configurationWebSP,
-    selectedAppItem,
-    updateSelectedApp,
+  configurationWebSP,
+  selectedAppItem,
+  updateSelectedApp,
 } from "../../runtimeStore";
 import { updateAppManifest } from "../../services/appManifest";
 import { Stack } from "../common/Stack";
@@ -27,21 +27,16 @@ export function SelectedAppConfig() {
     >
       <Stack horizontalAlign="space-between" horizontal verticalAlign="center">
         <Stack gap={10} horizontal verticalAlign="center">
-          <Folder24Regular />
+          <Button
+            appearance="secondary"
+            icon={<ArrowLeft16Regular />}
+            onClick={() => {
+              selectedAppItem.value = undefined;
+            }}
+          />
           <Subtitle1>Configuration of {selectedAppItem.value.name}</Subtitle1>
         </Stack>
         <Stack horizontal gap={15}>
-          <StackItem>
-            <Button
-              appearance="secondary"
-              icon={<ArrowLeft16Regular />}
-              onClick={() => {
-                selectedAppItem.value = undefined;
-              }}
-            >
-              Back
-            </Button>
-          </StackItem>
           <StackItem>
             <Button appearance="primary" onClick={saveManifest}>
               Save

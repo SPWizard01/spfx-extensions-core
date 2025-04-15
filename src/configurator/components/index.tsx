@@ -1,4 +1,12 @@
-import { Badge, Link, Title2 } from "@fluentui/react-components";
+import {
+  Badge,
+  Link,
+  Title2,
+  Toast,
+  ToastTitle,
+  useToastController,
+} from "@fluentui/react-components";
+import { Copy16Regular } from "@fluentui/react-icons";
 import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
@@ -13,7 +21,7 @@ import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
 import ManageSitesDrawer from "./common/ManageSitesDrawer";
 import { Stack } from "./common/Stack";
-import { ToastNotification } from "./common/ToastNotification";
+import { toasterId, ToastNotification } from "./common/ToastNotification";
 import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
@@ -23,7 +31,7 @@ function getBadges() {
   const badges: ComponentChildren[] = [];
   if (configurationIsGlobal) {
     badges.push(
-      <Badge key="global" size="extra-large" color="danger">
+      <Badge key="global" size="extra-large" shape="rounded" color="danger">
         Global
       </Badge>
     );
@@ -31,34 +39,44 @@ function getBadges() {
   }
   if (getConfigurationWebIsRootHub()) {
     badges.push(
-      <Badge key="root" size="extra-large" color="success">
+      <Badge key="hubRoot" size="extra-large" shape="rounded" color="success">
         Hub root site
       </Badge>
     );
   }
   if (getConfigurationWebIsHubChild() && !getConfigurationWebIsRootHub()) {
     badges.push(
-      <Badge key="child" size="extra-large" color="warning">
+      <Badge key="child" size="extra-large" shape="rounded" color="warning">
         Hub child site
       </Badge>
     );
   }
   if (!getConfigurationWebIsRootHub() && !getConfigurationWebIsHubChild()) {
     badges.push(
-      <Badge key="nonhub" size="extra-large" color="brand">
+      <Badge key="nonhub" size="extra-large" shape="rounded" color="brand">
         Non hub site
       </Badge>
     );
   }
   if (getConfigurationWebIsSubsite()) {
     badges.push(
-      <Badge key="subsite" size="extra-large" color="informative">
+      <Badge
+        key="subsite"
+        size="extra-large"
+        shape="rounded"
+        color="informative"
+      >
         Sub site
       </Badge>
     );
   } else {
     badges.push(
-      <Badge key="root" size="extra-large" color="informative">
+      <Badge
+        key="siteCollectionRoot"
+        size="extra-large"
+        shape="rounded"
+        color="informative"
+      >
         Site collection
       </Badge>
     );
@@ -68,10 +86,20 @@ function getBadges() {
 
 export function Index() {
   const [error] = useErrorBoundary();
+  const { dispatchToast } = useToastController(toasterId);
   if (error) {
     logGenericCoreError("Error in App component:", error);
     return <div>Error: {error.message}</div>;
   }
+
+  const notify = () =>
+    dispatchToast(
+      <Toast>
+        <ToastTitle>Link copied to clipboard.</ToastTitle>
+      </Toast>,
+      { position: "top", intent: "info", timeout: 1000, toastId: cfgWeb }
+    );
+
   return (
     <Stack
       style={{
@@ -79,12 +107,20 @@ export function Index() {
       }}
       gap={20}
     >
-      <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
-      <Stack horizontal gap={8} verticalAlign="center">
+      <Stack horizontal gap={16} verticalAlign="center">
+        <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
         {...getBadges()}
+      </Stack>
+      <Stack horizontal gap={8} verticalAlign="center">
         <Link target="_blank" href={cfgWeb}>
           {cfgWeb}
         </Link>
+        <Copy16Regular
+          onClick={() => {
+            navigator.clipboard.writeText(cfgWeb);
+            notify();
+          }}
+        />
       </Stack>
       <AppList />
       <SelectedAppConfig />

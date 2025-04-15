@@ -1,9 +1,10 @@
-import { Button, Label } from "@fluentui/react-components";
 import {
-  AppFolder20Regular,
-  DeleteRegular,
-  EditRegular,
-} from "@fluentui/react-icons";
+  Button,
+  Link,
+  Skeleton,
+  SkeletonItem,
+} from "@fluentui/react-components";
+import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
@@ -19,24 +20,18 @@ export interface AppIdName {
   name: string;
 }
 
-// interface WebIdName {
-//   Id: string;
-//   Name: string;
-//   Url: string;
-//   isSubWeb: boolean;
-// }
-
 export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
-  console.log("AppDefinitionGrid", app);
+
   const [appDefinitions, setAppDefinitions] = useState<
     ResolvedAppDefinitionMapItem[]
   >([]);
-  // const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
+  const [appDefinitionsDownloaded, setAppDefinitionsDownloaded] =
+    useState(false);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
-    console.log("allAppDefinitions", allAppDefinitions);
+    setAppDefinitionsDownloaded(true);
     setAppDefinitions(allAppDefinitions);
   }
 
@@ -45,7 +40,6 @@ export const AppDefinitionGrid = () => {
     downloadData(selectedAppItem.value);
   });
   if (!app) return null;
-
   return (
     <Stack
       style={{
@@ -53,74 +47,56 @@ export const AppDefinitionGrid = () => {
         borderBottom: "1px solid #eaeaea",
       }}
     >
-      {appDefinitions.map((appDef) => (
-        <Stack
-          horizontal
-          gap={8}
-          horizontalAlign="space-between"
-          verticalAlign="center"
-          style={{
-            borderTop: "1px solid #eaeaea",
-            padding: "10px 6px",
-          }}
-        >
-          <Stack horizontal verticalAlign="center" gap={8}>
-            <AppFolder20Regular /> <Label size="medium">{appDef.name}</Label>
-          </Stack>
-          <Stack gap={8} horizontal>
-            <Button
-              aria-label="Edit sites"
-              icon={<EditRegular />}
-              onClick={() => {
-                ManageSitesDrawerSignal.value = {
-                  open: true,
-                  appDefinition: appDef,
-                };
-              }}
-            />
-            {!app.manifest.isESM && (
-              <Button
-                aria-label="Delete"
-                icon={<DeleteRegular />}
-                onClick={() => {
-                  console.log("Delete clicked");
-                }}
-              />
+      {appDefinitions.map((appDef) => {
+        return (
+          <Stack
+            horizontal
+            gap={8}
+            horizontalAlign="space-between"
+            verticalAlign="center"
+            style={{
+              borderTop: "1px solid #eaeaea",
+              padding: "10px 6px",
+              minHeight: "53px",
+            }}
+          >
+            {!appDefinitionsDownloaded ? (
+              <Skeleton aria-label="Loading Content" style={{ width: "100%" }}>
+                <SkeletonItem />
+              </Skeleton>
+            ) : (
+              <>
+                <Stack horizontal verticalAlign="center" gap={8} grow>
+                  <AppFolder20Regular />{" "}
+                  <Link
+                    size="medium"
+                    onClick={() => {
+                      ManageSitesDrawerSignal.value = {
+                        open: true,
+                        appDefinition: appDef,
+                      };
+                    }}
+                  >
+                    {appDef.name}
+                  </Link>
+                </Stack>
+                <Stack gap={8} horizontal>
+                  <Button
+                    aria-label="Edit sites"
+                    icon={<EditRegular />}
+                    onClick={() => {
+                      ManageSitesDrawerSignal.value = {
+                        open: true,
+                        appDefinition: appDef,
+                      };
+                    }}
+                  />
+                </Stack>
+              </>
             )}
           </Stack>
-        </Stack>
-      ))}
+        );
+      })}
     </Stack>
-    // <DataGrid
-    //   items={appDefinitions}
-    //   columns={columns}
-    //   getRowId={(item: AppIdName) => item.id}
-    //   style={{
-    //     minWidth: "100%",
-    //   }}
-    //   columnSizingOptions={{
-    //     actions: {
-    //       maxWidth: 100,
-    //       idealWidth: 100,
-    //     },
-    //   }}
-    // >
-    //   <DataGridHeader>
-    //     <DataGridRow>
-    //       {({ renderHeaderCell }) => (
-    //         <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-    //       )}
-    //     </DataGridRow>
-    //   </DataGridHeader>
-    //   <DataGridBody<AppIdName>>
-    //     {({ item, rowId }) => (
-    //       <DataGridRow<AppIdName> key={rowId}>
-    //         {({ renderCell }) => (
-    //           <DataGridCell>{renderCell(item)}</DataGridCell>
-    //         )}
-    //       </DataGridRow>
-    //     )}
-    //   </DataGridBody>
-    // </DataGrid>
   );
 };
