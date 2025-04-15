@@ -1,6 +1,6 @@
 import { evictAppsTXTCache, evictManifestTXTCache } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
-import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
+import { fetchAppCollectionConfigFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
 const CORE_MANIFEST_CHECK_INTERVAL = 60000;
@@ -55,7 +55,7 @@ export async function performManifestCheck(
   try {
     logGenericCoreInfo(`Checking for manifest updates across all locations...`);
     await Promise.all([evictAppsTXTCache(), evictManifestTXTCache()]);
-    const appLocations = await fetchAppsTXTFromAllLocations(
+    const appLocations = await fetchAppCollectionConfigFromAllLocations(
       site,
       web,
       hubUrl,

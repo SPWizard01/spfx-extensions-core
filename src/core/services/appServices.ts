@@ -22,9 +22,8 @@ export function unmountAppInstance(
 
 export async function unmountInstancesOnContextChange(contextId: string) {
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps.filter(
-    (a) => !a.isWebPartApp
+    (a) => !a.isWebPartApp && !a.keepOnContextChange
   )) {
-    if (alreadyRegisteredApp.keepOnContextChange) continue;
     for (const appInstance of alreadyRegisteredApp.instances.filter(
       (i) => i.contextId !== contextId
     )) {

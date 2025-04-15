@@ -67,7 +67,7 @@ async function fetchAndCacheAppsTXT(
     return retResult;
 }
 
-export async function fetchAppsTXTFromAllLocations(
+export async function fetchAppCollectionConfigFromAllLocations(
     siteUrl: string,
     webUrl: string,
     hubUrl: string,

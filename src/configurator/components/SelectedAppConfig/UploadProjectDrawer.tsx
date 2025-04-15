@@ -1,19 +1,19 @@
 import {
-    Badge,
-    Button,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerHeaderTitle,
-    MessageBar,
-    Spinner,
-    Switch,
-    useRestoreFocusSource,
+  Badge,
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerHeaderTitle,
+  MessageBar,
+  Spinner,
+  Switch,
+  useRestoreFocusSource,
 } from "@fluentui/react-components";
 import {
-    CheckmarkCircle24Regular,
-    Dismiss24Regular,
-    DismissCircle24Regular,
+  CheckmarkCircle24Regular,
+  Dismiss24Regular,
+  DismissCircle24Regular,
 } from "@fluentui/react-icons";
 import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { Stack } from "../common/Stack";
@@ -31,17 +31,18 @@ export default function UploadProjectDrawer({
   const restoreFocusSourceAttributes = useRestoreFocusSource();
 
   async function onEPToggleSelect(checked: boolean, checkedEpName: string) {
+    if(!app) return;
     if (checked) {
-      app!.manifest.appRelativeEntryPointUrls.push(checkedEpName);
+      app.manifest.appRelativeEntryPointUrls.push(checkedEpName);
     }
 
     if (!checked) {
-      app!.manifest.appRelativeEntryPointUrls =
-        app!.manifest.appRelativeEntryPointUrls.filter(
+      app.manifest.appRelativeEntryPointUrls =
+        app.manifest.appRelativeEntryPointUrls.filter(
           (epUrl) => epUrl !== checkedEpName
         );
     }
-    updateSelectedApp(app!);
+    updateSelectedApp(app, true);
   }
 
   if (!app) return null;

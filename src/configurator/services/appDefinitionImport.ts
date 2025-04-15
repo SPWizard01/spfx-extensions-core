@@ -1,44 +1,52 @@
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { logGenericCoreError } from "../../core/services/loggingService";
+import type { SPFxExtensionAppDefinitionMapItem, SPFxExtensionAppMapItemConfig } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import { configrationWebUrl } from "../runtimeStore";
 
-interface AllAppsProps {
+export interface ResolvedAppDefinitionMapItem extends SPFxExtensionAppDefinitionMapItem {
   name: string;
-  id: string;
   resolved: boolean;
 }
-
+const EMPTY_DEF_CONFIG: SPFxExtensionAppMapItemConfig = { enabledEverywhere: false, excludedHubIds: [], excludedIds: [], includedHubIds: [], includedIds: [] };
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
-  const allApps: AllAppsProps[] = [];
+
   if (!app.manifest.isESM) {
-    const set = new Set(app.manifest.appDefinitionMap.flatMap((a) => a.appId));
-    allApps.push(
-      ...set
-        .keys()
-        .filter((k) => k !== "*")
-        .map((a) => {
-          return {
-            id: a,
-            name: a,
-            resolved: false,
-          };
-        })
-    );
-    return allApps;
+    const nonEsmDefs: ResolvedAppDefinitionMapItem[] = [];
+    for (const element of app.manifest.appRelativeEntryPointUrls) {
+      const nonEsmEPConfig: SPFxExtensionAppMapItemConfig =
+        app.manifest.appDefinitionMap.find(a => a.appId === element)?.config ??
+        JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG));
+      nonEsmDefs.push({
+        appId: element,
+        name: element,
+        resolved: true,
+        config: nonEsmEPConfig,
+      });
+    }
+    return nonEsmDefs;
   }
+  const manifestDefinitions: ResolvedAppDefinitionMapItem[] = app.manifest.appDefinitionMap.map((def) => {
+    return {
+      appId: def.appId,
+      name: `Unknown_${def.appId}`,
+      resolved: false,
+      config: def.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
+    }
+  })
+
   for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "").replace(/\.\//g, "");
     const fullUrl = new URL(
       `${configrationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${ep}`
     );
     const isAllowed = await isFileAllowedToRun(fullUrl, app.name, true);
-    fullUrl.searchParams.set("t", `${Date.now()}`);
     if (!isAllowed) {
       continue;
     }
+    fullUrl.searchParams.set("t", `${Date.now()}`);
     try {
       const module = await import(`${fullUrl}`);
       if (!module.default) {
@@ -63,17 +71,24 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         );
         continue;
       }
-      module.default.forEach((appDef: SPFxExtensionAppDefinition) => {
-        allApps.push({
-          id: appDef.id,
+      for (const appDef of (module.default as SPFxExtensionAppDefinition[])) {
+        const foundDef = manifestDefinitions.find(a => a.appId === appDef.id);
+        if (foundDef) {
+          foundDef.name = appDef.name;
+          foundDef.resolved = true;
+          continue;
+        }
+        manifestDefinitions.push({
+          appId: appDef.id,
           name: appDef.name,
           resolved: true,
+          config: JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
         });
-      });
+      }
     } catch (e) {
       logGenericCoreError(`Error loading ${fullUrl}`, e);
       continue;
     }
   }
-  return allApps;
+  return manifestDefinitions;
 }

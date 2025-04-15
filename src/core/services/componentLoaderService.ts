@@ -1,3 +1,4 @@
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
@@ -11,43 +12,58 @@ import {
   logGenericCoreInfo,
   logGenericCoreWarning,
 } from "./loggingService";
-import { fetchAppsTXTFromAllLocations } from "./txtAppsService";
+import { fetchAppCollectionConfigFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
 
-interface AssetPromise {
-  url: string;
-  promise: Promise<SPFxExtensionAppRegistration[]>;
-  manifest: CacheableAppFolderManifest;
-}
 let isLoaded = false;
 const loadedAssets: string[] = [];
 
-export async function importEntryPoint(fullJSUrl: string, isESM: boolean) {
-  try {
-    const appRegistrations = await import(fullJSUrl);
-    if (!isESM) {
-      logGenericCoreWarning(
-        `Non ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`,
-        fullJSUrl
-      );
+export async function importEntryPointsAndExecute(fullJSUrl: string, originalEntry: string, manifest: SPFxExtensionFolderManifest) {
+
+  // if non esm do additional checks here
+  if (!manifest.isESM) {
+    const appRegsBeforeEntryPoint = window.__SPFxExtensions.Apps.map(a => a.id);
+    logGenericCoreWarning(
+      `Non-ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`,
+      fullJSUrl
+    );
+    const foundNonESMAppConfig = manifest.appDefinitionMap.find(a => a.appId === originalEntry);
+    if (!foundNonESMAppConfig) {
+      logGenericCoreError(`Could not find app configuration item for non-ESM app`, originalEntry);
       return [];
     }
-    const defaultExport =
-      appRegistrations.default as SPFxExtensionAppRegistration[];
-    if (!defaultExport) {
-      throw `No default export found in ${fullJSUrl}, only ESM modules are supported.`;
+    try {
+      await import(fullJSUrl);
     }
-    return defaultExport;
-  } catch (e) {
-    logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
-    throw e;
+    catch (e) {
+      logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
+      return [];
+    }
+    //if the apps were registered in non ESM the array will be different, this is how we know that the app was registered
+    return window.__SPFxExtensions.Apps.filter(a => appRegsBeforeEntryPoint.indexOf(a.id) === -1);
   }
+  else {
+    try {
+      const appRegistrations = await import(fullJSUrl);
+      const defaultExport =
+        appRegistrations.default as SPFxExtensionAppRegistration[];
+      if (!defaultExport) {
+        logGenericCoreError(`No default export found in ${fullJSUrl}, only ESM modules are supported.`);
+        return [];
+      }
+      return executeESMRegistrations(defaultExport, manifest, fullJSUrl);;
+    } catch (e) {
+      logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
+      return [];
+    }
+  }
+
 }
 
 async function parseManifestAndImportEntryPoints(
   manifestToParse: CacheableAppFolderManifest
 ) {
-  const returnPromiseArray: AssetPromise[] = [];
+  const returnPromiseArray: Promise<SPFxExtensionAppRegistration[]>[] = [];
   const cdnLoc = manifestToParse.url.replace(MANIFEST_NAME, "");
 
   logGenericCoreDebug(
@@ -77,33 +93,15 @@ async function parseManifestAndImportEntryPoints(
     if (!isAllowed) {
       continue;
     }
-
-    // if non esm do additional checks here
-    if(!manifestToParse.manifest.isESM) {
-      const foundNonESMAppConfig = manifestToParse.manifest.appDefinitionMap.find(a=>a.appId === entryUrl);
-      if(!foundNonESMAppConfig) {
-        logGenericCoreError(`Could not find app configuration item for non ESM app`, manifestToParse.name, entryUrl);
-        continue;
-      }
-    }
-
-
-
-
-
     const plainUrl = `${jsUrl.origin}${jsUrl.pathname}`;
     const urlWithCache = `${jsUrl}`;
     const isScriptLoaded = loadedAssets.includes(plainUrl);
-    if (!isScriptLoaded) {
-      loadedAssets.push(plainUrl);
-      returnPromiseArray.push({
-        url: urlWithCache,
-        promise: importEntryPoint(urlWithCache, manifestToParse.manifest.isESM),
-        manifest: manifestToParse,
-      });
-    } else {
+    if (isScriptLoaded) {
       logGenericCoreInfo(`EntryPoint already loaded:`, urlWithCache);
+      continue;
     }
+    loadedAssets.push(plainUrl);
+    returnPromiseArray.push(importEntryPointsAndExecute(urlWithCache, entryUrl, manifestToParse.manifest));
   }
 
   return returnPromiseArray;
@@ -122,7 +120,7 @@ export async function loadModernApps(
   isLoaded = true;
   // window.__SPFxExtensions.LoadedAppAssets = [];
   //LOAD collectionConfig.txt
-  const coreCollection = await fetchAppsTXTFromAllLocations(
+  const coreCollection = await fetchAppCollectionConfigFromAllLocations(
     siteUrl,
     webUrl,
     hubUrl
@@ -137,7 +135,7 @@ export async function loadModernApps(
     (p) => p.status === "fulfilled"
   );
 
-  const entryPointsFromManifestTXTs: Promise<AssetPromise[]>[] = [];
+  const successfullAppRegistrations: Promise<SPFxExtensionAppRegistration[]>[] = [];
   const resolvedRootAppsManifests = resolvedManifestTXTs.filter(
     (m) => m.value.type === "root"
   );
@@ -152,71 +150,27 @@ export async function loadModernApps(
   //TODO: check performance impact
 
   for (const rootManifestTXT of resolvedRootAppsManifests) {
-    entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(rootManifestTXT.value)
-    );
+    const rootEntries = await parseManifestAndImportEntryPoints(rootManifestTXT.value);
+    successfullAppRegistrations.push(...rootEntries);
   }
-  //wait for root stuff to load
-  const rootResults = await Promise.allSettled(entryPointsFromManifestTXTs);
-  await Promise.allSettled(getModulePromises(rootResults));
   logGenericCoreDebug("Root apps loaded.");
 
   //wait for site stuff to load
   for (const siteManifests of resolvedSiteAppsManifests) {
-    entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(siteManifests.value)
-    );
+    const siteEntries = await parseManifestAndImportEntryPoints(siteManifests.value)
+    successfullAppRegistrations.push(...siteEntries);
   }
-  const rootAndSiteResults = await Promise.allSettled(
-    entryPointsFromManifestTXTs
-  );
-  await Promise.allSettled(getModulePromises(rootAndSiteResults));
   logGenericCoreDebug("Site apps loaded.");
 
   //wait for web stuff to load
   for (const webManifests of resolvedWebAppsManifests) {
-    entryPointsFromManifestTXTs.push(
-      parseManifestAndImportEntryPoints(webManifests.value)
-    );
+    const webEntries = await parseManifestAndImportEntryPoints(webManifests.value);
+    successfullAppRegistrations.push(...webEntries);
   }
-  const rootAndSiteAndWebResults = await Promise.allSettled(
-    entryPointsFromManifestTXTs
-  );
-  await Promise.allSettled(getModulePromises(rootAndSiteAndWebResults));
   logGenericCoreDebug("SiteWeb apps loaded.");
+  const successfullyRegistered = (await Promise.allSettled(successfullAppRegistrations)).filter(
+    (r) => r.status === "fulfilled").flatMap((r) => r.value);;
 
-  const entryPointSettledResults = await Promise.allSettled(
-    entryPointsFromManifestTXTs
-  );
-
-  //there will be no rejected results as this returns always an array of promises
-  const fetchedEntryPoints = entryPointSettledResults.filter(
-    (r) => r.status === "fulfilled"
-  );
-
-  const assetPromises = fetchedEntryPoints.flatMap((a) => a.value);
-  const allExportsSettled = await Promise.allSettled(
-    assetPromises.map((a) => a.promise)
-  );
-  const allExports = allExportsSettled
-    .filter((a) => a.status === "fulfilled")
-    .flatMap((a) => a.value);
-  await unregisterNonApplicable(allExports);
-
-  const successfullyRegistered: SPFxExtensionAppRegistration[] = [];
-  for (const asset of assetPromises) {
-    try {
-      const exports = await asset.promise;
-      if (!asset.manifest.manifest.isESM) {
-        continue;
-      }
-      successfullyRegistered.push(
-        ...(await executeRegistration(exports, asset.manifest, asset.url))
-      );
-    } catch (e) {
-      logGenericCoreError(`Could not load or parse manifest.`, e);
-    }
-  }
   //unregister any remaining app definitions that are not applicable to this context
   await unregisterNonApplicable(successfullyRegistered);
   window.__SPFxExtensions.AllAppAssetsLoadedResolver();
@@ -254,9 +208,9 @@ async function unregisterNonApplicable(
   }
 }
 
-async function executeRegistration(
+function executeESMRegistrations(
   registrations: SPFxExtensionAppRegistration[],
-  manifestToParse: CacheableAppFolderManifest,
+  manifestToParse: SPFxExtensionFolderManifest,
   fullJSUrl: string
 ) {
   // const isHub = getIsHubSite();
@@ -280,7 +234,7 @@ async function executeRegistration(
       );
       continue;
     }
-    const foundMapItem = manifestToParse.manifest.appDefinitionMap.find(
+    const foundMapItem = manifestToParse.appDefinitionMap.find(
       (a) => a.appId.toLowerCase() === appReg.id.toLowerCase()
     );
     const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
@@ -289,10 +243,10 @@ async function executeRegistration(
       continue;
     }
     const isEnabledEverywhere = foundMapItem.config.enabledEverywhere;
-    const appEnabled = isEnabledEverywhere ? 
-    foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
-    foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
-    foundMapItem.config.excludedIds.indexOf(currentHubId) === -1 : true;
+    const appEnabled = isEnabledEverywhere ?
+      foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
+      foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
+      foundMapItem.config.excludedHubIds.indexOf(currentHubId) === -1 : true;
 
     if (!appEnabled) {
       logGenericCoreInfo(notEnabledMSG);
@@ -305,18 +259,4 @@ async function executeRegistration(
     }
   }
   return successfullyRegistered;
-}
-
-function getModulePromises(
-  manifestResults: PromiseSettledResult<AssetPromise[]>[]
-) {
-  const modulePromises: Promise<any>[] = [];
-  for (const manifestResult of manifestResults) {
-    if (manifestResult.status === "fulfilled") {
-      for (const module of manifestResult.value) {
-        modulePromises.push(module.promise);
-      }
-    }
-  }
-  return modulePromises;
 }

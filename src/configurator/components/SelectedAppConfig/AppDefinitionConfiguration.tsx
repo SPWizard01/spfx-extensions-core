@@ -1,21 +1,20 @@
 import {
-    Button,
-    Dropdown,
-    Label,
-    Option,
-    type OptionOnSelectData,
-    type SelectionEvents,
+  Button,
+  Dropdown,
+  Label,
+  Option,
+  type OptionOnSelectData,
+  type SelectionEvents,
 } from "@fluentui/react-components";
 
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "react";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
-    configurationWebSubWebs,
-    selectedAppItem,
-    updateSelectedApp,
+  configurationWebSubWebs,
+  selectedAppItem,
+  updateSelectedApp,
 } from "../../runtimeStore";
-import { getAppDefinitions } from "../../services/appDefinitionImport";
 import { Stack } from "../common/Stack";
 import { AddWeb } from "./AddWeb";
 
@@ -68,7 +67,7 @@ export function AppDefinitionConfiguration(
   }
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
-    const allAppDefinitions = await getAppDefinitions(downloadDataApp);
+    // const allAppDefinitions = await getAppDefinitions(downloadDataApp);
     const allWebIds: WebIdAppIdMap[] = [allWebs];
 
     allWebIds.push(
@@ -82,7 +81,7 @@ export function AppDefinitionConfiguration(
     );
     downloadDataApp.manifest.appDefinitionMap.forEach((_w) => {});
     setWebIdMap(allWebIds);
-    setAllDefs(allAppDefinitions);
+    setAllDefs([]);
   }
   useSignalEffect(() => {
     if (!app) return;

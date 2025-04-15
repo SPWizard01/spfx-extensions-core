@@ -8,7 +8,10 @@ import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { selectedAppItem } from "../../runtimeStore";
-import { getAppDefinitions } from "../../services/appDefinitionImport";
+import {
+  getAppDefinitions,
+  type ResolvedAppDefinitionMapItem,
+} from "../../services/appDefinitionImport";
 import { ManageSitesDrawerSignal } from "../common/ManageSitesDrawer";
 import { Stack } from "../common/Stack";
 export interface AppIdName {
@@ -25,44 +28,21 @@ export interface AppIdName {
 
 export const AppDefinitionGrid = () => {
   const app = selectedAppItem.value;
-
-  const [appDefinitions, setAppDefinitions] = useState<AppIdName[]>([]);
+  console.log("AppDefinitionGrid", app);
+  const [appDefinitions, setAppDefinitions] = useState<
+    ResolvedAppDefinitionMapItem[]
+  >([]);
   // const [webIdMap, setWebIdMap] = useState<WebIdAppIdMap[]>([]);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
-    // const allWebIds: WebIdAppIdMap[] = [];
-
-    // allWebIds.push(
-    //   ...selectedWebAvailableWebs.map((w) => ({
-    //     Id: w.Id,
-    //     Name: w.Title,
-    //     Url: w.ServerRelativeUrl,
-    //     isSubWeb: true,
-    //     enabledApps: [],
-    //   }))
-    // );
-    // downloadDataApp.manifest.appDefinitionMap?.forEach((w: ) => {
-    //   // const web = allWebIds.find((w1) => w1.Id === w.webId);
-    //   // if (web) {
-    //   //   web.enabledApps = w.enabledAppIds;
-    //   // } else {
-    //   //   allWebIds.push({
-    //   //     Id: w.webId,
-    //   //     Name: "Unknown",
-    //   //     Url: `Unknown_${w.webId}`,
-    //   //     isSubWeb: false,
-    //   //     enabledApps: w.enabledAppIds,
-    //   //   });
-    //   // }
-    // });
-    // setWebIdMap(allWebIds);
+    console.log("allAppDefinitions", allAppDefinitions);
     setAppDefinitions(allAppDefinitions);
   }
 
   useSignalEffect(() => {
-    if (!app) return;
-    downloadData(app);
+    if (!selectedAppItem.value) return;
+    downloadData(selectedAppItem.value);
   });
   if (!app) return null;
 
@@ -73,7 +53,7 @@ export const AppDefinitionGrid = () => {
         borderBottom: "1px solid #eaeaea",
       }}
     >
-      {selectedAppItem.value?.manifest.appDefinitionMap.map((appDef) => (
+      {appDefinitions.map((appDef) => (
         <Stack
           horizontal
           gap={8}
@@ -85,11 +65,7 @@ export const AppDefinitionGrid = () => {
           }}
         >
           <Stack horizontal verticalAlign="center" gap={8}>
-            <AppFolder20Regular />{" "}
-            <Label size="medium">
-              {appDefinitions.find((a) => a.id == appDef.appId)?.name ??
-                `Unknown_${appDef.appId}`}
-            </Label>
+            <AppFolder20Regular /> <Label size="medium">{appDef.name}</Label>
           </Stack>
           <Stack gap={8} horizontal>
             <Button
