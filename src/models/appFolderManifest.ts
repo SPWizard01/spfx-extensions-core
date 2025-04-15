@@ -30,6 +30,14 @@ export interface SPFxExtensionAppDefinitionMapItem {
      */
     appId: string;
     /**
+     * Only applicable to non ESM
+     */
+    appName?: string;
+    /**
+     * Only applicable to non ESM
+     */
+    appRelativeEntryPointUrl?: string;
+    /**
      * Configuration of said app definition item.
      */
     config: SPFxExtensionAppMapItemConfig;
