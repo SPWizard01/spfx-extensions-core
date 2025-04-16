@@ -1,18 +1,29 @@
 import {
   Badge,
+  Body1,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerFooter,
   DrawerHeader,
   DrawerHeaderTitle,
   Label,
+  Link,
   MessageBar,
   MessageBarBody,
+  Popover,
+  PopoverSurface,
+  PopoverTrigger,
+  Subtitle2,
   Switch,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
-import { Delete16Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import {
+  ArrowTurnDownRightRegular,
+  Dismiss24Regular,
+  Info16Regular,
+} from "@fluentui/react-icons";
 import { useComputed } from "@preact/signals";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
@@ -28,13 +39,19 @@ import {
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../runtimeStore";
+
+import { GetWebConfigContext } from "../../../utilities/getConfigWebContext";
 import { Stack } from "../common/Stack";
-import { StackItem } from "../common/StackItem";
 
 interface IProps {
   appDefinitions: AppFolderManifestDefinitionItem[];
 }
 
+interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
+  webs: ConfiguratorURLMapItem[];
+}
+
+const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const urlList = useComputed(() => {
@@ -65,13 +82,56 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     return defaultList;
   });
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
+
+  const urlsWithSubsites: ConfiguratorURLMapItemWithSubSites[] = [];
+
+  urlList.value.forEach((url, _, arr) => {
+    if (url.isRootWeb) {
+      urlsWithSubsites.push({
+        ...url,
+        webs: [
+          url,
+          ...arr.filter((s) => s.siteId === url.siteId && s.id !== url.id),
+        ],
+      });
+    }
+    return url;
+  });
+
+  // TODO Group urlList.value by hubs, sites, webs
+  const siteCollections = urlsWithSubsites.filter(
+    (v) => v.isRootWeb && !v.isHubRoot
+  );
+  const hubRootCollections = urlsWithSubsites.filter((sc) => sc.isHubRoot);
+
+  function GetBadge(
+    color:
+      | "subtle"
+      | "success"
+      | "brand"
+      | "danger"
+      | "important"
+      | "informative"
+      | "severe"
+      | "warning"
+      | undefined,
+    text: string,
+    width: string = "72px"
+  ) {
+    return (
+      <Badge size="small" color={color} style={{ width: width }}>
+        {text}
+      </Badge>
+    );
+  }
+
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
       separator
       open={!!selectedAppDeinitionMapItem.value}
       position="end"
-      size="medium"
+      size="large"
     >
       <DrawerHeader>
         <DrawerHeaderTitle
@@ -108,73 +168,176 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               horizontalAlign="space-between"
               verticalAlign="center"
             >
-              <Label>Enable everywhere</Label>
+              <Stack horizontal gap={8} verticalAlign="center">
+                <Label>Enable everywhere</Label>
+                <Popover withArrow>
+                  <PopoverTrigger disableButtonEnhancement>
+                    <Link>
+                      <Info16Regular />
+                    </Link>
+                  </PopoverTrigger>
+                  <PopoverSurface tabIndex={-1}>
+                    <Body1>
+                      {configWebContext === "global" &&
+                        "Enables app for all listed and unlisted hubs and sites in tenant."}
+                    </Body1>
+                  </PopoverSurface>
+                </Popover>
+              </Stack>
               <Switch
                 defaultChecked={
                   selectedAppDeinitionMapItem.value.config.enabledEverywhere
                 }
               />
             </Stack>
-            {urlList.value.map((site) => (
-              <Stack
-                horizontalAlign="space-between"
-                verticalAlign="center"
-                horizontal
-                gap={8}
-                key={site.id}
-              >
-                <>
-                  TODO: Split me and ManageSitesDrawer part so I can be reused
-                </>
-                <Stack horizontal gap={8} verticalAlign="center">
-                  {site.isHubRoot && <Badge size="small">Hub Root</Badge>}
-                  {site.isRootWeb && (
-                    <Badge size="small" color="success">
-                      Site Collection
-                    </Badge>
-                  )}
-                  {!site.isHubRoot && site.hubid && (
-                    <Badge color="warning" size="small">
-                      Hub child
-                    </Badge>
-                  )}
-                  <StackItem>{site.url}</StackItem>
-                </Stack>
-                {selectedAppDeinitionMapItem.value ? (
-                  <>
-                    {site.isRootWeb ? (
-                      <>
-                        <Label>Enable for all collection</Label>
-                        <Switch
-                          defaultChecked={
-                            selectedAppDeinitionMapItem.value.config
-                              .enabledEverywhere &&
-                            !selectedAppDeinitionMapItem.value.config.excludedIds.some(
-                              (s) => s === site.id
-                            )
-                          }
-                        />
-                      </>
-                    ) : null}
+
+            <Stack>
+              <Subtitle2>Hub sites</Subtitle2>
+              {hubRootCollections.map((site) => (
+                <Stack>
+                  <Stack
+                    horizontal
+                    gap={8}
+                    verticalAlign="center"
+                    horizontalAlign="space-between"
+                  >
+                    <Stack horizontal verticalAlign="center" gap={8}>
+                      {GetBadge("success", "Hub")}
+                      {site.url}
+                    </Stack>
                     <Switch
-                      defaultChecked={
-                        selectedAppDeinitionMapItem.value.config
-                          .enabledEverywhere &&
-                        !selectedAppDeinitionMapItem.value.config.excludedIds.some(
-                          (s) => s === site.id
-                        )
-                      }
+                      onChange={(_, data) => {
+                        //TODO
+                        console.log(
+                          "Turn on for ALL HUB SITE COLLECTION AND HUB CHILDS",
+                          data
+                        );
+                      }}
                     />
-                  </>
-                ) : (
-                  <Button
-                    disabled={!site.canDelete}
-                    onClick={() => {}}
-                    icon={<Delete16Regular />}
-                  />
-                )}
-              </Stack>
-            ))}
+                  </Stack>
+
+                  <Stack
+                    horizontal
+                    gap={8}
+                    verticalAlign="center"
+                    horizontalAlign="space-between"
+                  >
+                    <Stack horizontal verticalAlign="center" gap={8}>
+                      <ArrowTurnDownRightRegular />
+                      {GetBadge("warning", "Site collection")}
+                      {site.url}
+                    </Stack>
+                    <Switch
+                      onChange={(_, data) => {
+                        //TODO
+                        console.log(
+                          "Turn on for ALL SITE COLLECTION ROOT HUB",
+                          data
+                        );
+                      }}
+                    />
+                  </Stack>
+
+                  {site.webs.map((subSite) => (
+                    <Stack
+                      horizontal
+                      horizontalAlign="space-between"
+                      verticalAlign="center"
+                      style={{ paddingLeft: "24px " }}
+                    >
+                      <Stack horizontal gap={8} verticalAlign="center">
+                        <ArrowTurnDownRightRegular />
+                        {GetBadge(undefined, "Web", "50px")}
+                        <Body1>{subSite.url}</Body1>
+                      </Stack>
+                      <Switch />
+                    </Stack>
+                  ))}
+                </Stack>
+              ))}
+            </Stack>
+
+            <Stack gap={12}>
+              <Subtitle2>Site collections</Subtitle2>
+              <Divider />
+              {siteCollections.map((site) => (
+                <>
+                  <Stack>
+                    <Stack
+                      horizontal
+                      gap={8}
+                      verticalAlign="center"
+                      horizontalAlign="space-between"
+                    >
+                      <Stack horizontal verticalAlign="center" gap={8}>
+                        {GetBadge("warning", "Site collection")}
+                        {site.url}
+                      </Stack>
+                      {/* TODO Enable for all site collection subsites */}
+                      <Switch />
+                    </Stack>
+
+                    {site.webs.map((subSite) => (
+                      <Stack
+                        horizontal
+                        horizontalAlign="space-between"
+                        verticalAlign="center"
+                      >
+                        <Stack horizontal gap={8} verticalAlign="center">
+                          <ArrowTurnDownRightRegular />
+                          <Badge size="small">Web</Badge>
+                          <Body1>{subSite.url.split(site.url)[1] || "/"}</Body1>
+                        </Stack>
+                        {/* TODO include/exclude separate site */}
+                        <Switch />
+                      </Stack>
+                    ))}
+                  </Stack>
+                  <Divider />
+                </>
+              ))}
+            </Stack>
+
+            <Stack gap={12}>
+              <Subtitle2>Webs</Subtitle2>
+              <Divider />
+              {/* TODO List independent webs instead site collection */}
+              {siteCollections.map((site) => (
+                <>
+                  <Stack>
+                    <Stack
+                      horizontal
+                      gap={8}
+                      verticalAlign="center"
+                      horizontalAlign="space-between"
+                    >
+                      <Stack horizontal verticalAlign="center" gap={8}>
+                        {GetBadge("warning", "Site collection")}
+                        {site.url}
+                      </Stack>
+                      {/* TODO  */}
+                      <Switch />
+                    </Stack>
+
+                    {site.webs.map((subSite) => (
+                      <Stack
+                        horizontal
+                        horizontalAlign="space-between"
+                        verticalAlign="center"
+                      >
+                        <Stack horizontal gap={8} verticalAlign="center">
+                          <ArrowTurnDownRightRegular />
+                          <Badge size="small">Web</Badge>
+                          <Body1>{subSite.url.split(site.url)[1] || "/"}</Body1>
+                        </Stack>
+                        <Switch />
+                      </Stack>
+                    ))}
+                  </Stack>
+                  <Divider />
+                </>
+              ))}
+            </Stack>
           </Stack>
         </Stack>
       </DrawerBody>

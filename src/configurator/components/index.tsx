@@ -11,12 +11,9 @@ import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { logGenericCoreError } from "../../core/services/loggingService";
-import {
-  configurationIsGlobal,
-  getConfigurationWebIsHubChild,
-  getConfigurationWebIsRootHub,
-  getConfigurationWebIsSubsite,
-} from "../runtimeStore";
+
+import { GetWebConfigContext } from "../../utilities/getConfigWebContext";
+import { configurationIsGlobal } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
 import { ManageSitesDrawer } from "./AppList/ManageSitesDrawer";
@@ -26,6 +23,7 @@ import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
 const cfgWeb = queryWeb ?? getWebAbsoluteUrl();
+const configWebType = GetWebConfigContext();
 
 function getBadges() {
   const badges: ComponentChildren[] = [];
@@ -37,28 +35,28 @@ function getBadges() {
     );
     return badges;
   }
-  if (getConfigurationWebIsRootHub()) {
+  if (configWebType === "hubRoot") {
     badges.push(
       <Badge key="hubRoot" size="extra-large" shape="rounded" color="success">
         Hub root site
       </Badge>
     );
   }
-  if (getConfigurationWebIsHubChild() && !getConfigurationWebIsRootHub()) {
+  if (configWebType === "hubChild") {
     badges.push(
       <Badge key="child" size="extra-large" shape="rounded" color="warning">
         Hub child site
       </Badge>
     );
   }
-  if (!getConfigurationWebIsRootHub() && !getConfigurationWebIsHubChild()) {
+  if (configWebType === "nonHub") {
     badges.push(
       <Badge key="nonhub" size="extra-large" shape="rounded" color="brand">
         Non hub site
       </Badge>
     );
   }
-  if (getConfigurationWebIsSubsite()) {
+  if (configWebType === "subsite") {
     badges.push(
       <Badge
         key="subsite"
@@ -111,17 +109,20 @@ export function Index() {
         <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
         {...getBadges()}
       </Stack>
-      <Stack horizontal gap={8} verticalAlign="center">
-        <Link target="_blank" href={cfgWeb}>
-          {cfgWeb}
-        </Link>
-        <Copy16Regular
-          onClick={() => {
-            navigator.clipboard.writeText(cfgWeb);
-            notify();
-          }}
-        />
-      </Stack>
+      {queryWeb && (
+        <Stack horizontal gap={8} verticalAlign="center">
+          <Link target="_blank" href={cfgWeb}>
+            {cfgWeb}
+          </Link>
+          <Copy16Regular
+            onClick={() => {
+              navigator.clipboard.writeText(cfgWeb);
+              notify();
+            }}
+          />
+        </Stack>
+      )}
+
       <AppList />
       <SelectedAppConfig />
       <ManageSitesDrawer />

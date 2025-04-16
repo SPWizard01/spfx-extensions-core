@@ -7,15 +7,20 @@ import type { AppCollectionConfigurationItem } from "../models/appCollectionConf
 import type { AppFolderManifestDefinitionItem } from "../models/AppFolderManifestDefinitionItem";
 import { configrationWebUrl } from "../runtimeStore";
 
-const EMPTY_DEF_CONFIG: SPFxExtensionAppMapItemConfig = { enabledEverywhere: false, excludedHubIds: [], excludedIds: [], includedHubIds: [], includedIds: [] };
+const EMPTY_DEF_CONFIG: SPFxExtensionAppMapItemConfig = {
+  enabledEverywhere: false,
+  excludedHubIds: [],
+  excludedIds: [],
+  includedHubIds: [],
+  includedIds: [],
+};
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
-
   if (!app.manifest.isESM) {
     const nonEsmDefs: AppFolderManifestDefinitionItem[] = [];
     for (const element of app.manifest.appRelativeEntryPointUrls) {
       const nonEsmEPConfig: SPFxExtensionAppMapItemConfig =
-        app.manifest.appDefinitionMap.find(a => a.appId === element)?.config ??
-        JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG));
+        app.manifest.appDefinitionMap.find((a) => a.appId === element)
+          ?.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG));
       nonEsmDefs.push({
         appId: element,
         name: element,
@@ -25,15 +30,15 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     }
     return nonEsmDefs;
   }
-  const manifestDefinitions: AppFolderManifestDefinitionItem[] = app.manifest.appDefinitionMap.map((def) => {
-    return {
-      appId: def.appId,
-      name: `Unknown_${def.appId}`,
-      resolved: false,
-      config: def.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
-    }
-  })
-  console.log("Manifest definitions", manifestDefinitions);
+  const manifestDefinitions: AppFolderManifestDefinitionItem[] =
+    app.manifest.appDefinitionMap.map((def) => {
+      return {
+        appId: def.appId,
+        name: `Unknown_${def.appId}`,
+        resolved: false,
+        config: def.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
+      };
+    });
   for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "").replace(/\.\//g, "");
     const fullUrl = new URL(
@@ -68,8 +73,8 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         );
         continue;
       }
-      for (const appDef of (module.default as SPFxExtensionAppDefinition[])) {
-        const foundDef = manifestDefinitions.find(a => a.appId === appDef.id);
+      for (const appDef of module.default as SPFxExtensionAppDefinition[]) {
+        const foundDef = manifestDefinitions.find((a) => a.appId === appDef.id);
         if (foundDef) {
           foundDef.name = appDef.name;
           foundDef.resolved = true;
