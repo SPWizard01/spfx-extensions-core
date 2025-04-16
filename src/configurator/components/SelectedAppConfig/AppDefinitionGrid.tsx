@@ -1,9 +1,4 @@
-import {
-  Button,
-  Link,
-  Skeleton,
-  SkeletonItem,
-} from "@fluentui/react-components";
+import { Button, Link, ProgressBar } from "@fluentui/react-components";
 import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
@@ -36,6 +31,14 @@ export function AppDefinitionGrid() {
     downloadData(selectedAppItem.value);
   });
   if (!selectedAppItem.value) return null;
+  if (!appDefinitionsDownloaded) {
+    return (
+      <Stack style={{ marginTop: "10px" }}>
+        <ProgressBar />
+      </Stack>
+    );
+  }
+
   return (
     <Stack
       style={{
@@ -56,40 +59,32 @@ export function AppDefinitionGrid() {
               minHeight: "53px",
             }}
           >
-            {!appDefinitionsDownloaded ? (
-              <Skeleton aria-label="Loading Content" style={{ width: "100%" }}>
-                <SkeletonItem />
-              </Skeleton>
-            ) : (
-              <>
-                <Stack horizontal verticalAlign="center" gap={8} grow>
-                  <AppFolder20Regular />{" "}
-                  <Link
-                    size="medium"
-                    onClick={() => {
-                      selectedAppDeinitionMapItem.value = {
-                        appId: appDef.appId,
-                        config: appDef.config,
-                      };
-                    }}
-                  >
-                    {appDef.name}
-                  </Link>
-                </Stack>
-                <Stack gap={8} horizontal>
-                  <Button
-                    aria-label="Edit sites"
-                    icon={<EditRegular />}
-                    onClick={() => {
-                      selectedAppDeinitionMapItem.value = {
-                        appId: appDef.appId,
-                        config: appDef.config,
-                      };
-                    }}
-                  />
-                </Stack>
-              </>
-            )}
+            <Stack horizontal verticalAlign="center" gap={8} grow>
+              <AppFolder20Regular />{" "}
+              <Link
+                size="medium"
+                onClick={() => {
+                  selectedAppDeinitionMapItem.value = {
+                    appId: appDef.appId,
+                    config: appDef.config,
+                  };
+                }}
+              >
+                {appDef.name}
+              </Link>
+            </Stack>
+            <Stack gap={8} horizontal>
+              <Button
+                aria-label="Edit sites"
+                icon={<EditRegular />}
+                onClick={() => {
+                  selectedAppDeinitionMapItem.value = {
+                    appId: appDef.appId,
+                    config: appDef.config,
+                  };
+                }}
+              />
+            </Stack>
           </Stack>
         );
       })}
