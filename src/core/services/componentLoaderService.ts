@@ -199,9 +199,7 @@ async function unregisterNonApplicable(
       );
       if (unregistered) {
         logGenericCoreWarning(
-          `Unregistered app as it does not belong in this context`,
-          alreadyRegisteredApp.id,
-          alreadyRegisteredApp.name
+          `Unregistered App ${alreadyRegisteredApp.id} (${alreadyRegisteredApp.name}) as it does not belong in this context`,
         );
       }
     }
@@ -211,7 +209,7 @@ async function unregisterNonApplicable(
 function executeESMRegistrations(
   registrations: SPFxExtensionAppRegistration[],
   manifestToParse: SPFxExtensionFolderManifest,
-  fullJSUrl: string
+  fullJSUrl: string,
 ) {
   // const isHub = getIsHubSite();
   const currentWebId = getWebId().toLowerCase();
@@ -237,7 +235,7 @@ function executeESMRegistrations(
     const foundMapItem = manifestToParse.appDefinitionMap.find(
       (a) => a.appId.toLowerCase() === appReg.id.toLowerCase()
     );
-    const notEnabledMSG = `App with id ${appReg.id} ${appReg.name} is not enabled for current web. Skipping...`;
+    const notEnabledMSG = `App with id ${appReg.id} (${appReg.name}) is not enabled for current web. Skipping...`;
     if (!foundMapItem) {
       logGenericCoreInfo(notEnabledMSG);
       continue;
@@ -252,11 +250,16 @@ function executeESMRegistrations(
       logGenericCoreInfo(notEnabledMSG);
       continue;
     }
-    window.__SPFxExtensions.RegisterApp(appReg);
+    const registeredApp = window.__SPFxExtensions.RegisterApp(appReg);
     successfullyRegistered.push(appReg);
     if (!appReg.isWebPartApp && appReg.autoExecute) {
-      window.__SPFxExtensions.InstantiateApp(appReg.id, {});
+      registeredApp.then(app => {
+        if (app.instances.length < (appReg.maxInstances ?? Infinity)) {
+          window.__SPFxExtensions.InstantiateApp(appReg.id, {});
+        }
+      })
     }
+
   }
   return successfullyRegistered;
 }

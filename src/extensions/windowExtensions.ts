@@ -36,6 +36,7 @@ declare global {
     historyForward: CustomEvent<HistoryEventDetails>;
     historyGo: CustomEvent<HistoryEventDetails>;
     contextChange: CustomEvent<ContextChangeEventDetails>;
+    contextRefresh: CustomEvent<ContextChangeEventDetails>;
   }
   // interface ImportMeta {
   //   resolve: (url: string) => string;

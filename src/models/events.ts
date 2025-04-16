@@ -20,7 +20,8 @@ export type SPFxExtensionAppInstanceEvents = {
   onConfigurationClose: undefined;
   onConfigurationChange: SPFxExtensionAppConfig;
   onDisplayModeChange: CompatibleDisplayMode;
-  onContextChange: ContextChangeEventDetails;
+  contextChange: ContextChangeEventDetails;
+  contextRefresh: ContextChangeEventDetails;
   onPlaceholdersChanged: any;
   onAppCustomizerDisposed: undefined;
 };

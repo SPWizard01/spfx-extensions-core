@@ -62,6 +62,7 @@ export async function initCoreServices() {
   window.addEventListener(
     "contextChange",
     async () => {
+      logGenericCoreInfo("Context changed, reloading apps...");
       const siteUrl = getSiteAbsoluteUrl();
       const webUrl = getWebAbsoluteUrl();
       const hubSiteUrl = await getHubSiteUrl();

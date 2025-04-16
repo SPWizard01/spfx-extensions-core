@@ -131,6 +131,14 @@ export interface SPFxExtensionAppDefinition {
    * Only applicable when `isESM` is set to true is set in the manifest
    */
   autoExecute?: boolean;
+  /**
+   * If set to a value greater than 0, Core will only `autoExecute` when instance count is less than this value.
+   * 
+   * Setting this to undefined will allow unlimited instances of the app to be created.
+   * 
+   * Setting this to 0 will prevent any instances of the app to be created.
+   */
+  maxInstances?: number;
 
   /**
    * Internal registry of all the instances of this app

@@ -27,6 +27,9 @@ export function ensureApp(appId: string) {
       name: APP_LOADING,
       description: APP_LOADING,
       isWebPartApp: false,
+      keepOnContextChange: false,
+      autoExecute: false,
+      maxInstances: Infinity,
       hideAppSelectorWhenAppLoaded: false,
       hideConfiguratorButton: false,
       registrationCompleted: false,
@@ -56,6 +59,10 @@ export function registerAppService() {
       appDefinition.name = newAppDefinition.name;
       appDefinition.description = newAppDefinition.description;
       appDefinition.isWebPartApp = newAppDefinition.isWebPartApp;
+      appDefinition.keepOnContextChange = newAppDefinition.keepOnContextChange ?? false;
+      appDefinition.autoExecute = newAppDefinition.autoExecute ?? false;
+      appDefinition.maxInstances =
+        newAppDefinition.maxInstances ?? Infinity;
       appDefinition.hideAppSelectorWhenAppLoaded =
         newAppDefinition.hideAppSelectorWhenAppLoaded ?? false;
       appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
