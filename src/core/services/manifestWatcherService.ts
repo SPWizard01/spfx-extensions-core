@@ -1,11 +1,11 @@
+import { DEBUG_KEYS } from "../../utilities/debug";
 import { evictAppsTXTCache, evictManifestTXTCache } from "./coreIdbService";
-import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
+import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 import { fetchAppCollectionConfigFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
-const CORE_MANIFEST_CHECK_INTERVAL = 60000;
-let manifestWatch = 0;
-let fistTimeChecked = false;
+const CORE_MANIFEST_CHECK_INTERVAL = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE)) > 0 ? 100000 : 60000;
+let manifestWatch: number = 0;
 
 export function registerManifestWatcher(
   site: string,
@@ -16,22 +16,11 @@ export function registerManifestWatcher(
   if (contextChange) {
     window.clearInterval(manifestWatch);
     manifestWatch = 0;
-    fistTimeChecked = false;
   }
-  if (manifestWatch) return;
-  if (!fistTimeChecked) {
-    //do not await, just check in background first time.
-    performManifestCheck(site, web, hubUrl);
-    fistTimeChecked = true;
-  }
-  //60 -120 sec
-  // const rnd = getRandomArbitrary(60000, 120000);
-  manifestWatch = window.setInterval(async () => {
-    await performManifestCheck(site, web, hubUrl);
-    window.clearInterval(manifestWatch);
-    manifestWatch = 0;
-    registerManifestWatcher(site, web, hubUrl);
-  }, CORE_MANIFEST_CHECK_INTERVAL);
+  if (manifestWatch > 0) return;
+  manifestWatch = window.setInterval(performManifestCheck, CORE_MANIFEST_CHECK_INTERVAL, site, web, hubUrl);
+  //do not await, just check in background first time.
+  performManifestCheck(site, web, hubUrl);
 }
 
 export async function performManifestCheck(
@@ -45,14 +34,13 @@ export async function performManifestCheck(
       const lastCheck = new Date(item);
       const now = new Date();
       const diff = now.getTime() - lastCheck.getTime();
-      if (diff < CORE_MANIFEST_CHECK_INTERVAL) {
+      const maxDiff = CORE_MANIFEST_CHECK_INTERVAL - 2000; //2 seconds buffer
+      //add 2 seconds since interval is not reliable and exact
+      if (diff < maxDiff) {
+        logGenericCoreDebug("Manifest check already performed recently, skipping.", `${diff} < ${maxDiff}`);
         return;
       }
     }
-  } catch (_e) {
-    localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
-  }
-  try {
     logGenericCoreInfo(`Checking for manifest updates across all locations...`);
     await Promise.all([evictAppsTXTCache(), evictManifestTXTCache()]);
     const appLocations = await fetchAppCollectionConfigFromAllLocations(
@@ -66,8 +54,10 @@ export async function performManifestCheck(
       true
     );
     await Promise.allSettled(allManifests);
-    localStorage.setItem(CORE_MANIFEST_CHECK, new Date().toISOString());
   } catch (e) {
     logGenericCoreError("Error checking for manifest updates", e);
   }
+  const nextCheck = new Date().toISOString();
+  logGenericCoreDebug("Setting next manifest check to", nextCheck)
+  localStorage.setItem(CORE_MANIFEST_CHECK, nextCheck);
 }

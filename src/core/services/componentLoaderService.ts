@@ -1,4 +1,4 @@
-import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
+import type { SPFxExtensionAppDefinitionMapItem, SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
@@ -22,25 +22,30 @@ export async function importEntryPointsAndExecute(fullJSUrl: string, originalEnt
 
   // if non esm do additional checks here
   if (!manifest.isESM) {
-    const appRegsBeforeEntryPoint = window.__SPFxExtensions.Apps.map(a => a.id);
-    logGenericCoreWarning(
-      `Non-ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp in code.`,
-      fullJSUrl
-    );
     const foundNonESMAppConfig = manifest.appDefinitionMap.find(a => a.appId === originalEntry);
     if (!foundNonESMAppConfig) {
-      logGenericCoreError(`Could not find app configuration item for non-ESM app`, originalEntry);
+      const error = `Could not find app configuration item for non-ESM app ${originalEntry}`
+      logGenericCoreError(error);
+      return [];
+    }
+    const isEnabled = isEntryEnabledInCurrentContext(foundNonESMAppConfig);
+    if (!isEnabled) {
+      logGenericCoreInfo(`App ${originalEntry} is not enabled in current context. Skipping...`);
       return [];
     }
     try {
+      logGenericCoreWarning(
+        `Non-ESM module detected. Make sure to call window.__SPFxExtensions.RegisterApp and window.__SPFxExtensions.InstantiateApp in code.`,
+        fullJSUrl
+      );
       await import(fullJSUrl);
     }
     catch (e) {
-      logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
+      const error = `Error while importing or executing ${fullJSUrl} ${e}`;
+      logGenericCoreError(error);
       return [];
     }
-    //if the apps were registered in non ESM the array will be different, this is how we know that the app was registered
-    return window.__SPFxExtensions.Apps.filter(a => appRegsBeforeEntryPoint.indexOf(a.id) === -1);
+    return []
   }
   else {
     try {
@@ -51,7 +56,7 @@ export async function importEntryPointsAndExecute(fullJSUrl: string, originalEnt
         logGenericCoreError(`No default export found in ${fullJSUrl}, only ESM modules are supported.`);
         return [];
       }
-      return executeESMRegistrations(defaultExport, manifest, fullJSUrl);;
+      return executeRegistrations(defaultExport, manifest, fullJSUrl);
     } catch (e) {
       logGenericCoreError(`Error while importing or executing`, fullJSUrl, e);
       return [];
@@ -74,7 +79,7 @@ async function parseManifestAndImportEntryPoints(
   );
 
   for (const entryUrl of manifestToParse.manifest.appRelativeEntryPointUrls) {
-    const ep = entryUrl.replace(/\.\.\/?/g, "./");
+    const ep = entryUrl.replace(/\.\.\/?/g, "./").replace(/^\.\//, "");
     const fullJSUrl = `${cdnLoc}${ep}`.toLowerCase();
 
     logGenericCoreDebug(`EntryPoint JS: `, fullJSUrl);
@@ -169,8 +174,7 @@ export async function loadModernApps(
   }
   logGenericCoreDebug("SiteWeb apps loaded.");
   const successfullyRegistered = (await Promise.allSettled(successfullAppRegistrations)).filter(
-    (r) => r.status === "fulfilled").flatMap((r) => r.value);;
-
+    (r) => r.status === "fulfilled").flatMap((r) => r.value);
   //unregister any remaining app definitions that are not applicable to this context
   await unregisterNonApplicable(successfullyRegistered);
   window.__SPFxExtensions.AllAppAssetsLoadedResolver();
@@ -206,15 +210,13 @@ async function unregisterNonApplicable(
   }
 }
 
-function executeESMRegistrations(
+async function executeRegistrations(
   registrations: SPFxExtensionAppRegistration[],
   manifestToParse: SPFxExtensionFolderManifest,
   fullJSUrl: string,
 ) {
   // const isHub = getIsHubSite();
-  const currentWebId = getWebId().toLowerCase();
-  const currentSiteId = getSiteId().toLowerCase();
-  const currentHubId = getHubSiteId().toLowerCase();
+
 
   if (!Array.isArray(registrations)) {
     logGenericCoreError(
@@ -240,26 +242,33 @@ function executeESMRegistrations(
       logGenericCoreInfo(notEnabledMSG);
       continue;
     }
-    const isEnabledEverywhere = foundMapItem.config.enabledEverywhere;
-    const appEnabled = isEnabledEverywhere ?
-      foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
-      foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
-      foundMapItem.config.excludedHubIds.indexOf(currentHubId) === -1 : true;
+    const appEnabled = isEntryEnabledInCurrentContext(foundMapItem);
 
     if (!appEnabled) {
       logGenericCoreInfo(notEnabledMSG);
       continue;
     }
-    const registeredApp = window.__SPFxExtensions.RegisterApp(appReg);
+    const registeredApp = await window.__SPFxExtensions.RegisterApp(appReg);
     successfullyRegistered.push(appReg);
     if (!appReg.isWebPartApp && appReg.autoExecute) {
-      registeredApp.then(app => {
-        if (app.instances.length < (appReg.maxInstances ?? Infinity)) {
-          window.__SPFxExtensions.InstantiateApp(appReg.id, {});
-        }
-      })
+      if (registeredApp.instances.length < (appReg.maxInstances ?? Infinity)) {
+        window.__SPFxExtensions.InstantiateApp(appReg.id, {});
+      }
     }
 
   }
   return successfullyRegistered;
+}
+
+function isEntryEnabledInCurrentContext(foundMapItem: SPFxExtensionAppDefinitionMapItem) {
+  const currentWebId = getWebId().toLowerCase();
+  const currentSiteId = getSiteId().toLowerCase();
+  const currentHubId = getHubSiteId().toLowerCase();
+
+  const isEnabledEverywhere = foundMapItem.config.enabledEverywhere;
+  const appEnabled = isEnabledEverywhere ?
+    foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
+    foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
+    foundMapItem.config.excludedHubIds.indexOf(currentHubId) === -1 : true;
+  return appEnabled;
 }

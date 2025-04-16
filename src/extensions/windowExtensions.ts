@@ -78,7 +78,7 @@ declare global {
        * 
        * It will be called once `window.__SPFxExtensions.RegisterApp` is called.
        * 
-       * This method is called inside SPFx when applicable, otherwise it is up to the user to call this method.
+       * This method is called inside SPFx or Core when applicable.
        * 
        * @param appId appllication id to run
        * @param runTimeConfig runtime configuration for the app to use.
@@ -92,7 +92,9 @@ declare global {
        * 
        * If app was registered earlier it might contain instances that need to be instantiated.
        * 
-       * This will usually be done by `Core` however, in cases where apps are not in `ESM` format, it is up to the user to call this method.
+       * This will be done by `Core`.
+       * 
+       * Its not supported to call this method from non ESM modules as it will be unregistered as soon as execution completes.
        * 
        * @param app app definition
        */
@@ -103,6 +105,9 @@ declare global {
 
       /**
        * Unregisters app from global registry, removes all instances of the app.
+       * 
+       * Called by `Core` during lifecyle events
+       * 
        * @param appId application id to unregister
        */
       UnregisterApp(
