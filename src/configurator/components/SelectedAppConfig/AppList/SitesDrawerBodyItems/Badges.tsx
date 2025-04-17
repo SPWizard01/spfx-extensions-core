@@ -15,7 +15,7 @@ export function GetBadge(
   width: string = "72px"
 ) {
   return (
-    <Badge size="small" color={color} style={{ width: width }}>
+    <Badge size="medium" color={color} style={{ width: width }}>
       {text}
     </Badge>
   );

@@ -1,8 +1,6 @@
 import {
-  Badge,
   Body1,
   Button,
-  Divider,
   Drawer,
   DrawerBody,
   DrawerFooter,
@@ -15,15 +13,10 @@ import {
   Popover,
   PopoverSurface,
   PopoverTrigger,
-  Subtitle2,
   Switch,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
-import {
-  ArrowTurnDownRightRegular,
-  Dismiss24Regular,
-  Info16Regular,
-} from "@fluentui/react-icons";
+import { Dismiss24Regular, Info16Regular } from "@fluentui/react-icons";
 import { useComputed } from "@preact/signals";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../../models/appFolderManifest";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
@@ -48,8 +41,9 @@ import type {
   SiteUrlCollectionItem,
 } from "../../../models/UrlCollectionMapItem";
 import { Stack } from "../../common/Stack";
-import { GetBadge } from "./SitesDrawerBodyItems/Badges";
 import HubSites from "./SitesDrawerBodyItems/HubSites";
+import SiteCollections from "./SitesDrawerBodyItems/SiteCollections";
+import Webs from "./SitesDrawerBodyItems/Webs";
 
 interface IProps {
   appDefinitions: AppFolderManifestDefinitionItem[];
@@ -260,87 +254,10 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                 }
               />
             </Stack>
-
-            <HubSites hubSites={testBench.value} />
-
             <Stack gap={12}>
-              <Subtitle2>Site collections</Subtitle2>
-              <Divider />
-              {siteCollections.map((site) => (
-                <>
-                  <Stack>
-                    <Stack
-                      horizontal
-                      gap={8}
-                      verticalAlign="center"
-                      horizontalAlign="space-between"
-                    >
-                      <Stack horizontal verticalAlign="center" gap={8}>
-                        {GetBadge("warning", "Site collection")}
-                        {site.url}
-                      </Stack>
-                      {/* TODO Enable for all site collection subsites */}
-                      <Switch />
-                    </Stack>
-
-                    {site.webs.map((subSite) => (
-                      <Stack
-                        horizontal
-                        horizontalAlign="space-between"
-                        verticalAlign="center"
-                      >
-                        <Stack horizontal gap={8} verticalAlign="center">
-                          <ArrowTurnDownRightRegular />
-                          <Badge size="small">Web</Badge>
-                          <Body1>{subSite.url.split(site.url)[1] || "/"}</Body1>
-                        </Stack>
-                        {/* TODO include/exclude separate site */}
-                        <Switch />
-                      </Stack>
-                    ))}
-                  </Stack>
-                  <Divider />
-                </>
-              ))}
-            </Stack>
-            <Divider />
-            <Stack gap={12}>
-              <Subtitle2>Webs</Subtitle2>
-              <Divider />
-              {siteCollections.map((site) => (
-                <>
-                  <Stack>
-                    <Stack
-                      horizontal
-                      gap={8}
-                      verticalAlign="center"
-                      horizontalAlign="space-between"
-                    >
-                      <Stack horizontal verticalAlign="center" gap={8}>
-                        {GetBadge("warning", "Site collection")}
-                        {site.url}
-                      </Stack>
-                      <Switch />
-                    </Stack>
-
-                    {site.webs.map((subSite) => (
-                      <Stack
-                        horizontal
-                        horizontalAlign="space-between"
-                        verticalAlign="center"
-                      >
-                        <Stack horizontal gap={8} verticalAlign="center">
-                          <ArrowTurnDownRightRegular />
-                          <Badge size="small">Web</Badge>
-                          <Body1>{subSite.url.split(site.url)[1] || "/"}</Body1>
-                        </Stack>
-                        <Switch />
-                      </Stack>
-                    ))}
-                  </Stack>
-                  <Divider />
-                </>
-              ))}
+              <HubSites hubSites={testBench.value} />
+              <SiteCollections siteCollections={siteCollections} />
+              <Webs webs={siteCollections} />
             </Stack>
           </Stack>
         </Stack>
