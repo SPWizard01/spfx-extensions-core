@@ -3,13 +3,13 @@ import {
   ArrowRightRegular,
   ArrowTurnDownRightRegular,
 } from "@fluentui/react-icons";
+import type { HubUrlCollectionItem } from "../../../../models/UrlCollectionMapItem";
 import { Stack } from "../../../common/Stack";
 import { StackItem } from "../../../common/StackItem";
-import type { UrlHubCollection } from "../ManageAppDefinitionMapItemDrawer";
 import { GetBadge } from "./Badges";
 
 interface HubSitesProps {
-  hubSites: UrlHubCollection[];
+  hubSites: HubUrlCollectionItem[];
 }
 
 export default function HubSites({ hubSites }: HubSitesProps) {

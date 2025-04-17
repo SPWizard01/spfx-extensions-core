@@ -1,12 +1,12 @@
 import { Body1, Divider, Subtitle2, Switch } from "@fluentui/react-components";
 import { ArrowRightRegular } from "@fluentui/react-icons";
 
+import type { SPFxExtensionUrlMapItem } from "../../../../../models/appCollectionManifest";
 import { Stack } from "../../../common/Stack";
-import type { UrlSiteCollection } from "../ManageAppDefinitionMapItemDrawer";
 import { GetBadge } from "./Badges";
 
 interface WebsProps {
-  webs: UrlSiteCollection[];
+  webs: SPFxExtensionUrlMapItem[];
 }
 
 export default function Webs({ webs }: WebsProps) {

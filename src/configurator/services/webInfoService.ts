@@ -3,14 +3,17 @@ import "@pnp/sp/hubSites";
 import type { ISiteInfo } from "@pnp/sp/sites/types";
 import { SPCollection } from "@pnp/sp/spqueryable";
 import type { IWebInfo } from "@pnp/sp/webs";
-import { logGenericCoreError } from "../../core/services/loggingService";
+import { logGenericCoreError, logGenericCoreWarning } from "../../core/services/loggingService";
 import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest";
 import { EMPTY_GUID } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { HubResultResponse, HubResultSitesResponse } from "../models/HubResultResponse";
+import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/UrlCollectionMapItem";
+import { configurationRootWeb, configurationSite, configurationWeb, getConfigurationWebIsRootHub } from "../runtimeStore";
 import { getPnPSP } from "./pnpService";
+import { hubResponseToMapItem, spliceSites, spliceWebs, webInfoToMapItem } from "./webStructureResolver";
 export async function getAllWebInfos(sp: SPFI) {
-  const thisWeb = await getWeb(sp);
+  const thisWeb = configurationWeb;
   if (thisWeb.isError) {
     logGenericCoreError("Unable to get web info", thisWeb.error);
     return [];
@@ -40,6 +43,21 @@ async function getWebInfoRecursive(webs: IWebInfo[]) {
   return webInfos;
 }
 
+async function getWebInfoRecursiveResult(webs: IWebInfo[]) {
+
+  const infoPromises: Promise<ApiCallResult<IWebInfo[]>>[] = [];
+  for (const webInfo of webs) {
+    const webSp = getPnPSP(webInfo.Url);
+    infoPromises.push(getWebs(webSp));
+  }
+  const infoResult = await Promise.all(infoPromises)
+  const mapForRecursion = infoResult.filter((r) => !r.isError && r.data.length > 0).flatMap((r) => r.data);
+  if (mapForRecursion.length > 0) {
+    infoResult.push(...(await getWebInfoRecursiveResult(mapForRecursion)));
+  }
+  return infoResult.some(r => r.data.length > 0 || r.isError) ? infoResult : [];
+}
+
 export async function resolveWebStructure(webUrl: URL) {
   const sp = getPnPSP(webUrl.origin + webUrl.pathname);
 
@@ -56,17 +74,7 @@ export async function resolveWebStructure(webUrl: URL) {
       webStructure.warnings.push(siteErr);
       logGenericCoreError(siteErr, webUrl.href);
     }
-    // if (
-    //   site.data?.HubSiteId &&
-    //   site.data?.HubSiteId !== EMPTY_GUID &&
-    //   site.data.HubSiteId !== site.data.Id
-    // ) {
-    // }
-
-
-
-    console.log("rootHub", sp.web.toRequestUrl(), site.data.HubSiteId, site.data.Id);
-    const rootWeb = await getWebRoot(sp);
+    const rootWeb = await getRootWeb(sp);
     if (rootWeb.isError) {
       const rwErr = `Unable to get root web info ${rootWeb.error}`;
       webStructure.warnings.push(rwErr);
@@ -91,19 +99,142 @@ export async function resolveWebStructure(webUrl: URL) {
   return webStructure;
 }
 
-export async function getHubStructure(sp: SPFI, hubSiteId: string) {
-  const allHubs: HubResultSitesResponse[] = [];
-  for await (const chunk of getHubStructureGenerator(sp.web.toUrl().replace("_api/web", ""), hubSiteId)) {
-    allHubs.push(...chunk);
-  };
-  return allHubs;
+async function _getWebStructure(sp: SPFI) {
+  const web = await getWeb(sp);
+  const returnResult: SPFxExtensionUrlMapItem[] = []
+  if (web.isError) {
+    logGenericCoreError(`Unable to get web info ${web.error}`);
+    return returnResult;
+  }
+  returnResult.push({
+    id: web.data.Id,
+    url: web.data.Url,
+    hubid: EMPTY_GUID,
+    siteId: EMPTY_GUID,
+    isHubRoot: false,
+    isRootWeb: false,
+  })
+  const subWebs = await getWebs(sp);
+  if (subWebs.isError) {
+    logGenericCoreError(`Unable to get subwebs info ${subWebs.error}`);
+    return returnResult;
+  }
+
+  const recursiveWebs = await getWebInfoRecursiveResult(subWebs.data);
+  const rootSubWebsMap = webInfoToMapItem(subWebs.data, EMPTY_GUID, EMPTY_GUID);
+  const subWebsMap = webInfoToMapItem(recursiveWebs.filter(r => !r.isError).flatMap(d => d.data), EMPTY_GUID, EMPTY_GUID);
+  const allWebsMap = [...rootSubWebsMap, ...subWebsMap];
+  returnResult.push(...spliceWebs(allWebsMap, EMPTY_GUID));
+  return returnResult
 }
 
-export async function* getHubStructureGenerator(queryUrl: string, hubSiteId: string, initial = true): AsyncGenerator<HubResultSitesResponse[]> {
+export async function getSiteStructure(sp: SPFI) {
+  const site = configurationSite
+
+  let returnResult: SiteUrlCollectionItem = {
+    hubid: EMPTY_GUID,
+    id: EMPTY_GUID,
+    url: "",
+    siteId: EMPTY_GUID,
+    isHubRoot: false,
+    isRootWeb: false,
+    webs: []
+  }
+  if (site.isError) {
+    logGenericCoreError(`Unable to get site info ${site.error}`);
+    return returnResult;
+  }
+  const rootWeb = configurationRootWeb;
+  if (rootWeb.isError) {
+    logGenericCoreError(`Unable to get root web info ${rootWeb.error}`);
+    return returnResult;
+  }
+  const rootSubwebs = await getRootWebWebs(sp);
+  if (rootSubwebs.isError) {
+    logGenericCoreError(`Unable to get root subweb info ${rootWeb.error}`);
+    return returnResult;
+  }
+  const recursiveWebs = await getWebInfoRecursiveResult(rootSubwebs.data);
+  const rootSubWebsMap = webInfoToMapItem(rootSubwebs.data, site.data.Id, site.data.HubSiteId);
+  const subWebsMap = webInfoToMapItem(recursiveWebs.filter(r => !r.isError).flatMap(d => d.data), site.data.Id, site.data.HubSiteId);
+  const allWebsMap = [...rootSubWebsMap, ...subWebsMap];
+  const siteResult: SPFxExtensionUrlMapItem = {
+    hubid: site.data.HubSiteId,
+    id: rootWeb.data.Id,
+    url: rootWeb.data.Url,
+    siteId: site.data.Id,
+    isHubRoot: site.data.IsHubSite,
+    isRootWeb: true,
+  }
+  returnResult = {
+    ...siteResult,
+    webs: [
+      siteResult,
+      ...spliceWebs(allWebsMap, site.data.Id)
+    ],
+  }
+  return returnResult
+}
+
+export async function getHubStructure(sp: SPFI, suppliedHubId?: string) {
+  if (!getConfigurationWebIsRootHub()) {
+    return undefined;
+  }
+  const hubSiteId = suppliedHubId ?? configurationSite.data.HubSiteId;
+  const allHubItems: HubResultSitesResponse[] = [];
+  for await (const chunk of getHubStructureGenerator(sp.web.toUrl().replace("_api/web", ""), hubSiteId)) {
+    allHubItems.push(...chunk);
+  };
+  const resolvedStructure: HubUrlCollectionItem = {
+    id: "",
+    url: "",
+    siteId: hubSiteId,
+    hubid: hubSiteId,
+    isHubRoot: true,
+    isRootWeb: true,
+    sites: [],
+    webs: [],
+  };
+  const remainingItems = hubResponseToMapItem(allHubItems);
+  const hubRootIdx = remainingItems.findIndex((s) => s.hubid === hubSiteId && s.siteId === hubSiteId);
+  let hubRoot = hubRootIdx > -1 ? remainingItems.splice(hubRootIdx, 1)[0] : undefined;
+  if (!hubRoot) {
+    logGenericCoreWarning("API Call did not return Hub ROOT", hubSiteId);
+    hubRoot = {
+      id: configurationRootWeb.data.Id,
+      url: configurationRootWeb.data.Url,
+      hubid: hubSiteId,
+      siteId: hubSiteId,
+      isHubRoot: true,
+      isRootWeb: true,
+    }
+  }
+  resolvedStructure.id = hubRoot.id;
+  resolvedStructure.url = hubRoot.url;
+  resolvedStructure.hubid = hubRoot.hubid;
+  resolvedStructure.siteId = hubRoot.siteId;
+  resolvedStructure.sites.push({
+    ...hubRoot,
+    webs: [hubRoot],
+  })
+
+  const hubSubWebsToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
+    remainingItems,
+    hubRoot.siteId
+  );
+  const rootSite = resolvedStructure.sites.find((s) => s.id === hubRoot.id);
+  if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
+  const hubSitesToPush = spliceSites(remainingItems);
+  resolvedStructure.sites.push(...hubSitesToPush);
+  resolvedStructure.webs.push(...remainingItems);
+  return resolvedStructure;
+}
+
+async function* getHubStructureGenerator(queryUrl: string, hubSiteId: string, initial = true): AsyncGenerator<HubResultSitesResponse[]> {
   const initialRequest = SPCollection(queryUrl, initial ? "_api/v2.1/sites" : "").using(SPBrowser())<HubResultResponse>
   if (initial) {
     initialRequest
-      .filter(`sharepointIds/hubSiteId eq '${hubSiteId}'`).top(2);
+      .filter(`sharepointIds/hubSiteId eq '${hubSiteId}'`).top(99);
   }
   initialRequest.on.parse.replace(async (url, response, result) => {
     const emptyResult: HubResultResponse = {
@@ -131,8 +262,12 @@ export async function* getHubStructureGenerator(queryUrl: string, hubSiteId: str
   }
 }
 
-export async function getWebRoot(sp: SPFI) {
+export async function getRootWeb(sp: SPFI) {
   return fetchSPData(() => sp.site.rootWeb(), {} as IWebInfo);
+}
+
+export async function getRootWebWebs(sp: SPFI) {
+  return fetchSPData(() => sp.site.rootWeb.webs(), []);
 }
 
 export async function getSite(sp: SPFI) {
@@ -144,7 +279,7 @@ export async function getWeb(sp: SPFI) {
 }
 
 export async function getWebs(sp: SPFI) {
-  return fetchSPData(() => sp.web.webs(), [] as IWebInfo[]);
+  return fetchSPData(() => sp.web.webs(), []);
 }
 
 async function fetchSPData<T>(

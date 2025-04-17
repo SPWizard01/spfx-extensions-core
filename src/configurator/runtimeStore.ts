@@ -1,8 +1,10 @@
+import type { IWebInfo } from "@pnp/sp/webs";
 import { signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type { SPFxExtensionAppDefinitionMapItem } from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
+import type { ApiCallResult } from "./models/apiCallResult";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
   getAllAppCollections,
@@ -11,15 +13,25 @@ import {
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
-import { getAllWebInfos, getSite, getWeb, getWebRoot } from "./services/webInfoService";
+import { getHubStructure, getRootWeb, getSite, getSiteStructure, getWeb } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
 export const configrationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
 export const configurationSite = await getSite(configurationWebSP);
+export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.isError ? await getRootWeb(configurationWebSP) : {
+  data: {} as IWebInfo,
+  warnings: [],
+  error: `Unable to get root web since site is not available`,
+  isError: true
+};
 export const configurationWeb = await getWeb(configurationWebSP);
-export const configurationRootWeb = await getWebRoot(configurationWebSP);
 export const configurationIsGlobal = !queryWeb
+
+export function getConfigurationWebIsSite() {
+  if (configurationRootWeb.isError || configurationWeb.isError) return false;
+  return configurationWeb.data.Id === configurationRootWeb.data.Id;
+}
 
 export function getConfigurationWebIsRootHub() {
   if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError) return false;
@@ -36,9 +48,9 @@ export function getConfigurationWebIsSubsite() {
   return configurationRootWeb.data.Id !== configurationWeb.data.Id;
 }
 
-export const configurationWebSubWebs = await getAllWebInfos(
-  configurationWebSP
-);
+export const configurationWebSubWebs: IWebInfo[] = [];
+export const configurationSiteStructure = getConfigurationWebIsSite() ? await getSiteStructure(configurationWebSP) : undefined;
+export const configurationHubStructure = await getHubStructure(configurationWebSP, configurationSite.data?.HubSiteId);
 
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getAppCollectionConfig(configurationWebSP);

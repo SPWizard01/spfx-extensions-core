@@ -1,11 +1,11 @@
 import { Body1, Divider, Subtitle2, Switch } from "@fluentui/react-components";
 import { ArrowTurnDownRightRegular } from "@fluentui/react-icons";
+import type { SiteUrlCollectionItem } from "../../../../models/UrlCollectionMapItem";
 import { Stack } from "../../../common/Stack";
-import type { UrlSiteCollection } from "../ManageAppDefinitionMapItemDrawer";
 import { GetBadge } from "./Badges";
 
 interface SiteCollectionsProps {
-  siteCollections: UrlSiteCollection[];
+  siteCollections: SiteUrlCollectionItem[];
 }
 
 export default function SiteCollections({

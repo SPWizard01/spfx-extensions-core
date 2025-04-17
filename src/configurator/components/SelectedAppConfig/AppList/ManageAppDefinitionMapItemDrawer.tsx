@@ -23,12 +23,16 @@ import type { AppCollectionConfigurationItem } from "../../../models/appCollecti
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import type { ConfiguratorURLMapItem } from "../../../models/urlMapItemExtended";
 import {
+  configurationHubStructure,
   configurationIsGlobal,
   configurationRootWeb,
   configurationSite,
+  configurationSiteStructure,
   configurationWebSubWebs,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
+  getConfigurationWebIsSite,
+  getConfigurationWebIsSubsite,
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../../runtimeStore";
@@ -40,6 +44,10 @@ import type {
   HubUrlCollectionItem,
   SiteUrlCollectionItem,
 } from "../../../models/UrlCollectionMapItem";
+import {
+  spliceSites,
+  spliceWebs,
+} from "../../../services/webStructureResolver";
 import { Stack } from "../../common/Stack";
 import HubSites from "./SitesDrawerBodyItems/HubSites";
 import SiteCollections from "./SitesDrawerBodyItems/SiteCollections";
@@ -56,34 +64,39 @@ interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const urlList = useComputed(() => {
-    const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
-      ? configurationWebSubWebs.map((w) => {
-          return {
-            id: w.Id,
-            siteId: w.Id,
-            hubid: configurationSite.data?.HubSiteId ?? EMPTY_GUID,
-            url: w.Url,
-            isRootWeb: w.Id === configurationRootWeb.data?.Id,
-            isHubRoot:
-              w.Id === configurationRootWeb.data?.Id &&
-              getConfigurationWebIsRootHub(),
-            canDelete: false,
-          };
-        })
-      : [];
-    contextCollectionConfig.value.urlMap.forEach((item) => {
-      // not in default list
-      if (!defaultList.some((s) => s.id === item.id)) {
-        defaultList.push({
-          ...item,
-          canDelete: true,
-        });
-      }
-    });
+  const _urlList = useComputed(() => {
+    const hubToMap = configurationHubStructure;
+    const siteToMap = configurationSiteStructure;
+    const defaultList: ConfiguratorURLMapItem[] =
+      !configurationIsGlobal && getConfigurationWebIsSite()
+        ? configurationWebSubWebs.map((w) => {
+            return {
+              id: w.Id,
+              siteId: w.Id,
+              hubid: configurationSite.data?.HubSiteId ?? EMPTY_GUID,
+              url: w.Url,
+              isRootWeb: w.Id === configurationRootWeb.data?.Id,
+              isHubRoot:
+                w.Id === configurationRootWeb.data?.Id &&
+                getConfigurationWebIsRootHub(),
+              canDelete: false,
+            };
+          })
+        : [];
+    if (configurationIsGlobal) {
+      contextCollectionConfig.value.urlMap.forEach((item) => {
+        // not in default list
+        if (!defaultList.some((s) => s.id === item.id)) {
+          defaultList.push({
+            ...item,
+            canDelete: true,
+          });
+        }
+      });
+    }
+
     return defaultList;
   });
-
   const testBench = useComputed(() => {
     const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
       ? configurationWebSubWebs.map((w) => {
@@ -117,11 +130,11 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     for (const hubId of nonEmptyHubKeys) {
       const hubItems = allGroupedByHub[hubId];
       if (!hubItems) continue;
-      const copyItems = [...hubItems];
-      const hubRootIdx = copyItems.findIndex((s) => s.isHubRoot);
+      const remainingItems = [...hubItems];
+      const hubRootIdx = remainingItems.findIndex((s) => s.isHubRoot);
       //if this hub group contains root hub
       if (hubRootIdx > -1) {
-        const hubRoot = copyItems.splice(hubRootIdx, 1)[0];
+        const hubRoot = remainingItems.splice(hubRootIdx, 1)[0];
         let inHubCollection = hubResults.find((h) => h.hubid === hubId);
         if (!inHubCollection) {
           inHubCollection = {
@@ -136,15 +149,17 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           };
           hubResults.push(inHubCollection);
         }
+        console.log("hubSubWebsToPush", remainingItems, hubRoot.siteId);
         const hubSubWebsToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
-          copyItems,
+          remainingItems,
           hubRoot.siteId
         );
         const rootSite = inHubCollection.sites.find((s) => s.id === hubRoot.id);
         if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
-        const hubSitesToPush: SiteUrlCollectionItem[] = spliceSites(copyItems);
+        const hubSitesToPush: SiteUrlCollectionItem[] =
+          spliceSites(remainingItems);
         inHubCollection.sites.push(...hubSitesToPush);
-        inHubCollection.webs.push(...copyItems);
+        inHubCollection.webs.push(...remainingItems);
       } else {
         const inHubCollection: HubUrlCollectionItem = {
           hubid: hubId,
@@ -156,11 +171,11 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           sites: [],
           webs: [],
         };
-        inHubCollection.sites.push(...spliceSites(copyItems));
-        inHubCollection.webs.push(...copyItems);
+        inHubCollection.sites.push(...spliceSites(remainingItems));
+        inHubCollection.webs.push(...remainingItems);
         hubResults.push(inHubCollection);
       }
-      console.log("remaining", copyItems);
+      console.log("remaining", remainingItems);
     }
     console.log("hubResults", hubResults);
 
@@ -170,19 +185,6 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
 
   const urlsWithSubsites: ConfiguratorURLMapItemWithSubSites[] = [];
-
-  urlList.value.forEach((url, _, arr) => {
-    if (url.isRootWeb) {
-      urlsWithSubsites.push({
-        ...url,
-        webs: [
-          url,
-          ...arr.filter((s) => s.siteId === url.siteId && s.id !== url.id),
-        ],
-      });
-    }
-    return url;
-  });
 
   // TODO Group urlList.value by hubs, sites, webs
   const siteCollections = urlsWithSubsites.filter(
@@ -255,9 +257,20 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               />
             </Stack>
             <Stack gap={12}>
-              <HubSites hubSites={testBench.value} />
-              <SiteCollections siteCollections={siteCollections} />
-              <Webs webs={siteCollections} />
+              {getConfigurationWebIsRootHub() || configurationIsGlobal ? (
+                <HubSites
+                  hubSites={
+                    configurationHubStructure ? [configurationHubStructure] : []
+                  }
+                />
+              ) : null}
+              {configurationIsGlobal ? (
+                <SiteCollections siteCollections={siteCollections} />
+              ) : null}
+              {(getConfigurationWebIsSite() || configurationIsGlobal) &&
+              !getConfigurationWebIsRootHub() ? (
+                <Webs webs={siteCollections} />
+              ) : null}
             </Stack>
           </Stack>
         </Stack>
@@ -300,58 +313,4 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
       </DrawerFooter>
     </Drawer>
   );
-}
-function spliceSites(copyItems: ConfiguratorURLMapItem[]) {
-  const sitesToPush: SiteUrlCollectionItem[] = [];
-  let siteIdx = copyItems.findIndex((s) => s.isRootWeb);
-  while (siteIdx > -1) {
-    const siteItem = copyItems.splice(siteIdx, 1)[0];
-    let inSiteCollection = sitesToPush.find((s) => s.id === siteItem.id);
-    if (!inSiteCollection) {
-      inSiteCollection = {
-        ...siteItem,
-        webs: [siteItem],
-      };
-      sitesToPush.push(inSiteCollection);
-    }
-    const websToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
-      copyItems,
-      siteItem.siteId
-    );
-    inSiteCollection.webs.push(
-      ...websToPush.sort((a, b) => a.url.localeCompare(b.url))
-    );
-    siteIdx = copyItems.findIndex((s) => s.isRootWeb);
-  }
-  return sitesToPush;
-}
-
-function spliceWebs(copyItems: SPFxExtensionUrlMapItem[], siteId: string) {
-  const websToPush: SPFxExtensionUrlMapItem[] = [];
-  let webIdx = copyItems.findIndex((s) => s.siteId === siteId);
-  while (webIdx > -1) {
-    const webItem = copyItems.splice(webIdx, 1)[0];
-    websToPush.push(webItem);
-    webIdx = copyItems.findIndex((s) => s.siteId === siteId);
-  }
-  return websToPush.sort((a, b) => a.url.localeCompare(b.url));
-}
-
-function groupSites(mapItems: SPFxExtensionUrlMapItem[]) {
-  const returnSites: SPFxExtensionUrlMapItem[] = [];
-  const groupedSites = Object.groupBy(mapItems, (item) => item.siteId);
-  const siteKeys = Object.keys(groupedSites);
-  for (const site of siteKeys) {
-    const siteItems = groupedSites[site];
-    if (!siteItems) continue;
-    const rootWeb = siteItems.find((s) => s.isRootWeb);
-    const nonRootWebs = siteItems
-      .filter((s) => !s.isRootWeb)
-      .sort((a, b) => a.url.localeCompare(b.url));
-    if (rootWeb) {
-      returnSites.push(rootWeb);
-    }
-    returnSites.push(...nonRootWebs);
-  }
-  return returnSites;
 }
