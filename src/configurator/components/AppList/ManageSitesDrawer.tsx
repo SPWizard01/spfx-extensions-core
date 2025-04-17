@@ -169,6 +169,8 @@ export function ManageSitesDrawer() {
         };
       });
       await updateAppCollectionConfig(configurationWebSP, contextCopy);
+      console.log("updated", contextCopy);
+      contextCollectionConfig.value = contextCopy;
     } finally {
       setIsResolving(false);
       setUrlInputError("");
@@ -176,7 +178,6 @@ export function ManageSitesDrawer() {
       setModified(false);
       setCollectionUrlMap([]);
       ManageSitesDrawerSignal.value = false;
-      contextCollectionConfig.value = contextCopy;
     }
   }
 

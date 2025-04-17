@@ -17,37 +17,25 @@ import {
   useRestoreFocusSource,
 } from "@fluentui/react-components";
 import { Dismiss24Regular, Info16Regular } from "@fluentui/react-icons";
-import { useComputed } from "@preact/signals";
+import { useSignalEffect } from "@preact/signals";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../../models/appFolderManifest";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import type { ConfiguratorURLMapItem } from "../../../models/urlMapItemExtended";
 import {
-  configurationHubStructure,
   configurationIsGlobal,
-  configurationRootWeb,
-  configurationSite,
-  configurationSiteStructure,
-  configurationWebSubWebs,
+  configurationWebSP,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
   getConfigurationWebIsSite,
-  getConfigurationWebIsSubsite,
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../../runtimeStore";
 
-import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
-import { EMPTY_GUID } from "../../../../utilities/constants";
+import { useState } from "preact/hooks";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
-import type {
-  HubUrlCollectionItem,
-  SiteUrlCollectionItem,
-} from "../../../models/UrlCollectionMapItem";
-import {
-  spliceSites,
-  spliceWebs,
-} from "../../../services/webStructureResolver";
+import type { HubUrlCollectionItem } from "../../../models/UrlCollectionMapItem";
+import { getHubStructure } from "../../../services/webInfoService";
 import { Stack } from "../../common/Stack";
 import HubSites from "./SitesDrawerBodyItems/HubSites";
 import SiteCollections from "./SitesDrawerBodyItems/SiteCollections";
@@ -64,124 +52,18 @@ interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const _urlList = useComputed(() => {
-    const hubToMap = configurationHubStructure;
-    const siteToMap = configurationSiteStructure;
-    const defaultList: ConfiguratorURLMapItem[] =
-      !configurationIsGlobal && getConfigurationWebIsSite()
-        ? configurationWebSubWebs.map((w) => {
-            return {
-              id: w.Id,
-              siteId: w.Id,
-              hubid: configurationSite.data?.HubSiteId ?? EMPTY_GUID,
-              url: w.Url,
-              isRootWeb: w.Id === configurationRootWeb.data?.Id,
-              isHubRoot:
-                w.Id === configurationRootWeb.data?.Id &&
-                getConfigurationWebIsRootHub(),
-              canDelete: false,
-            };
-          })
-        : [];
-    if (configurationIsGlobal) {
-      contextCollectionConfig.value.urlMap.forEach((item) => {
-        // not in default list
-        if (!defaultList.some((s) => s.id === item.id)) {
-          defaultList.push({
-            ...item,
-            canDelete: true,
-          });
-        }
+  const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
+  useSignalEffect(() => {
+    if (!configurationIsGlobal && getConfigurationWebIsRootHub()) {
+      getHubStructure(
+        configurationWebSP,
+        contextCollectionConfig.value.urlMap
+      ).then((hub) => {
+        setHubStructure(hub ? [hub] : []);
       });
     }
-
-    return defaultList;
   });
-  const testBench = useComputed(() => {
-    const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
-      ? configurationWebSubWebs.map((w) => {
-          return {
-            id: w.Id,
-            siteId: w.Id,
-            hubid: configurationSite.data?.HubSiteId ?? EMPTY_GUID,
-            url: w.Url,
-            isRootWeb: w.Id === configurationRootWeb.data?.Id,
-            isHubRoot:
-              w.Id === configurationRootWeb.data?.Id &&
-              getConfigurationWebIsRootHub(),
-            canDelete: false,
-          };
-        })
-      : [];
-    contextCollectionConfig.value.urlMap.forEach((item) => {
-      // not in default list
-      if (!defaultList.some((s) => s.id === item.id)) {
-        defaultList.push({
-          ...item,
-          canDelete: true,
-        });
-      }
-    });
-    const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
-    const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
-      (k) => k && k !== EMPTY_GUID
-    );
-    const hubResults: HubUrlCollectionItem[] = [];
-    for (const hubId of nonEmptyHubKeys) {
-      const hubItems = allGroupedByHub[hubId];
-      if (!hubItems) continue;
-      const remainingItems = [...hubItems];
-      const hubRootIdx = remainingItems.findIndex((s) => s.isHubRoot);
-      //if this hub group contains root hub
-      if (hubRootIdx > -1) {
-        const hubRoot = remainingItems.splice(hubRootIdx, 1)[0];
-        let inHubCollection = hubResults.find((h) => h.hubid === hubId);
-        if (!inHubCollection) {
-          inHubCollection = {
-            ...hubRoot,
-            sites: [
-              {
-                ...hubRoot,
-                webs: [hubRoot],
-              },
-            ],
-            webs: [],
-          };
-          hubResults.push(inHubCollection);
-        }
-        console.log("hubSubWebsToPush", remainingItems, hubRoot.siteId);
-        const hubSubWebsToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
-          remainingItems,
-          hubRoot.siteId
-        );
-        const rootSite = inHubCollection.sites.find((s) => s.id === hubRoot.id);
-        if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
-        const hubSitesToPush: SiteUrlCollectionItem[] =
-          spliceSites(remainingItems);
-        inHubCollection.sites.push(...hubSitesToPush);
-        inHubCollection.webs.push(...remainingItems);
-      } else {
-        const inHubCollection: HubUrlCollectionItem = {
-          hubid: hubId,
-          id: hubId,
-          isHubRoot: true,
-          isRootWeb: true,
-          siteId: hubId,
-          url: hubId,
-          sites: [],
-          webs: [],
-        };
-        inHubCollection.sites.push(...spliceSites(remainingItems));
-        inHubCollection.webs.push(...remainingItems);
-        hubResults.push(inHubCollection);
-      }
-      console.log("remaining", remainingItems);
-    }
-    console.log("hubResults", hubResults);
 
-    return hubResults;
-  });
-  console.log("testBench", testBench.value);
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
 
   const urlsWithSubsites: ConfiguratorURLMapItemWithSubSites[] = [];
@@ -258,11 +140,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
             </Stack>
             <Stack gap={12}>
               {getConfigurationWebIsRootHub() || configurationIsGlobal ? (
-                <HubSites
-                  hubSites={
-                    configurationHubStructure ? [configurationHubStructure] : []
-                  }
-                />
+                <HubSites hubSites={hubStructure} />
               ) : null}
               {configurationIsGlobal ? (
                 <SiteCollections siteCollections={siteCollections} />

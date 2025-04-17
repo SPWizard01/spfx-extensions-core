@@ -9,9 +9,9 @@ import { EMPTY_GUID } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { HubResultResponse, HubResultSitesResponse } from "../models/HubResultResponse";
 import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/UrlCollectionMapItem";
-import { configurationRootWeb, configurationSite, configurationWeb, getConfigurationWebIsRootHub } from "../runtimeStore";
+import { configurationRootWeb, configurationSite, configurationSiteStructure, configurationWeb, getConfigurationWebIsRootHub, getConfigurationWebIsSite } from "../runtimeStore";
 import { getPnPSP } from "./pnpService";
-import { hubResponseToMapItem, spliceSites, spliceWebs, webInfoToMapItem } from "./webStructureResolver";
+import { hubResponseToMapItem, spliceHub, spliceSites, spliceWebs, webInfoToMapItem } from "./webStructureResolver";
 export async function getAllWebInfos(sp: SPFI) {
   const thisWeb = configurationWeb;
   if (thisWeb.isError) {
@@ -23,24 +23,8 @@ export async function getAllWebInfos(sp: SPFI) {
     logGenericCoreError("Unable to get web info", allSubwebs.error);
     return [];
   }
-  const recursiveWebs = await getWebInfoRecursive(allSubwebs.data);
-  return [thisWeb.data, ...allSubwebs.data, ...recursiveWebs];
-}
-async function getWebInfoRecursive(webs: IWebInfo[]) {
-  const webInfos = new Set<IWebInfo>();
-
-  const promises = webs.map(async (element) => {
-    try {
-      const subWebInfos = await getPnPSP(element.Url).web.webs();
-      subWebInfos.forEach((info) => webInfos.add(info));
-      const sub = await getWebInfoRecursive(subWebInfos);
-      sub.forEach((info) => webInfos.add(info));
-    } catch (error) {
-      logGenericCoreError("Unable to get web info", element.Url, error);
-    }
-  });
-  await Promise.all(promises);
-  return webInfos;
+  const recursiveWebs = await getWebInfoRecursiveResult(allSubwebs.data);
+  return [thisWeb.data, ...allSubwebs.data, ...recursiveWebs.filter(r => !r.isError).flatMap(d => d.data)];
 }
 
 async function getWebInfoRecursiveResult(webs: IWebInfo[]) {
@@ -129,6 +113,9 @@ async function _getWebStructure(sp: SPFI) {
 }
 
 export async function getSiteStructure(sp: SPFI) {
+  if (!getConfigurationWebIsSite()) {
+    return undefined;
+  }
   const site = configurationSite
 
   let returnResult: SiteUrlCollectionItem = {
@@ -176,8 +163,14 @@ export async function getSiteStructure(sp: SPFI) {
   return returnResult
 }
 
-export async function getHubStructure(sp: SPFI, suppliedHubId?: string) {
+
+
+
+export async function getHubStructure(sp: SPFI, additionalMapItems: SPFxExtensionUrlMapItem[], suppliedHubId?: string) {
   if (!getConfigurationWebIsRootHub()) {
+    return undefined;
+  }
+  if (!configurationSiteStructure) {
     return undefined;
   }
   const hubSiteId = suppliedHubId ?? configurationSite.data.HubSiteId;
@@ -223,10 +216,79 @@ export async function getHubStructure(sp: SPFI, suppliedHubId?: string) {
     hubRoot.siteId
   );
   const rootSite = resolvedStructure.sites.find((s) => s.id === hubRoot.id);
-  if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
+  if (rootSite) {
+    rootSite.webs.push(...hubSubWebsToPush);
+  }
+  else {
+    resolvedStructure.webs.push(...hubSubWebsToPush);
+  }
   const hubSitesToPush = spliceSites(remainingItems);
   resolvedStructure.sites.push(...hubSitesToPush);
   resolvedStructure.webs.push(...remainingItems);
+  for (const element of configurationSiteStructure.webs.sort((a, b) => a.url.localeCompare(b.url))) {
+    if (resolvedStructure.sites.flatMap(s => s.webs).findIndex(w => w.id === element.id) === -1) {
+      const foundSiteIdx = resolvedStructure.sites.findIndex(s => s.siteId === element.siteId);
+      if (foundSiteIdx < 0) {
+        resolvedStructure.sites.push({
+          id: element.id,
+          url: element.url,
+          hubid: element.hubid,
+          siteId: element.siteId,
+          isHubRoot: false,
+          isRootWeb: true,
+          webs: [element],
+        });
+        continue;
+      }
+      resolvedStructure.sites[foundSiteIdx].webs.push(element);
+      resolvedStructure.sites[foundSiteIdx].webs = resolvedStructure.sites[foundSiteIdx].webs.sort((a, b) => a.url.localeCompare(b.url));
+    }
+  }
+  //add sites that ar in context config
+  const additionalHubInfo = spliceHub([...additionalMapItems], hubSiteId);
+  if (additionalHubInfo) {
+    for (const additionalSiteInfo of additionalHubInfo.sites) {
+      const foundSites = resolvedStructure.sites.find(s => s.id === additionalSiteInfo.id);
+      if (foundSites) {
+        for (const additionalWebInfo of additionalSiteInfo.webs) {
+          const foundWebs = foundSites.webs.find(w => w.id === additionalWebInfo.id);
+          if (foundWebs) {
+            continue;
+          } else {
+            foundSites.webs.push(additionalWebInfo);
+          }
+        }
+        foundSites.webs = foundSites.webs.sort((a, b) => a.url.localeCompare(b.url));
+        continue;
+      }
+      resolvedStructure.sites.push(additionalSiteInfo);
+    }
+    for (const additionalWebInfo of additionalHubInfo.webs) {
+      const foundWebs = resolvedStructure.webs.find(w => w.id === additionalWebInfo.id);
+      if (foundWebs) {
+        continue;
+      } else {
+        resolvedStructure.webs.push(additionalWebInfo);
+      }
+    }
+  }
+
+  const toRemove: SPFxExtensionUrlMapItem[] = [];
+  for (const unstructuredWeb of resolvedStructure.webs) {
+    const hasCorrespondingSiteEntry = resolvedStructure.sites.find(s => s.id === unstructuredWeb.siteId);
+    if (!hasCorrespondingSiteEntry) {
+      continue;
+    }
+    toRemove.push({ ...unstructuredWeb });
+    const hasWebEntry = hasCorrespondingSiteEntry.webs.find(s => s.id === unstructuredWeb.id);
+    if (!hasWebEntry) {
+      hasCorrespondingSiteEntry.webs.push({ ...unstructuredWeb });
+      hasCorrespondingSiteEntry.webs = hasCorrespondingSiteEntry.webs.sort((a, b) => a.url.localeCompare(b.url));
+    }
+  }
+
+  resolvedStructure.webs = resolvedStructure.webs.filter(w => toRemove.findIndex(r => r.id === w.id) > -1);
+  resolvedStructure.webs = resolvedStructure.webs.sort((a, b) => a.url.localeCompare(b.url));
   return resolvedStructure;
 }
 

@@ -13,7 +13,7 @@ import {
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
-import { getHubStructure, getRootWeb, getSite, getSiteStructure, getWeb } from "./services/webInfoService";
+import { getRootWeb, getSite, getSiteStructure, getWeb } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
 export const configrationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
 
@@ -48,10 +48,6 @@ export function getConfigurationWebIsSubsite() {
   return configurationRootWeb.data.Id !== configurationWeb.data.Id;
 }
 
-export const configurationWebSubWebs: IWebInfo[] = [];
-export const configurationSiteStructure = getConfigurationWebIsSite() ? await getSiteStructure(configurationWebSP) : undefined;
-export const configurationHubStructure = await getHubStructure(configurationWebSP, configurationSite.data?.HubSiteId);
-
 const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
 const enabledAppsData = await getAppCollectionConfig(configurationWebSP);
 
@@ -69,6 +65,10 @@ export const allAppItems =
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppDeinitionMapItem = signal<SPFxExtensionAppDefinitionMapItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
+
+
+export const configurationWebSubWebs: IWebInfo[] = [];
+export const configurationSiteStructure = await getSiteStructure(configurationWebSP);
 
 
 export function getEmptyAppItem(appName: string) {
