@@ -40,8 +40,13 @@ import {
   selectedAppItem,
 } from "../../../runtimeStore";
 
+import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
 import { EMPTY_GUID } from "../../../../utilities/constants";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
+import type {
+  HubUrlCollectionItem,
+  SiteUrlCollectionItem,
+} from "../../../models/UrlCollectionMapItem";
 import { Stack } from "../../common/Stack";
 import { GetBadge } from "./SitesDrawerBodyItems/Badges";
 import HubSites from "./SitesDrawerBodyItems/HubSites";
@@ -51,14 +56,6 @@ interface IProps {
 }
 
 interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
-  webs: ConfiguratorURLMapItem[];
-}
-
-export interface UrlSiteCollection extends ConfiguratorURLMapItem {
-  webs: ConfiguratorURLMapItem[];
-}
-export interface UrlHubCollection extends ConfiguratorURLMapItem {
-  sites: UrlSiteCollection[];
   webs: ConfiguratorURLMapItem[];
 }
 
@@ -90,57 +87,6 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
         });
       }
     });
-    const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
-    const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
-      (k) => k && k !== EMPTY_GUID
-    );
-    const restItemKeys = Object.keys(allGroupedByHub).filter(
-      (k) => !k || k === EMPTY_GUID
-    );
-    const allHubs: ConfiguratorURLMapItem[] = [];
-    const allSites: ConfiguratorURLMapItem[] = [];
-    const allWebs: ConfiguratorURLMapItem[] = [];
-    for (const element of nonEmptyHubKeys) {
-      const hubItems = allGroupedByHub[element];
-      if (!hubItems) continue;
-      allHubs.push(...groupSites(hubItems));
-    }
-
-    for (const element of restItemKeys) {
-      const nonHubItems = allGroupedByHub[element];
-      if (!nonHubItems) continue;
-      const groupedBySite = Object.groupBy(nonHubItems, (item) => item.siteId);
-      const siteKeys = Object.keys(groupedBySite);
-      for (const site of siteKeys) {
-        const siteItems = groupedBySite[site];
-        if (!siteItems) continue;
-        const rootWeb = siteItems.find((s) => s.isRootWeb);
-        const nonRootWebs = siteItems
-          .filter((s) => !s.isRootWeb)
-          .sort((a, b) => a.url.localeCompare(b.url));
-        if (rootWeb) {
-          allSites.push(rootWeb);
-          allSites.push(...nonRootWebs);
-          //push to sites collection
-        } else {
-          allWebs.push(...nonRootWebs);
-          //push to webs collection
-        }
-      }
-    }
-
-    console.log(
-      "allHubs",
-      Object.groupBy(allHubs, (item) => item.hubid)
-    );
-    console.log(
-      "allSites",
-      Object.groupBy(allSites, (item) => item.siteId)
-    );
-    console.log(
-      "allWebs",
-      Object.groupBy(allWebs, (item) => item.siteId)
-    );
     return defaultList;
   });
 
@@ -173,7 +119,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
       (k) => k && k !== EMPTY_GUID
     );
-    const hubResults: UrlHubCollection[] = [];
+    const hubResults: HubUrlCollectionItem[] = [];
     for (const hubId of nonEmptyHubKeys) {
       const hubItems = allGroupedByHub[hubId];
       if (!hubItems) continue;
@@ -196,18 +142,17 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           };
           hubResults.push(inHubCollection);
         }
-        const hubSubWebsToPush: ConfiguratorURLMapItem[] = spliceWebs(
+        const hubSubWebsToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
           copyItems,
           hubRoot.siteId
         );
         const rootSite = inHubCollection.sites.find((s) => s.id === hubRoot.id);
         if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
-        const hubSitesToPush: UrlSiteCollection[] = spliceSites(copyItems);
+        const hubSitesToPush: SiteUrlCollectionItem[] = spliceSites(copyItems);
         inHubCollection.sites.push(...hubSitesToPush);
         inHubCollection.webs.push(...copyItems);
       } else {
-        const inHubCollection: UrlHubCollection = {
-          canDelete: true,
+        const inHubCollection: HubUrlCollectionItem = {
           hubid: hubId,
           id: hubId,
           isHubRoot: true,
@@ -440,7 +385,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   );
 }
 function spliceSites(copyItems: ConfiguratorURLMapItem[]) {
-  const sitesToPush: UrlSiteCollection[] = [];
+  const sitesToPush: SiteUrlCollectionItem[] = [];
   let siteIdx = copyItems.findIndex((s) => s.isRootWeb);
   while (siteIdx > -1) {
     const siteItem = copyItems.splice(siteIdx, 1)[0];
@@ -452,7 +397,7 @@ function spliceSites(copyItems: ConfiguratorURLMapItem[]) {
       };
       sitesToPush.push(inSiteCollection);
     }
-    const websToPush: ConfiguratorURLMapItem[] = spliceWebs(
+    const websToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
       copyItems,
       siteItem.siteId
     );
@@ -464,8 +409,8 @@ function spliceSites(copyItems: ConfiguratorURLMapItem[]) {
   return sitesToPush;
 }
 
-function spliceWebs(copyItems: ConfiguratorURLMapItem[], siteId: string) {
-  const websToPush: ConfiguratorURLMapItem[] = [];
+function spliceWebs(copyItems: SPFxExtensionUrlMapItem[], siteId: string) {
+  const websToPush: SPFxExtensionUrlMapItem[] = [];
   let webIdx = copyItems.findIndex((s) => s.siteId === siteId);
   while (webIdx > -1) {
     const webItem = copyItems.splice(webIdx, 1)[0];
@@ -475,8 +420,8 @@ function spliceWebs(copyItems: ConfiguratorURLMapItem[], siteId: string) {
   return websToPush.sort((a, b) => a.url.localeCompare(b.url));
 }
 
-function groupSites(mapItems: ConfiguratorURLMapItem[]) {
-  const returnSites: ConfiguratorURLMapItem[] = [];
+function groupSites(mapItems: SPFxExtensionUrlMapItem[]) {
+  const returnSites: SPFxExtensionUrlMapItem[] = [];
   const groupedSites = Object.groupBy(mapItems, (item) => item.siteId);
   const siteKeys = Object.keys(groupedSites);
   for (const site of siteKeys) {

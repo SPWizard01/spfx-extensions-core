@@ -1,11 +1,13 @@
-import type { SPFI } from "@pnp/sp";
+import { SPBrowser, type SPFI } from "@pnp/sp";
 import "@pnp/sp/hubSites";
 import type { ISiteInfo } from "@pnp/sp/sites/types";
+import { SPCollection } from "@pnp/sp/spqueryable";
 import type { IWebInfo } from "@pnp/sp/webs";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest";
 import { EMPTY_GUID } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
+import type { HubResultResponse, HubResultSitesResponse } from "../models/HubResultResponse";
 import { getPnPSP } from "./pnpService";
 export async function getAllWebInfos(sp: SPFI) {
   const thisWeb = await getWeb(sp);
@@ -54,13 +56,16 @@ export async function resolveWebStructure(webUrl: URL) {
       webStructure.warnings.push(siteErr);
       logGenericCoreError(siteErr, webUrl.href);
     }
-    if (
-      site.data?.HubSiteId &&
-      site.data?.HubSiteId !== EMPTY_GUID &&
-      site.data.HubSiteId !== site.data.Id
-    ) {
-      const rootHub = sp.hubSites.getById(site.data.HubSiteId);
-    }
+    // if (
+    //   site.data?.HubSiteId &&
+    //   site.data?.HubSiteId !== EMPTY_GUID &&
+    //   site.data.HubSiteId !== site.data.Id
+    // ) {
+    // }
+
+
+
+    console.log("rootHub", sp.web.toRequestUrl(), site.data.HubSiteId, site.data.Id);
     const rootWeb = await getWebRoot(sp);
     if (rootWeb.isError) {
       const rwErr = `Unable to get root web info ${rootWeb.error}`;
@@ -84,6 +89,46 @@ export async function resolveWebStructure(webUrl: URL) {
     logGenericCoreError("Unable to get web structure", webUrl.href, error);
   }
   return webStructure;
+}
+
+export async function getHubStructure(sp: SPFI, hubSiteId: string) {
+  const allHubs: HubResultSitesResponse[] = [];
+  for await (const chunk of getHubStructureGenerator(sp.web.toUrl().replace("_api/web", ""), hubSiteId)) {
+    allHubs.push(...chunk);
+  };
+  return allHubs;
+}
+
+export async function* getHubStructureGenerator(queryUrl: string, hubSiteId: string, initial = true): AsyncGenerator<HubResultSitesResponse[]> {
+  const initialRequest = SPCollection(queryUrl, initial ? "_api/v2.1/sites" : "").using(SPBrowser())<HubResultResponse>
+  if (initial) {
+    initialRequest
+      .filter(`sharepointIds/hubSiteId eq '${hubSiteId}'`).top(2);
+  }
+  initialRequest.on.parse.replace(async (url, response, result) => {
+    const emptyResult: HubResultResponse = {
+      "@odata.context": "",
+      value: [],
+      "@odata.nextLink": "",
+    }
+    if (response.ok) {
+      try {
+        result = await response.json() as HubResultResponse;
+        return [url, response, result];
+      }
+      catch (error) {
+        logGenericCoreError("Unable to parse hubdata response", url, error);
+        return [url, response, emptyResult];
+      }
+    }
+    logGenericCoreError("Error getting hubdata", url, response.statusText);
+    return [url, response, emptyResult];
+  });
+  const initialResponse = await initialRequest();
+  yield initialResponse.value;
+  if (initialResponse["@odata.nextLink"]) {
+    yield* getHubStructureGenerator(initialResponse["@odata.nextLink"], hubSiteId, false);
+  }
 }
 
 export async function getWebRoot(sp: SPFI) {
