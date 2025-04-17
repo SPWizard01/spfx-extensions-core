@@ -68,6 +68,22 @@ export function spliceHubs(defaultList: SPFxExtensionUrlMapItem[]) {
     return hubResults;
 }
 
+export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
+    const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
+    const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
+        (k) => k && k !== EMPTY_GUID
+    );
+    const hubResults: HubUrlCollectionItem[] = [];
+    for (const hubId of nonEmptyHubKeys) {
+        const hubItems = allGroupedByHub[hubId];
+        if (!hubItems) continue;
+        const splicedData = spliceHub(hubItems, hubId);
+        if (!splicedData) continue;
+        hubResults.push(splicedData);
+    }
+    return hubResults;
+}
+
 
 export function spliceSites(copyItems: SPFxExtensionUrlMapItem[]) {
     const sitesToPush: SiteUrlCollectionItem[] = [];
