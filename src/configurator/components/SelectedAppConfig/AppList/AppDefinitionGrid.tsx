@@ -2,14 +2,14 @@ import { Button, Link, ProgressBar } from "@fluentui/react-components";
 import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
-import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
-import type { AppFolderManifestDefinitionItem } from "../../models/AppFolderManifestDefinitionItem";
+import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
+import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
   selectedAppDeinitionMapItem,
   selectedAppItem,
-} from "../../runtimeStore";
-import { getAppDefinitions } from "../../services/appDefinitionImport";
-import { Stack } from "../common/Stack";
+} from "../../../runtimeStore";
+import { getAppDefinitions } from "../../../services/appDefinitionImport";
+import { Stack } from "../../common/Stack";
 import { ManageAppDefinitionMapItemDrawer } from "./ManageAppDefinitionMapItemDrawer";
 
 export function AppDefinitionGrid() {

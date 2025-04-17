@@ -16,9 +16,9 @@ import {
   configurationWebSP,
   selectedAppItem,
   updateSelectedApp,
-} from "../../runtimeStore";
-import { getAllAppJSFiles } from "../../services/fileService";
-import { Stack } from "../common/Stack";
+} from "../../../runtimeStore";
+import { getAllAppJSFiles } from "../../../services/fileService";
+import { Stack } from "../../common/Stack";
 import { filesToUpload, finishedUploadSignal } from "./FilePicker";
 import UploadProjectDrawer from "./UploadProjectDrawer";
 

@@ -2,8 +2,8 @@ import { Button, Input, Subtitle2, Switch } from "@fluentui/react-components";
 import { GetRandomCacheStringAsync } from "../../../core/services/browserCache";
 import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { Stack } from "../common/Stack";
-import { AppDefinitionGrid } from "./AppDefinitionGrid";
-import EntryPoints from "./EntryPoints";
+import { AppDefinitionGrid } from "./AppList/AppDefinitionGrid";
+import EntryPoints from "./EntryPoints/EntryPoints";
 
 export function ManifestConfig() {
   const app = selectedAppItem.value;

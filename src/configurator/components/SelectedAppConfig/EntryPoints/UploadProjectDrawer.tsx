@@ -14,8 +14,9 @@ import {
   Dismiss24Regular,
   DismissCircle24Regular,
 } from "@fluentui/react-icons";
-import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
-import { Stack } from "../common/Stack";
+import { selectedAppItem, updateSelectedApp } from "../../../runtimeStore";
+import { Stack } from "../../common/Stack";
+
 import { UploadProjectDrawerSignal } from "./EntryPoints";
 import { FilePicker, filesToUpload } from "./FilePicker";
 
@@ -30,7 +31,7 @@ export default function UploadProjectDrawer({
   const restoreFocusSourceAttributes = useRestoreFocusSource();
 
   async function onEPToggleSelect(checked: boolean, checkedEpName: string) {
-    if(!app) return;
+    if (!app) return;
     if (checked) {
       app.manifest.appRelativeEntryPointUrls.push(checkedEpName);
     }

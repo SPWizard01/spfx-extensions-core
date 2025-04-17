@@ -25,10 +25,10 @@ import {
   Info16Regular,
 } from "@fluentui/react-icons";
 import { useComputed } from "@preact/signals";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
-import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
-import type { AppFolderManifestDefinitionItem } from "../../models/AppFolderManifestDefinitionItem";
-import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
+import type { SPFxExtensionAppDefinitionMapItem } from "../../../../models/appFolderManifest";
+import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
+import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
+import type { ConfiguratorURLMapItem } from "../../../models/urlMapItemExtended";
 import {
   configurationIsGlobal,
   configurationRootWeb,
@@ -38,11 +38,13 @@ import {
   getConfigurationWebIsRootHub,
   selectedAppDeinitionMapItem,
   selectedAppItem,
-} from "../../runtimeStore";
+} from "../../../runtimeStore";
 
-import { EMPTY_GUID } from "../../../utilities/constants";
-import { GetWebConfigContext } from "../../../utilities/getConfigWebContext";
-import { Stack } from "../common/Stack";
+import { EMPTY_GUID } from "../../../../utilities/constants";
+import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
+import { Stack } from "../../common/Stack";
+import { GetBadge } from "./SitesDrawerBodyItems/Badges";
+import HubSites from "./SitesDrawerBodyItems/HubSites";
 
 interface IProps {
   appDefinitions: AppFolderManifestDefinitionItem[];
@@ -52,10 +54,10 @@ interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
   webs: ConfiguratorURLMapItem[];
 }
 
-interface UrlSiteCollection extends ConfiguratorURLMapItem {
+export interface UrlSiteCollection extends ConfiguratorURLMapItem {
   webs: ConfiguratorURLMapItem[];
 }
-interface UrlHubCollection extends ConfiguratorURLMapItem {
+export interface UrlHubCollection extends ConfiguratorURLMapItem {
   sites: UrlSiteCollection[];
   webs: ConfiguratorURLMapItem[];
 }
@@ -140,140 +142,6 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
       Object.groupBy(allWebs, (item) => item.siteId)
     );
     return defaultList;
-  });
-
-  const urlEntries = useComputed(() => {
-    const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
-      ? configurationWebSubWebs.map((w) => {
-          return {
-            id: w.Id,
-            siteId: w.Id,
-            hubid: configurationSite.data?.HubSiteId ?? EMPTY_GUID,
-            url: w.Url,
-            isRootWeb: w.Id === configurationRootWeb.data?.Id,
-            isHubRoot:
-              w.Id === configurationRootWeb.data?.Id &&
-              getConfigurationWebIsRootHub(),
-            canDelete: false,
-          };
-        })
-      : [];
-    contextCollectionConfig.value.urlMap.forEach((item) => {
-      // not in default list
-      if (!defaultList.some((s) => s.id === item.id)) {
-        defaultList.push({
-          ...item,
-          canDelete: true,
-        });
-      }
-    });
-    const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
-    const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
-      (k) => k && k !== EMPTY_GUID
-    );
-    const nonHubKeys = Object.keys(allGroupedByHub).filter(
-      (k) => !k || k === EMPTY_GUID
-    );
-    const hubResults: UrlHubCollection[] = [];
-    const allHubs: ConfiguratorURLMapItem[] = [];
-    const allSites: ConfiguratorURLMapItem[] = [];
-    const allWebs: ConfiguratorURLMapItem[] = [];
-    for (const hubId of nonEmptyHubKeys) {
-      const hubItems = allGroupedByHub[hubId];
-      if (!hubItems) continue;
-      const copyItems = [...hubItems];
-      const hubRootIdx = copyItems.findIndex((s) => s.isHubRoot);
-      //if this hub group contains root hub
-      if (hubRootIdx) {
-        const hubRoot = copyItems.splice(hubRootIdx, 1)[0];
-        let inHubCollection = hubResults.find((h) => h.hubid === hubId);
-        if (!inHubCollection) {
-          inHubCollection = {
-            ...hubRoot,
-            sites: [
-              {
-                ...hubRoot,
-                webs: [],
-              },
-            ],
-            webs: [],
-          };
-          hubResults.push(inHubCollection);
-        }
-        let siteIdx = copyItems.findIndex((s) => s.isRootWeb);
-        while (siteIdx > -1) {
-          const siteItem = copyItems.splice(siteIdx, 1)[0];
-          let inSiteCollection = inHubCollection.sites.find(
-            (s) => s.id === siteItem.id
-          );
-          if (!inSiteCollection) {
-            inSiteCollection = {
-              ...siteItem,
-              webs: [],
-            };
-            inHubCollection.sites.push(inSiteCollection);
-          }
-          const websToPush: ConfiguratorURLMapItem[] = [];
-          let webIdx = copyItems.findIndex((s) => s.siteId === siteItem.siteId);
-          while (webIdx > -1) {
-            const webItem = copyItems.splice(webIdx, 1)[0];
-            websToPush.push(webItem);
-            webIdx = copyItems.findIndex((s) => s.siteId === siteItem.siteId);
-          }
-          inSiteCollection.webs.push(
-            ...websToPush.sort((a, b) => a.url.localeCompare(b.url))
-          );
-          siteIdx = copyItems.findIndex((s) => s.isRootWeb);
-        }
-      }
-
-      const groupedSites = Object.groupBy(hubItems, (item) => item.siteId);
-      const siteKeys = Object.keys(groupedSites);
-      for (const site of siteKeys) {
-        const siteItems = groupedSites[site];
-        if (!siteItems) continue;
-        const rootWeb = siteItems.find((s) => s.isRootWeb);
-        const nonRootWebs = siteItems
-          .filter((s) => !s.isRootWeb)
-          .sort((a, b) => a.url.localeCompare(b.url));
-        if (rootWeb) {
-          allHubs.push(rootWeb);
-        }
-        allHubs.push(...nonRootWebs);
-      }
-    }
-
-    for (const element of nonHubKeys) {
-      const nonHubItems = allGroupedByHub[element];
-      if (!nonHubItems) continue;
-      const groupedBySite = Object.groupBy(nonHubItems, (item) => item.siteId);
-      const siteKeys = Object.keys(groupedBySite);
-      for (const site of siteKeys) {
-        const siteItems = groupedBySite[site];
-        if (!siteItems) continue;
-        const rootWeb = siteItems.find((s) => s.isRootWeb);
-        const nonRootWebs = siteItems
-          .filter((s) => !s.isRootWeb)
-          .sort((a, b) => a.url.localeCompare(b.url));
-        if (rootWeb) {
-          allSites.push(rootWeb);
-          allSites.push(...nonRootWebs);
-          //push to sites collection
-        } else {
-          allWebs.push(...nonRootWebs);
-          //push to webs collection
-        }
-      }
-    }
-    const resultHubs = Object.groupBy(allHubs, (item) => item.hubid);
-    const resultSites = Object.groupBy(allSites, (item) => item.siteId);
-    const resultWebs = Object.groupBy(allWebs, (item) => item.siteId);
-
-    return {
-      hubs: resultHubs as Record<string, ConfiguratorURLMapItem[]>,
-      sites: resultSites as Record<string, ConfiguratorURLMapItem[]>,
-      webs: resultWebs as Record<string, ConfiguratorURLMapItem[]>,
-    };
   });
 
   const testBench = useComputed(() => {
@@ -381,28 +249,6 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const siteCollections = urlsWithSubsites.filter(
     (v) => v.isRootWeb && !v.isHubRoot
   );
-  const hubRootCollections = urlsWithSubsites.filter((sc) => sc.isHubRoot);
-
-  function GetBadge(
-    color:
-      | "subtle"
-      | "success"
-      | "brand"
-      | "danger"
-      | "important"
-      | "informative"
-      | "severe"
-      | "warning"
-      | undefined,
-    text: string,
-    width: string = "72px"
-  ) {
-    return (
-      <Badge size="small" color={color} style={{ width: width }}>
-        {text}
-      </Badge>
-    );
-  }
 
   return (
     <Drawer
@@ -470,91 +316,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               />
             </Stack>
 
-            <Stack>
-              <Subtitle2>Hub sites</Subtitle2>
-              {testBench.value.map((hubRoot) => {
-                return (
-                  <Stack>
-                    <Stack
-                      horizontal
-                      gap={8}
-                      verticalAlign="center"
-                      horizontalAlign="space-between"
-                    >
-                      <Stack horizontal verticalAlign="center" gap={8}>
-                        {GetBadge("success", "Hub")}
-                        {hubRoot.url}
-                      </Stack>
-                      <Switch
-                        onChange={(_, data) => {
-                          //TODO
-                          console.log(
-                            "Turn on for ALL HUB SITE COLLECTION AND HUB CHILDS",
-                            data
-                          );
-                        }}
-                      />
-                    </Stack>
-                    {hubRoot.sites.map((site) => {
-                      return (
-                        <>
-                          <Stack
-                            horizontal
-                            gap={8}
-                            verticalAlign="center"
-                            horizontalAlign="space-between"
-                          >
-                            <Stack horizontal verticalAlign="center" gap={8}>
-                              <ArrowTurnDownRightRegular />
-                              {GetBadge("warning", "Site collection")}
-                              {site.url}
-                            </Stack>
-                            <Switch
-                              onChange={(_, data) => {
-                                //TODO
-                                console.log(
-                                  "Turn on for ALL SITE COLLECTION ROOT HUB",
-                                  data
-                                );
-                              }}
-                            />
-                          </Stack>
-                          {site.webs.map((subSite) => (
-                            <Stack
-                              horizontal
-                              horizontalAlign="space-between"
-                              verticalAlign="center"
-                              style={{ paddingLeft: "24px " }}
-                            >
-                              <Stack horizontal gap={8} verticalAlign="center">
-                                <ArrowTurnDownRightRegular />
-                                {GetBadge(undefined, "Web", "50px")}
-                                <Body1>{subSite.url}</Body1>
-                              </Stack>
-                              <Switch />
-                            </Stack>
-                          ))}
-                        </>
-                      );
-                    })}
-                    {hubRoot.webs.map((subSite) => (
-                      <Stack
-                        horizontal
-                        horizontalAlign="space-between"
-                        verticalAlign="center"
-                      >
-                        <Stack horizontal gap={8} verticalAlign="center">
-                          <ArrowTurnDownRightRegular />
-                          {GetBadge(undefined, "Web", "50px")}
-                          <Body1>{subSite.url}</Body1>
-                        </Stack>
-                        <Switch />
-                      </Stack>
-                    ))}
-                  </Stack>
-                );
-              })}
-            </Stack>
+            <HubSites hubSites={testBench.value} />
 
             <Stack gap={12}>
               <Subtitle2>Site collections</Subtitle2>
@@ -596,11 +358,10 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                 </>
               ))}
             </Stack>
-
+            <Divider />
             <Stack gap={12}>
               <Subtitle2>Webs</Subtitle2>
               <Divider />
-              {/* TODO List independent webs instead site collection */}
               {siteCollections.map((site) => (
                 <>
                   <Stack>
@@ -614,7 +375,6 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                         {GetBadge("warning", "Site collection")}
                         {site.url}
                       </Stack>
-                      {/* TODO  */}
                       <Switch />
                     </Stack>
 
