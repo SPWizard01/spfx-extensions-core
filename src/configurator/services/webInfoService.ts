@@ -3,6 +3,7 @@ import type { ISiteInfo } from "@pnp/sp/sites/types";
 import type { IWebInfo } from "@pnp/sp/webs";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest";
+import { EMPTY_GUID } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import { getPnPSP } from "./pnpService";
 export async function getAllWebInfos(sp: SPFI) {
@@ -62,11 +63,11 @@ export async function resolveWebStructure(webUrl: URL) {
         webInfos.forEach(webInfo => {
             webStructure.data.push({
                 id: webInfo.Id,
-                siteId: site.data?.Id,
-                hubid: site.data?.HubSiteId,
+                siteId: site.data?.Id ?? EMPTY_GUID,
+                hubid: site.data?.HubSiteId ?? EMPTY_GUID,
                 url: webInfo.Url,
                 isRootWeb: webInfo.Id === rootWeb.data?.Id,
-                isHubRoot: site.data?.IsHubSite && webInfo.Id === site.data?.Id,
+                isHubRoot: site.data?.IsHubSite && webInfo.Id === rootWeb.data?.Id,
             });
         });
     }
