@@ -73,6 +73,9 @@ export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
     const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
         (k) => k && k !== EMPTY_GUID
     );
+    const otherKeys = Object.keys(allGroupedByHub).filter(
+        (k) => !k || k === EMPTY_GUID
+    );
     const hubResults: HubUrlCollectionItem[] = [];
     for (const hubId of nonEmptyHubKeys) {
         const hubItems = allGroupedByHub[hubId];
@@ -80,6 +83,33 @@ export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
         const splicedData = spliceHub(hubItems, hubId);
         if (!splicedData) continue;
         hubResults.push(splicedData);
+    }
+    const siteResults: SiteUrlCollectionItem[] = [];
+    const webResults: SPFxExtensionUrlMapItem[] = [];
+    for (const otherKey of otherKeys) {
+        const otherItems = allGroupedByHub[otherKey];
+        if (!otherItems) continue;
+        const allGroupedBySite = Object.groupBy(otherItems, (item) => item.siteId);
+        const nonEmptySiteKeys = Object.keys(allGroupedBySite).filter(
+            (k) => k && k !== EMPTY_GUID
+        );
+        const otherSiteKeys = Object.keys(allGroupedBySite).filter(
+            (k) => !k || k === EMPTY_GUID
+        );
+        for (const siteKey of nonEmptySiteKeys) {
+            const siteItems = allGroupedBySite[siteKey];
+            if (!siteItems) continue;
+            const splicedData = spliceSites(siteItems);
+            if (!splicedData) continue;
+            siteResults.push(...splicedData);
+        }
+        for (const webKey of otherSiteKeys) {
+            const webItems = allGroupedBySite[webKey];
+            if (!webItems) continue;
+            const splicedData = spliceWebs(webItems, webKey);
+            if (!splicedData) continue;
+            webResults.push(...splicedData);
+        }
     }
     return hubResults;
 }
