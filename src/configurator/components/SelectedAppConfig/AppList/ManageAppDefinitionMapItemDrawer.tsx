@@ -51,6 +51,8 @@ interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
 
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
+  console.log(configWebContext);
+
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
   useSignalEffect(() => {
@@ -139,16 +141,18 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               />
             </Stack>
             <Stack gap={12}>
-              {getConfigurationWebIsRootHub() || configurationIsGlobal ? (
-                <HubSites hubSites={hubStructure} />
-              ) : null}
-              {configurationIsGlobal ? (
+              {configWebContext === "global" ||
+                (configWebContext === "hubRoot" && (
+                  <HubSites hubSites={hubStructure} />
+                ))}
+              {configWebContext === "nonHub" && (
                 <SiteCollections siteCollections={siteCollections} />
-              ) : null}
-              {(getConfigurationWebIsSite() || configurationIsGlobal) &&
-              !getConfigurationWebIsRootHub() ? (
-                <Webs webs={siteCollections} />
-              ) : null}
+              )}
+              {configWebContext === "global" ||
+                configWebContext === "subsite" ||
+                (configWebContext === "hubChild" && (
+                  <Webs webs={siteCollections} />
+                ))}
             </Stack>
           </Stack>
         </Stack>
