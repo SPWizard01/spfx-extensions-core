@@ -1,6 +1,7 @@
 import {
   Body1,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerFooter,
@@ -13,6 +14,7 @@ import {
   Popover,
   PopoverSurface,
   PopoverTrigger,
+  Subtitle2,
   Switch,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
@@ -27,7 +29,6 @@ import {
   configurationWebSP,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
-  getConfigurationWebIsSite,
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../../runtimeStore";
@@ -36,10 +37,10 @@ import { useState } from "preact/hooks";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
 import type { HubUrlCollectionItem } from "../../../models/UrlCollectionMapItem";
 import { getHubStructure } from "../../../services/webInfoService";
+import { HubSites } from "../../common/HubSites";
+import { SiteCollections } from "../../common/SiteCollections";
 import { Stack } from "../../common/Stack";
-import HubSites from "./SitesDrawerBodyItems/HubSites";
-import SiteCollections from "./SitesDrawerBodyItems/SiteCollections";
-import Webs from "./SitesDrawerBodyItems/Webs";
+import { Webs } from "../../common/Webs";
 
 interface IProps {
   appDefinitions: AppFolderManifestDefinitionItem[];
@@ -51,8 +52,6 @@ interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
 
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
-  console.log(configWebContext);
-
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
   useSignalEffect(() => {
@@ -141,18 +140,26 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               />
             </Stack>
             <Stack gap={12}>
-              {configWebContext === "global" ||
-                (configWebContext === "hubRoot" && (
-                  <HubSites hubSites={hubStructure} />
-                ))}
-              {configWebContext === "nonHub" && (
-                <SiteCollections siteCollections={siteCollections} />
-              )}
-              {configWebContext === "global" ||
-                configWebContext === "subsite" ||
-                (configWebContext === "hubChild" && (
-                  <Webs webs={siteCollections} />
-                ))}
+              <HubSites hubSites={hubStructure} control="switch" />
+              <Stack gap={8}>
+                <Subtitle2 style={{ marginBottom: "8px" }}>
+                  Site collections
+                </Subtitle2>
+                <Stack gap={8}>
+                  <Divider />
+                  <SiteCollections
+                    siteCollections={siteCollections}
+                    control="switch"
+                  />
+                </Stack>
+              </Stack>
+              <Stack gap={8}>
+                <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
+                <Stack gap={8}>
+                  <Divider />
+                  <Webs webs={siteCollections} control="switch" />
+                </Stack>
+              </Stack>
             </Stack>
           </Stack>
         </Stack>

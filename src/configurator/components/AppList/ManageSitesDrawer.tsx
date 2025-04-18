@@ -1,24 +1,15 @@
 import {
-  Badge,
-  Body1,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerFooter,
   DrawerHeader,
   DrawerHeaderTitle,
-  Input,
-  MessageBar,
-  MessageBarBody,
-  Spinner,
+  Subtitle2,
   useRestoreFocusSource,
-  webLightTheme,
 } from "@fluentui/react-components";
-import {
-  Add16Regular,
-  Delete16Regular,
-  Dismiss24Regular,
-} from "@fluentui/react-icons";
+import { Dismiss24Regular } from "@fluentui/react-icons";
 import { signal, useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type {
@@ -36,17 +27,16 @@ import {
   getConfigurationWebIsRootHub,
 } from "../../runtimeStore";
 import { updateAppCollectionConfig } from "../../services/appCollection";
-import { validateUrl } from "../../services/urlService";
-import { resolveWebStructure } from "../../services/webInfoService";
+import { HubSites } from "../common/HubSites";
+import { SiteCollections } from "../common/SiteCollections";
 import { Stack } from "../common/Stack";
-import { StackItem } from "../common/StackItem";
+import { Webs } from "../common/Webs";
+import { AddSite } from "./AddSite";
 
 export const ManageSitesDrawerSignal = signal(false);
 
 export function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const [urlInputError, setUrlInputError] = useState("");
-  const [urlInput, setUrlInput] = useState("");
   const [isResolving, setIsResolving] = useState(false);
   const [modified, setModified] = useState(false);
   const [collectionUrlMap, setCollectionUrlMap] = useState<
@@ -81,63 +71,7 @@ export function ManageSitesDrawer() {
     setCollectionUrlMap(defaultList);
   });
 
-  async function addSite() {
-    if (!urlInput) return;
-
-    const validatedSite = validateUrl(urlInput);
-
-    if (validatedSite.error) {
-      // Handle error
-      setUrlInputError(validatedSite.error.message);
-      return;
-    }
-
-    const urlToResolve = urlInput.startsWith("/")
-      ? new URL(urlInput, window.location.origin)
-      : new URL(urlInput);
-    setIsResolving(true);
-    const structureResult = await resolveWebStructure(urlToResolve);
-    if (structureResult.isError) {
-      setUrlInputError(structureResult.error);
-      setIsResolving(false);
-      return;
-    }
-    if (getConfigurationWebIsRootHub()) {
-      if (
-        !structureResult.data.every(
-          (s) => s.hubid === configurationSite.data.HubSiteId
-        )
-      ) {
-        setUrlInputError(
-          "You can only add child hub sites when configuring a hub root."
-        );
-        setIsResolving(false);
-        return;
-      }
-    }
-    const collectionUrlMapCopy: ConfiguratorURLMapItem[] = JSON.parse(
-      JSON.stringify(collectionUrlMap)
-    );
-    let somethingAdded = false;
-    structureResult.data.forEach((item) => {
-      if (!collectionUrlMapCopy.some((s) => s.id === item.id)) {
-        collectionUrlMapCopy.push({
-          ...item,
-          canDelete: true,
-        });
-        somethingAdded = true;
-      }
-    });
-    setCollectionUrlMap(collectionUrlMapCopy);
-    setUrlInputError("");
-    setUrlInput("");
-    setIsResolving(false);
-    if (somethingAdded) {
-      setModified(true);
-    }
-  }
-
-  function deleteSite(web: SPFxExtensionUrlMapItem) {
+  function _deleteSite(web: SPFxExtensionUrlMapItem) {
     const collectionCopy: ConfiguratorURLMapItem[] = JSON.parse(
       JSON.stringify(collectionUrlMap)
     );
@@ -169,12 +103,9 @@ export function ManageSitesDrawer() {
         };
       });
       await updateAppCollectionConfig(configurationWebSP, contextCopy);
-      console.log("updated", contextCopy);
       contextCollectionConfig.value = contextCopy;
     } finally {
       setIsResolving(false);
-      setUrlInputError("");
-      setUrlInput("");
       setModified(false);
       setCollectionUrlMap([]);
       ManageSitesDrawerSignal.value = false;
@@ -186,10 +117,7 @@ export function ManageSitesDrawer() {
       {...restoreFocusSourceAttributes}
       separator
       open={ManageSitesDrawerSignal.value}
-      onOpenChange={() => {
-        setUrlInputError("");
-        setUrlInput("");
-      }}
+      onOpenChange={() => {}}
       position="end"
       size="medium"
     >
@@ -209,77 +137,27 @@ export function ManageSitesDrawer() {
           Manage sites
         </DrawerHeaderTitle>
       </DrawerHeader>
-      <Stack style={{ padding: "8px 24px", width: "100%" }} gap={8}>
-        <MessageBar intent="info">
-          <MessageBarBody>
-            Add site collections and hub child sites.
-          </MessageBarBody>
-        </MessageBar>
-        <Stack horizontal gap={8}>
-          <Input
-            style={{
-              width: "100%",
-            }}
-            onChange={(_, d) => {
-              setUrlInput(d.value);
-            }}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") {
-                addSite();
-              }
-            }}
-            onFocus={() => {
-              setUrlInputError("");
-            }}
-            value={urlInput}
-            placeholder="Site/Web URL"
-          />
-          <Button
-            disabled={!urlInput || isResolving}
-            onClick={() => addSite()}
-            icon={isResolving ? <Spinner size="tiny" /> : <Add16Regular />}
-          >
-            Add
-          </Button>
-        </Stack>
-        {urlInputError ? (
-          <Body1 style={{ color: webLightTheme.colorPaletteRedForeground1 }}>
-            {urlInputError}
-          </Body1>
-        ) : null}
-      </Stack>
-
+      <AddSite />
       <DrawerBody>
         <Stack gap={16} style={{ padding: "8px 0px" }}>
           <Stack gap={4}>
-            {collectionUrlMap.map((site) => (
-              <Stack
-                horizontalAlign="space-between"
-                verticalAlign="center"
-                horizontal
-                gap={8}
-                key={site.id}
-              >
-                <>
-                  TODO: Split me and ManageAppDefinitionMapItemDrawer part so I
-                  can be reused
-                </>
-                <Stack horizontal gap={8} verticalAlign="center">
-                  {site.isRootWeb && <Badge size="small">Hub root</Badge>}
-                  {!site.isHubRoot && site.hubid && (
-                    <Badge color="warning" size="small">
-                      Hub child
-                    </Badge>
-                  )}
-                  <StackItem>{site.url}</StackItem>
-                </Stack>
-                <Button
-                  disabled={!site.canDelete}
-                  onClick={() => deleteSite(site)}
-                  icon={<Delete16Regular />}
-                />
+            <HubSites hubSites={[]} control="delete" />
+            <Stack gap={8}>
+              <Subtitle2 style={{ marginBottom: "8px" }}>
+                Site collections
+              </Subtitle2>
+              <Stack gap={8}>
+                <Divider />
+                <SiteCollections siteCollections={[]} control="delete" />
               </Stack>
-            ))}
+            </Stack>
+            <Stack gap={8}>
+              <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
+              <Stack gap={8}>
+                <Divider />
+                <Webs webs={[]} control="delete" />
+              </Stack>
+            </Stack>
           </Stack>
         </Stack>
       </DrawerBody>
