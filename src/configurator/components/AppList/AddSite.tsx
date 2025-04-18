@@ -21,7 +21,7 @@ import { Stack } from "../common/Stack";
 export function AddSite() {
   const [urlInputError, setUrlInputError] = useState("");
   const [urlInput, setUrlInput] = useState("");
-
+  const [isResolving, setIsResolving] = useState(false);
   async function addSite() {
     if (!urlInput) return;
 
@@ -93,9 +93,9 @@ export function AddSite() {
           placeholder="Site/Web URL"
         />
         <Button
-          disabled={!urlInput}
+          disabled={!urlInput || isResolving}
           onClick={() => addSite()}
-          // icon={false ? <Spinner size="tiny" /> : <Add16Regular />}
+          icon={isResolving ? <Spinner size="tiny" /> : <Add16Regular />}
         >
           Add
         </Button>

@@ -111,7 +111,11 @@ export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
             webResults.push(...splicedData);
         }
     }
-    return hubResults;
+    return {
+        hubs: hubResults,
+        sites: siteResults,
+        webs: webResults,
+    };
 }
 
 
