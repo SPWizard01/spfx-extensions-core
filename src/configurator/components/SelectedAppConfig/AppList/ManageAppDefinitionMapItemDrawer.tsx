@@ -78,21 +78,90 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     }
   });
 
-  async function updateMinfestFromSite(data: CollectionEventSiteData) {
-    console.log("updateMinfestFromSite", data);
-    if (data.controlType === "switch" && data.itemType === "site") {
-      const siteItem = data.item;
-      if (data.data) {
-        const filterOutWebsOrSites =
-          selectedAppDeinitionMapItem.value!.config.excludedIds.filter((a) =>
-            siteItem.webs.some((w) => w.id !== a) ||
-            siteItem.id !== a
-          );
-        const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(JSON.stringify(selectedAppDeinitionMapItem.value));
-        copy.config.excludedIds = filterOutWebsOrSites;
-        selectedAppDeinitionMapItem.value = copy;
+  async function updateMinfestFromSite(event: CollectionEventSiteData) {
+    console.log("updateMinfestFromSite", event);
+    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
+      JSON.stringify(selectedAppDeinitionMapItem.value)
+    );
+    if (event.controlType === "switch" && event.itemType === "site") {
+      const siteItem = event.item;
+      const exIds =
+        selectedAppDeinitionMapItem.value!.config.excludedIds.filter(
+          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
+        );
+
+      const exHubIds =
+        selectedAppDeinitionMapItem.value!.config.excludedHubIds.filter(
+          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
+        );
+
+      const inIds =
+        selectedAppDeinitionMapItem.value!.config.includedIds.filter(
+          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
+        );
+      const inHubIds =
+        selectedAppDeinitionMapItem.value!.config.includedHubIds.filter(
+          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
+        );
+
+      if (
+        !selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
+        event.data
+      ) {
+        inIds.push(siteItem.id);
       }
+      if (
+        selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
+        !event.data
+      ) {
+        exIds.push(siteItem.id);
+      }
+      copy.config.excludedIds = exIds;
+      copy.config.excludedHubIds = exHubIds;
+      copy.config.includedIds = inIds;
+      copy.config.includedHubIds = inHubIds;
     }
+    if (event.controlType === "switch" && event.itemType === "web") {
+      const webItem = event.item;
+      const exIds =
+        selectedAppDeinitionMapItem.value!.config.excludedIds.filter(
+          (a) => webItem.id !== a
+        );
+
+      const exHubIds =
+        selectedAppDeinitionMapItem.value!.config.excludedHubIds.filter(
+          (a) => webItem.id !== a
+        );
+
+      const inIds =
+        selectedAppDeinitionMapItem.value!.config.includedIds.filter(
+          (a) => webItem.id !== a
+        );
+      const inHubIds =
+        selectedAppDeinitionMapItem.value!.config.includedHubIds.filter(
+          (a) => webItem.id !== a
+        );
+
+      if (
+        !selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
+        event.data
+      ) {
+        inIds.push(webItem.id);
+      }
+      if (
+        selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
+        !event.data
+      ) {
+        exIds.push(webItem.id);
+      }
+      copy.config.excludedIds = exIds;
+      copy.config.excludedHubIds = exHubIds;
+      copy.config.includedIds = inIds;
+      copy.config.includedHubIds = inHubIds;
+    }
+
+    console.log("copy", copy);
+    selectedAppDeinitionMapItem.value = copy;
   }
 
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
