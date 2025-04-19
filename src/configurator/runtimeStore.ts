@@ -1,6 +1,7 @@
 import type { IWebInfo } from "@pnp/sp/webs";
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
+import { logGenericCoreDebug } from "../core/services/loggingService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type { SPFxExtensionAppDefinitionMapItem } from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
@@ -28,19 +29,22 @@ export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.
 export const configurationWeb = await getWeb(configurationWebSP);
 export const configurationIsGlobal = !queryWeb
 
-export function getConfigurationWebIsSite() {
-  if (configurationRootWeb.isError || configurationWeb.isError) return false;
-  return configurationWeb.data.Id === configurationRootWeb.data.Id;
-}
+
 
 export function getConfigurationWebIsRootHub() {
   if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError) return false;
   return configurationSite.data.IsHubSite &&
     configurationRootWeb.data.Id === configurationWeb.data.Id;
 }
+
 export function getConfigurationWebIsHubChild() {
   if (configurationSite.isError) return false;
   return configurationSite.data.HubSiteId !== EMPTY_GUID;
+}
+
+export function getConfigurationWebIsSiteCollection() {
+  if (configurationRootWeb.isError || configurationWeb.isError) return false;
+  return configurationWeb.data.Id === configurationRootWeb.data.Id;
 }
 
 export function getConfigurationWebIsSubsite() {
@@ -69,7 +73,9 @@ export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 
 export const configurationWebSubWebs: IWebInfo[] = [];
 export const configurationSiteStructure = await getSiteStructure(configurationWebSP);
-
+effect(() => {
+  logGenericCoreDebug("Configuration", selectedAppDeinitionMapItem.value?.config);
+})
 
 export function getEmptyAppItem(appName: string) {
   return {

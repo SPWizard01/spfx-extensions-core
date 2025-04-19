@@ -23,13 +23,12 @@ import { useSignalEffect } from "@preact/signals";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../../models/appFolderManifest";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
-import type { ConfiguratorURLMapItem } from "../../../models/urlMapItemExtended";
 import {
   configurationIsGlobal,
   configurationWebSP,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
-  getConfigurationWebIsSite,
+  getConfigurationWebIsSiteCollection,
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../../runtimeStore";
@@ -37,15 +36,15 @@ import {
 import { useState } from "preact/hooks";
 import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
-import type { CollectionEventSiteData } from "../../../models/eventData";
 import type {
   HubUrlCollectionItem,
   SiteUrlCollectionItem,
-} from "../../../models/UrlCollectionMapItem";
+} from "../../../models/StructureModels";
 import {
   getHubStructure,
   getSiteStructure,
 } from "../../../services/webInfoService";
+import { getGlobalStructure } from "../../../services/webStructureResolver";
 import { HubSites } from "../../common/HubSites";
 import { SiteCollections } from "../../common/SiteCollections";
 import { Stack } from "../../common/Stack";
@@ -57,112 +56,54 @@ interface IProps {
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
+  const [prevDefinition, setPrevDefinition] = useState(
+    selectedAppDeinitionMapItem.value
+  );
+  const [modified, setModified] = useState(false);
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
-  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem>();
+  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem[]>(
+    []
+  );
   const [webStructure, setWebStructure] = useState<SPFxExtensionUrlMapItem[]>(
     []
   );
   useSignalEffect(() => {
-    if (!configurationIsGlobal && getConfigurationWebIsRootHub()) {
-      getHubStructure(
-        configurationWebSP,
-        contextCollectionConfig.value.urlMap
-      ).then((hub) => {
-        setHubStructure(hub ? [hub] : []);
-      });
+    if (!selectedAppDeinitionMapItem.value) return;
+    if (!prevDefinition) {
+      setPrevDefinition(selectedAppDeinitionMapItem.value);
+      return;
     }
-    if (getConfigurationWebIsSite() && !getConfigurationWebIsRootHub()) {
-      getSiteStructure(configurationWebSP).then((site) => {
-        setSiteStructure(site);
-      });
-    }
+    const copy = JSON.stringify(selectedAppDeinitionMapItem.value);
+    const current = JSON.stringify(prevDefinition);
+    setPrevDefinition(selectedAppDeinitionMapItem.value);
+    setModified(copy !== current);
   });
 
-  async function updateMinfestFromSite(event: CollectionEventSiteData) {
-    console.log("updateMinfestFromSite", event);
-    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
-      JSON.stringify(selectedAppDeinitionMapItem.value)
-    );
-    if (event.controlType === "switch" && event.itemType === "site") {
-      const siteItem = event.item;
-      const exIds =
-        selectedAppDeinitionMapItem.value!.config.excludedIds.filter(
-          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
-        );
-
-      const exHubIds =
-        selectedAppDeinitionMapItem.value!.config.excludedHubIds.filter(
-          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
-        );
-
-      const inIds =
-        selectedAppDeinitionMapItem.value!.config.includedIds.filter(
-          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
-        );
-      const inHubIds =
-        selectedAppDeinitionMapItem.value!.config.includedHubIds.filter(
-          (a) => siteItem.webs.some((w) => w.id !== a) && siteItem.id !== a
-        );
-
-      if (
-        !selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
-        event.data
-      ) {
-        inIds.push(siteItem.id);
+  useSignalEffect(() => {
+    if (!configurationIsGlobal) {
+      if (getConfigurationWebIsRootHub()) {
+        getHubStructure(
+          configurationWebSP,
+          contextCollectionConfig.value.urlMap
+        ).then((hub) => {
+          setHubStructure(hub ? [hub] : []);
+        });
       }
       if (
-        selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
-        !event.data
+        getConfigurationWebIsSiteCollection() &&
+        !getConfigurationWebIsRootHub()
       ) {
-        exIds.push(siteItem.id);
+        getSiteStructure(configurationWebSP).then((site) => {
+          setSiteStructure(site ? [site] : []);
+        });
       }
-      copy.config.excludedIds = exIds;
-      copy.config.excludedHubIds = exHubIds;
-      copy.config.includedIds = inIds;
-      copy.config.includedHubIds = inHubIds;
+    } else {
+      const global = getGlobalStructure(contextCollectionConfig.value.urlMap);
+      setHubStructure(global.hubs);
+      setSiteStructure(global.sites);
+      setWebStructure(global.webs);
     }
-    if (event.controlType === "switch" && event.itemType === "web") {
-      const webItem = event.item;
-      const exIds =
-        selectedAppDeinitionMapItem.value!.config.excludedIds.filter(
-          (a) => webItem.id !== a
-        );
-
-      const exHubIds =
-        selectedAppDeinitionMapItem.value!.config.excludedHubIds.filter(
-          (a) => webItem.id !== a
-        );
-
-      const inIds =
-        selectedAppDeinitionMapItem.value!.config.includedIds.filter(
-          (a) => webItem.id !== a
-        );
-      const inHubIds =
-        selectedAppDeinitionMapItem.value!.config.includedHubIds.filter(
-          (a) => webItem.id !== a
-        );
-
-      if (
-        !selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
-        event.data
-      ) {
-        inIds.push(webItem.id);
-      }
-      if (
-        selectedAppDeinitionMapItem.value!.config.enabledEverywhere &&
-        !event.data
-      ) {
-        exIds.push(webItem.id);
-      }
-      copy.config.excludedIds = exIds;
-      copy.config.excludedHubIds = exHubIds;
-      copy.config.includedIds = inIds;
-      copy.config.includedHubIds = inHubIds;
-    }
-
-    console.log("copy", copy);
-    selectedAppDeinitionMapItem.value = copy;
-  }
+  });
 
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
 
@@ -229,13 +170,24 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                 defaultChecked={
                   selectedAppDeinitionMapItem.value.config.enabledEverywhere
                 }
+                onChange={(_e, data) => {
+                  const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
+                    JSON.stringify(selectedAppDeinitionMapItem.value)
+                  );
+                  copy.config.enabledEverywhere = data.checked;
+                  copy.config.includedIds = [];
+                  copy.config.excludedIds = [];
+                  copy.config.includedHubIds = [];
+                  copy.config.excludedHubIds = [];
+                  selectedAppDeinitionMapItem.value = copy;
+                }}
               />
             </Stack>
             <Stack gap={12}>
               {hubStructure.length > 0 ? (
                 <HubSites hubSites={hubStructure} control="switch" />
               ) : null}
-              {siteStructure ? (
+              {siteStructure.length > 0 ? (
                 <>
                   <Subtitle2 style={{ marginBottom: "8px" }}>
                     Site collections
@@ -243,9 +195,8 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
                   <Stack gap={8}>
                     <Divider />
                     <SiteCollections
-                      siteCollections={[siteStructure]}
+                      siteCollections={siteStructure}
                       control="switch"
-                      onControlClick={updateMinfestFromSite}
                     />
                   </Stack>
                 </>
@@ -276,21 +227,18 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
 
           <Button
             appearance="primary"
-            onClick={async () => {
+            disabled={!modified}
+            onClick={() => {
+              if (!selectedAppDeinitionMapItem.value) return;
               const selectedAppCopy: AppCollectionConfigurationItem =
                 JSON.parse(JSON.stringify(selectedAppItem.value));
               const selectedDefCopy: SPFxExtensionAppDefinitionMapItem =
                 JSON.parse(JSON.stringify(selectedAppDeinitionMapItem.value));
-              const defItem =
-                selectedAppCopy.manifest.appDefinitionMap.findIndex(
-                  (a) => a.appId === selectedAppDeinitionMapItem.value!.appId
+              selectedAppCopy.manifest.appDefinitionMap =
+                selectedAppCopy.manifest.appDefinitionMap.filter(
+                  (a) => a.appId !== selectedDefCopy.appId
                 );
-              if (defItem > 0) {
-                selectedAppCopy.manifest.appDefinitionMap[defItem] =
-                  selectedDefCopy;
-              } else {
-                selectedAppCopy.manifest.appDefinitionMap.push(selectedDefCopy);
-              }
+              selectedAppCopy.manifest.appDefinitionMap.push(selectedDefCopy);
               selectedAppItem.value = selectedAppCopy;
               selectedAppDeinitionMapItem.value = undefined;
             }}

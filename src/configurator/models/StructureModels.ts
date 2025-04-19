@@ -7,3 +7,9 @@ export interface HubUrlCollectionItem extends SPFxExtensionUrlMapItem {
     sites: SiteUrlCollectionItem[];
     webs: SPFxExtensionUrlMapItem[];
 }
+
+export interface GlobalUrlStructure {
+    hubs: HubUrlCollectionItem[];
+    sites: SiteUrlCollectionItem[];
+    webs: SPFxExtensionUrlMapItem[];
+}

@@ -9,9 +9,10 @@ import {
 } from "@fluentui/react-components";
 import { Add16Regular } from "@fluentui/react-icons";
 import { useState } from "preact/hooks";
-import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
+import type { SPFxExtensionCollectionManifest } from "../../../models/appCollectionManifest";
 import {
   configurationSite,
+  contextCollectionConfig,
   getConfigurationWebIsRootHub,
 } from "../../runtimeStore";
 import { validateUrl } from "../../services/urlService";
@@ -36,7 +37,9 @@ export function AddSite() {
     const urlToResolve = urlInput.startsWith("/")
       ? new URL(urlInput, window.location.origin)
       : new URL(urlInput);
-    const structureResult = await resolveWebStructure(urlToResolve);
+    setIsResolving(true);
+    const structureResult = await resolveWebStructure(urlToResolve, true);
+    setIsResolving(false);
     if (structureResult.isError) {
       setUrlInputError(structureResult.error);
       return;
@@ -53,16 +56,14 @@ export function AddSite() {
         return;
       }
     }
-    const collectionUrlMapCopy: SPFxExtensionUrlMapItem[] = JSON.parse(
-      JSON.stringify([])
+    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
+      JSON.stringify(contextCollectionConfig.value)
     );
-    structureResult.data.forEach((item) => {
-      if (!collectionUrlMapCopy.some((s) => s.id === item.id)) {
-        collectionUrlMapCopy.push({
-          ...item,
-        });
-      }
+    collectionCopy.urlMap = collectionCopy.urlMap.filter((item) => {
+      return !structureResult.data.some((s) => s.id === item.id);
     });
+    collectionCopy.urlMap.push(...structureResult.data);
+    contextCollectionConfig.value = collectionCopy;
     setUrlInputError("");
     setUrlInput("");
   }

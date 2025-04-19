@@ -74,7 +74,7 @@ export async function updateAppCollectionConfig(sp: SPFI, appCollection: SPFxExt
         return false;
     }
     finally {
-        contextCollectionConfigUpdating.value = true;
+        contextCollectionConfigUpdating.value = false;
     }
 }
 

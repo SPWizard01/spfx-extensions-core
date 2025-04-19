@@ -8,23 +8,25 @@ import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest
 import { EMPTY_GUID } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { HubResultResponse, HubResultSitesResponse } from "../models/HubResultResponse";
-import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/UrlCollectionMapItem";
-import { configurationRootWeb, configurationSite, configurationSiteStructure, configurationWeb, getConfigurationWebIsRootHub, getConfigurationWebIsSite } from "../runtimeStore";
+import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/StructureModels";
+import {
+  configurationRootWeb,
+  configurationSite,
+  configurationSiteStructure,
+  getConfigurationWebIsRootHub,
+  getConfigurationWebIsSiteCollection
+} from "../runtimeStore";
 import { getPnPSP } from "./pnpService";
-import { hubResponseToMapItem, spliceHub, spliceSites, spliceWebs, webInfoToMapItem } from "./webStructureResolver";
+import { hubResponseToMapItem, spliceHub, spliceSites, spliceWebs, webInfoToMapItem, webInfoToMapItems } from "./webStructureResolver";
 export async function getAllWebInfos(sp: SPFI) {
-  const thisWeb = configurationWeb;
-  if (thisWeb.isError) {
-    logGenericCoreError("Unable to get web info", thisWeb.error);
-    return [];
-  }
+
   const allSubwebs = await getWebs(sp);
   if (allSubwebs.isError) {
     logGenericCoreError("Unable to get web info", allSubwebs.error);
     return [];
   }
   const recursiveWebs = await getWebInfoRecursiveResult(allSubwebs.data);
-  return [thisWeb.data, ...allSubwebs.data, ...recursiveWebs.filter(r => !r.isError).flatMap(d => d.data)];
+  return [...allSubwebs.data, ...recursiveWebs.filter(r => !r.isError).flatMap(d => d.data)];
 }
 
 async function getWebInfoRecursiveResult(webs: IWebInfo[]) {
@@ -42,7 +44,7 @@ async function getWebInfoRecursiveResult(webs: IWebInfo[]) {
   return infoResult.some(r => r.data.length > 0 || r.isError) ? infoResult : [];
 }
 
-export async function resolveWebStructure(webUrl: URL) {
+export async function resolveWebStructure(webUrl: URL, recursive = false) {
   const sp = getPnPSP(webUrl.origin + webUrl.pathname);
 
   const webStructure: ApiCallResult<SPFxExtensionUrlMapItem[]> = {
@@ -64,17 +66,31 @@ export async function resolveWebStructure(webUrl: URL) {
       webStructure.warnings.push(rwErr);
       logGenericCoreError(rwErr, webUrl.href);
     }
-    const webInfos = await getAllWebInfos(sp);
-    webInfos.forEach((webInfo) => {
-      webStructure.data.push({
-        id: webInfo.Id,
-        siteId: site.data?.Id ?? EMPTY_GUID,
-        hubid: site.data?.HubSiteId ?? EMPTY_GUID,
-        url: webInfo.Url,
-        isRootWeb: webInfo.Id === rootWeb.data?.Id,
-        isHubRoot: site.data?.IsHubSite && webInfo.Id === rootWeb.data?.Id,
-      });
-    });
+    const thisWeb = await getWeb(sp);
+    if (thisWeb.isError) {
+      const thisWebErr = `Unable to get web info ${thisWeb.error}`;
+      webStructure.isError = true;
+      webStructure.error = thisWebErr;
+      logGenericCoreError(thisWebErr, webUrl.href);
+      return webStructure;
+    }
+
+    if (!recursive || rootWeb.isError) {
+      const thisWebMapItem = webInfoToMapItem(thisWeb.data, site.data?.Id ?? EMPTY_GUID, site.data?.HubSiteId ?? EMPTY_GUID);
+      thisWebMapItem.isRootWeb = rootWeb.data?.Id === thisWeb.data.Id;
+      thisWebMapItem.isHubRoot = site.data?.IsHubSite && rootWeb.data?.Id === thisWeb.data.Id;
+      webStructure.data.push(thisWebMapItem);
+      return webStructure;
+    }
+
+    const rootWebSp = getPnPSP(rootWeb.data.Url);
+    const webInfos = await getAllWebInfos(rootWebSp);
+    const mappedRootWeb = webInfoToMapItem(rootWeb.data, site.data?.Id ?? EMPTY_GUID, site.data?.HubSiteId ?? EMPTY_GUID);
+    const mappedSubsites = webInfoToMapItems(webInfos, site.data?.Id ?? EMPTY_GUID, site.data?.HubSiteId ?? EMPTY_GUID);
+    mappedRootWeb.isRootWeb = true;
+    mappedRootWeb.isHubRoot = site.data?.IsHubSite ?? false
+    webStructure.data.push(mappedRootWeb);
+    webStructure.data.push(...mappedSubsites);
   } catch (error) {
     webStructure.isError = true;
     webStructure.error = `${error}`;
@@ -83,37 +99,8 @@ export async function resolveWebStructure(webUrl: URL) {
   return webStructure;
 }
 
-async function _getWebStructure(sp: SPFI) {
-  const web = await getWeb(sp);
-  const returnResult: SPFxExtensionUrlMapItem[] = []
-  if (web.isError) {
-    logGenericCoreError(`Unable to get web info ${web.error}`);
-    return returnResult;
-  }
-  returnResult.push({
-    id: web.data.Id,
-    url: web.data.Url,
-    hubid: EMPTY_GUID,
-    siteId: EMPTY_GUID,
-    isHubRoot: false,
-    isRootWeb: false,
-  })
-  const subWebs = await getWebs(sp);
-  if (subWebs.isError) {
-    logGenericCoreError(`Unable to get subwebs info ${subWebs.error}`);
-    return returnResult;
-  }
-
-  const recursiveWebs = await getWebInfoRecursiveResult(subWebs.data);
-  const rootSubWebsMap = webInfoToMapItem(subWebs.data, EMPTY_GUID, EMPTY_GUID);
-  const subWebsMap = webInfoToMapItem(recursiveWebs.filter(r => !r.isError).flatMap(d => d.data), EMPTY_GUID, EMPTY_GUID);
-  const allWebsMap = [...rootSubWebsMap, ...subWebsMap];
-  returnResult.push(...spliceWebs(allWebsMap, EMPTY_GUID));
-  return returnResult
-}
-
 export async function getSiteStructure(sp: SPFI) {
-  if (!getConfigurationWebIsSite()) {
+  if (!getConfigurationWebIsSiteCollection()) {
     return undefined;
   }
   const site = configurationSite
@@ -142,8 +129,8 @@ export async function getSiteStructure(sp: SPFI) {
     return returnResult;
   }
   const recursiveWebs = await getWebInfoRecursiveResult(rootSubwebs.data);
-  const rootSubWebsMap = webInfoToMapItem(rootSubwebs.data, site.data.Id, site.data.HubSiteId);
-  const subWebsMap = webInfoToMapItem(recursiveWebs.filter(r => !r.isError).flatMap(d => d.data), site.data.Id, site.data.HubSiteId);
+  const rootSubWebsMap = webInfoToMapItems(rootSubwebs.data, site.data.Id, site.data.HubSiteId);
+  const subWebsMap = webInfoToMapItems(recursiveWebs.filter(r => !r.isError).flatMap(d => d.data), site.data.Id, site.data.HubSiteId);
   const allWebsMap = [...rootSubWebsMap, ...subWebsMap];
   const siteResult: SPFxExtensionUrlMapItem = {
     hubid: site.data.HubSiteId,

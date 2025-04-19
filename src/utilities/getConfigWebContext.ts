@@ -1,18 +1,12 @@
 import {
+  configurationIsGlobal,
   getConfigurationWebIsHubChild,
   getConfigurationWebIsRootHub,
   getConfigurationWebIsSubsite,
 } from "../configurator/runtimeStore";
-import { getConfiguringWebUrl } from "../configurator/services/webConfiguratorService";
 
-export function GetWebConfigContext():
-  | "hubRoot"
-  | "hubChild"
-  | "nonHub"
-  | "subsite"
-  | "global"
-  | "other" {
-  if (!getConfiguringWebUrl()) {
+export function GetWebConfigContext() {
+  if (configurationIsGlobal) {
     return "global";
   }
   if (getConfigurationWebIsRootHub()) {
@@ -21,7 +15,7 @@ export function GetWebConfigContext():
   if (getConfigurationWebIsHubChild() && !getConfigurationWebIsRootHub()) {
     return "hubChild";
   }
-  if (!getConfigurationWebIsRootHub() && !getConfigurationWebIsHubChild()) {
+  if (!getConfigurationWebIsHubChild()) {
     return "nonHub";
   }
   if (getConfigurationWebIsSubsite()) {

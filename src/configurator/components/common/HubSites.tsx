@@ -4,9 +4,10 @@ import {
   ArrowTurnDownRightRegular,
   Delete16Regular,
 } from "@fluentui/react-icons";
-import { useState } from "preact/hooks";
+import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import type { CollectionEventHubData } from "../../models/eventData";
-import type { HubUrlCollectionItem } from "../../models/UrlCollectionMapItem";
+import type { HubUrlCollectionItem } from "../../models/StructureModels";
+import { selectedAppDeinitionMapItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { SiteCollections } from "./SiteCollections";
 import { Stack } from "./Stack";
@@ -16,14 +17,57 @@ import { Webs } from "./Webs";
 interface HubSitesProps {
   hubSites: HubUrlCollectionItem[];
   control: "switch" | "delete";
-  onControlClick?: (data: CollectionEventHubData) => void;
+  onDeleteClick?: (data: CollectionEventHubData) => void;
   disableControl?: boolean;
 }
 
-export function HubSites({ hubSites, onControlClick, control, disableControl }: HubSitesProps) {
-  const [sitesDisabled, setSitesDisabled] = useState(disableControl);
-  function onSwitchChange(data: boolean) {
-    setSitesDisabled(data);
+export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
+  function setConfigurationForHub(
+    hubItem: HubUrlCollectionItem,
+    checked: boolean
+  ) {
+    if (!selectedAppDeinitionMapItem.value) {
+      return;
+    }
+    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
+      JSON.stringify(selectedAppDeinitionMapItem.value)
+    );
+    function notThisHubItems(urlMapItemId: string) {
+      //webs do not contain this itemid
+      const notThisHubWebs = !hubItem.webs.some(
+        (w) => w.id === urlMapItemId || w.hubid === urlMapItemId
+      );
+      //sites do not contain this itemid
+      const notThisHubSites = !hubItem.sites.some(
+        (s) => s.id === urlMapItemId || s.hubid === urlMapItemId
+      );
+      //subsites do not contain this itemid
+      const notThisHubSiteWebs = !hubItem.sites.some((s) =>
+        s.webs.some((w) => w.id === urlMapItemId || w.hubid === urlMapItemId)
+      );
+      const notThisHub =
+        hubItem.hubid !== urlMapItemId && hubItem.siteId !== urlMapItemId;
+      return (
+        notThisHubWebs && notThisHubSites && notThisHubSiteWebs && notThisHub
+      );
+    }
+
+    const exIds = copy.config.excludedIds.filter(notThisHubItems);
+    const exHubIds = copy.config.excludedHubIds.filter(notThisHubItems);
+    const inIds = copy.config.includedIds.filter(notThisHubItems);
+    const inHubIds = copy.config.includedHubIds.filter(notThisHubItems);
+
+    if (!copy.config.enabledEverywhere && checked) {
+      inHubIds.push(hubItem.hubid);
+    }
+    if (copy.config.enabledEverywhere && !checked) {
+      exHubIds.push(hubItem.hubid);
+    }
+    copy.config.excludedIds = exIds;
+    copy.config.excludedHubIds = exHubIds;
+    copy.config.includedIds = inIds;
+    copy.config.includedHubIds = inHubIds;
+    selectedAppDeinitionMapItem.value = copy;
   }
   return (
     <Stack gap={8}>
@@ -46,21 +90,24 @@ export function HubSites({ hubSites, onControlClick, control, disableControl }: 
                   </Stack>
                   {control === "switch" ? (
                     <Switch
+                      checked={
+                        (selectedAppDeinitionMapItem.value?.config
+                          ?.enabledEverywhere ||
+                          selectedAppDeinitionMapItem.value?.config?.includedHubIds?.includes(
+                            hubRoot.hubid
+                          )) &&
+                        !selectedAppDeinitionMapItem.value?.config?.excludedHubIds?.includes(
+                          hubRoot.hubid
+                        )
+                      }
                       onChange={(_e, data) => {
-                        onControlClick?.({
-                          controlType: "switch",
-                          item: hubRoot,
-                          itemType: "hub",
-                          data: data.checked,
-                        });
-                        onSwitchChange(data.checked);
+                        setConfigurationForHub(hubRoot, data.checked);
                       }}
                     />
                   ) : (
                     <Button
                       onClick={() =>
-                        onControlClick?.({
-                          controlType: "delete",
+                        onDeleteClick?.({
                           item: hubRoot,
                           itemType: "hub",
                         })
@@ -70,18 +117,32 @@ export function HubSites({ hubSites, onControlClick, control, disableControl }: 
                   )}
                 </Stack>
                 <SiteCollections
-                  control="switch"
+                  control={control}
                   siteCollections={hubRoot.sites}
-                  onControlClick={onControlClick}
+                  onDeleteClick={onDeleteClick}
                   additionalIcon={<ArrowTurnDownRightRegular />}
-                  disableControl={disableControl || sitesDisabled}
+                  disableControl={
+                    selectedAppDeinitionMapItem.value?.config.excludedHubIds.includes(
+                      hubRoot.hubid
+                    ) ||
+                    selectedAppDeinitionMapItem.value?.config.includedHubIds.includes(
+                      hubRoot.hubid
+                    )
+                  }
                 />
                 <Webs
-                  control="switch"
+                  control={control}
                   webs={hubRoot.webs}
-                  onControlClick={onControlClick}
+                  onDeleteClick={onDeleteClick}
                   additionalIcon={<ArrowRightRegular />}
-                  disableControl={disableControl || sitesDisabled}
+                  disableControl={
+                    selectedAppDeinitionMapItem.value?.config.excludedHubIds.includes(
+                      hubRoot.hubid
+                    ) ||
+                    selectedAppDeinitionMapItem.value?.config.includedHubIds.includes(
+                      hubRoot.hubid
+                    )
+                  }
                 />
               </StackItem>
             </Stack>

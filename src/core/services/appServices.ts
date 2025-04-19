@@ -3,7 +3,7 @@ import type {
   SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import { CONFIGURATOR_APP_ID } from "../../utilities/constants";
-import { logInstanceRequestedError } from "./loggingService";
+import { logGenericCoreDebug, logInstanceRequestedError } from "./loggingService";
 
 export function unmountAppInstance(
   appDef: SPFxExtensionAppDefinition,
@@ -26,8 +26,7 @@ export async function unmountInstancesOnContextChange(contextId: string) {
     (a) => !a.isWebPartApp && !a.keepOnContextChange && a.id !== CONFIGURATOR_APP_ID
   );
   for (const alreadyRegisteredApp of instancesToUnmount) {
-    console.log(alreadyRegisteredApp,
-      `---Unmounting on context change`)
+    logGenericCoreDebug(alreadyRegisteredApp, `---Unmounting on context change`)
     for (const appInstance of alreadyRegisteredApp.instances.filter(
       (i) => i.contextId !== contextId
     )) {

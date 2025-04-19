@@ -2,115 +2,94 @@ import type { IWebInfo } from "@pnp/sp/webs";
 import type { SPFxExtensionUrlMapItem } from "../../models/appCollectionManifest";
 import { EMPTY_GUID } from "../../utilities/constants";
 import type { HubResultSitesResponse } from "../models/HubResultResponse";
-import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/UrlCollectionMapItem";
+import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../models/StructureModels";
 
 
 
-export function spliceHub(defaultList: SPFxExtensionUrlMapItem[], hubId: string) {
-    const relevantItems = [...defaultList.filter((item) => item.hubid === hubId)];
-    if (relevantItems.length === 0) return undefined;
-    const hubRootIdx = relevantItems.findIndex((s) => s.isHubRoot);
-    const hubDefault = {
-        hubid: hubId,
-        id: hubId,
-        isHubRoot: true,
-        isRootWeb: true,
-        siteId: hubId,
-        url: hubId,
+export function spliceHub(itemsToSplice: SPFxExtensionUrlMapItem[], hubId: string) {
+    const hubRootIdx = itemsToSplice.findIndex((s) => s.isHubRoot && s.hubid === hubId);
+    if (hubRootIdx < 0) {
+        return undefined;
     }
-    let hubRoot: HubUrlCollectionItem = {
-        ...hubDefault,
-        sites: [{
-            ...hubDefault,
-            webs: [hubDefault],
-        }],
+    const splicedRoot = itemsToSplice.splice(hubRootIdx, 1)[0];
+    const rootSite = {
+        ...splicedRoot,
+        webs: [splicedRoot],
+    }
+    const hubRoot: HubUrlCollectionItem = {
+        ...splicedRoot,
+        sites: [rootSite],
         webs: [],
     };
-    if (hubRootIdx > -1) {
-        const splicedRoot = relevantItems.splice(hubRootIdx, 1)[0];
-        hubRoot = {
-            ...splicedRoot,
-            sites: [{
-                ...splicedRoot,
-                webs: [splicedRoot],
-            }],
-            webs: [],
-        };
-    }
-
     const hubSubWebsToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
-        relevantItems,
-        hubRoot.siteId
+        itemsToSplice,
+        hubRoot.siteId,
+        hubId
     );
-    const rootSite = hubRoot.sites.find((s) => s.id === hubRoot.id);
-    if (rootSite) rootSite.webs.push(...hubSubWebsToPush);
-    const hubSitesToPush: SiteUrlCollectionItem[] =
-        spliceSites(relevantItems);
+    rootSite.webs.push(...hubSubWebsToPush);
+    const hubSitesToPush = spliceSites(itemsToSplice, hubId);
     hubRoot.sites.push(...hubSitesToPush);
-    hubRoot.webs.push(...relevantItems);
+    hubRoot.webs.push(...spliceWebs(itemsToSplice, hubRoot.siteId, hubId));
+    //anything left in the itemsToSplice is not part of this hub, so we return it back to the caller
     return hubRoot;
 }
 
-
-export function spliceHubs(defaultList: SPFxExtensionUrlMapItem[]) {
+export function getGlobalStructure(defaultList: SPFxExtensionUrlMapItem[]) {
     const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
     const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
         (k) => k && k !== EMPTY_GUID
     );
-    const hubResults: HubUrlCollectionItem[] = [];
-    for (const hubId of nonEmptyHubKeys) {
-        const hubItems = allGroupedByHub[hubId];
-        if (!hubItems) continue;
-        const splicedData = spliceHub(hubItems, hubId);
-        if (!splicedData) continue;
-        hubResults.push(splicedData);
-    }
-    return hubResults;
-}
-
-export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
-    const allGroupedByHub = Object.groupBy(defaultList, (item) => item.hubid);
-    const nonEmptyHubKeys = Object.keys(allGroupedByHub).filter(
-        (k) => k && k !== EMPTY_GUID
-    );
-    const otherKeys = Object.keys(allGroupedByHub).filter(
+    const nonHubKeys = Object.keys(allGroupedByHub).filter(
         (k) => !k || k === EMPTY_GUID
     );
+
+    const allHubItems = nonEmptyHubKeys.map((k) => allGroupedByHub[k] ?? []).flat();
+    const allNonHubItems = nonHubKeys.map((k) => allGroupedByHub[k] ?? []).flat();
+
     const hubResults: HubUrlCollectionItem[] = [];
+
+    const siteResults: SiteUrlCollectionItem[] = [];
+    const webResults: SPFxExtensionUrlMapItem[] = [];
+
     for (const hubId of nonEmptyHubKeys) {
-        const hubItems = allGroupedByHub[hubId];
-        if (!hubItems) continue;
-        const splicedData = spliceHub(hubItems, hubId);
+        const splicedData = spliceHub(allHubItems, hubId);
         if (!splicedData) continue;
         hubResults.push(splicedData);
     }
-    const siteResults: SiteUrlCollectionItem[] = [];
-    const webResults: SPFxExtensionUrlMapItem[] = [];
-    for (const otherKey of otherKeys) {
-        const otherItems = allGroupedByHub[otherKey];
-        if (!otherItems) continue;
-        const allGroupedBySite = Object.groupBy(otherItems, (item) => item.siteId);
-        const nonEmptySiteKeys = Object.keys(allGroupedBySite).filter(
-            (k) => k && k !== EMPTY_GUID
-        );
-        const otherSiteKeys = Object.keys(allGroupedBySite).filter(
-            (k) => !k || k === EMPTY_GUID
-        );
-        for (const siteKey of nonEmptySiteKeys) {
-            const siteItems = allGroupedBySite[siteKey];
-            if (!siteItems) continue;
-            const splicedData = spliceSites(siteItems);
-            if (!splicedData) continue;
-            siteResults.push(...splicedData);
-        }
-        for (const webKey of otherSiteKeys) {
-            const webItems = allGroupedBySite[webKey];
-            if (!webItems) continue;
-            const splicedData = spliceWebs(webItems, webKey);
-            if (!splicedData) continue;
-            webResults.push(...splicedData);
-        }
+    // has anything unspliced left
+    if (allHubItems.length > 0) {
+        allNonHubItems.push(...allHubItems);
     }
+    siteResults.push(...spliceSites(allNonHubItems));
+    webResults.push(...allNonHubItems);
+
+    // for (const otherKey of nonHubKeys) {
+    //     const otherItems = allGroupedByHub[otherKey];
+    //     if (!otherItems) continue;
+    //     const allGroupedBySite = Object.groupBy(otherItems, (item) => item.siteId);
+    //     const nonEmptySiteKeys = Object.keys(allGroupedBySite).filter(
+    //         (k) => k && k !== EMPTY_GUID
+    //     );
+    //     const otherSiteKeys = Object.keys(allGroupedBySite).filter(
+    //         (k) => !k || k === EMPTY_GUID
+    //     );
+    //     for (const siteKey of nonEmptySiteKeys) {
+    //         const siteItems = allGroupedBySite[siteKey];
+    //         if (!siteItems) continue;
+    //         const splicedData = spliceSites(siteItems);
+    //         if (splicedData.length > 0) {
+    //             siteResults.push(...splicedData);
+    //         } else {
+    //             webResults.push(...siteItems);
+    //         }
+
+    //     }
+    //     for (const webKey of otherSiteKeys) {
+    //         const webItems = allGroupedBySite[webKey];
+    //         if (!webItems) continue;
+    //         webResults.push(...webItems);
+    //     }
+    // }
     return {
         hubs: hubResults,
         sites: siteResults,
@@ -119,11 +98,14 @@ export function spliceGlobal(defaultList: SPFxExtensionUrlMapItem[]) {
 }
 
 
-export function spliceSites(copyItems: SPFxExtensionUrlMapItem[]) {
+export function spliceSites(itemsToSplice: SPFxExtensionUrlMapItem[], hubId?: string) {
     const sitesToPush: SiteUrlCollectionItem[] = [];
-    let siteIdx = copyItems.findIndex((s) => s.isRootWeb);
+    function indexFinder(s: SPFxExtensionUrlMapItem) {
+        return hubId ? s.isRootWeb && s.hubid === hubId : s.isRootWeb;
+    }
+    let siteIdx = itemsToSplice.findIndex(indexFinder);
     while (siteIdx > -1) {
-        const siteItem = copyItems.splice(siteIdx, 1)[0];
+        const siteItem = itemsToSplice.splice(siteIdx, 1)[0];
         let inSiteCollection = sitesToPush.find((s) => s.id === siteItem.id);
         if (!inSiteCollection) {
             inSiteCollection = {
@@ -133,24 +115,27 @@ export function spliceSites(copyItems: SPFxExtensionUrlMapItem[]) {
             sitesToPush.push(inSiteCollection);
         }
         const websToPush: SPFxExtensionUrlMapItem[] = spliceWebs(
-            copyItems,
-            siteItem.siteId
+            itemsToSplice,
+            siteItem.siteId,
         );
         inSiteCollection.webs.push(
             ...websToPush.sort((a, b) => a.url.localeCompare(b.url))
         );
-        siteIdx = copyItems.findIndex((s) => s.isRootWeb);
+        siteIdx = itemsToSplice.findIndex(indexFinder);
     }
     return sitesToPush;
 }
 
-export function spliceWebs(copyItems: SPFxExtensionUrlMapItem[], siteId: string) {
+export function spliceWebs(copyItems: SPFxExtensionUrlMapItem[], siteId: string, hubId?: string) {
     const websToPush: SPFxExtensionUrlMapItem[] = [];
-    let webIdx = copyItems.findIndex((s) => s.siteId === siteId);
+    function indexFinder(s: SPFxExtensionUrlMapItem) {
+        return hubId ? s.siteId === siteId && s.hubid === hubId : s.siteId === siteId;
+    }
+    let webIdx = copyItems.findIndex(indexFinder);
     while (webIdx > -1) {
         const webItem = copyItems.splice(webIdx, 1)[0];
         websToPush.push(webItem);
-        webIdx = copyItems.findIndex((s) => s.siteId === siteId);
+        webIdx = copyItems.findIndex(indexFinder);
     }
     return websToPush.sort((a, b) => a.url.localeCompare(b.url));
 }
@@ -190,17 +175,20 @@ export function hubResponseToMapItem(responseItems: HubResultSitesResponse[]) {
     return mapItems;
 }
 
-export function webInfoToMapItem(webInfos: IWebInfo[], siteId: string, hubId: string): SPFxExtensionUrlMapItem[] {
+
+export function webInfoToMapItem(webInfo: IWebInfo, siteId: string, hubId: string): SPFxExtensionUrlMapItem {
+    return {
+        id: webInfo.Id,
+        url: webInfo.Url,
+        siteId: siteId,
+        hubid: hubId,
+        isHubRoot: false,
+        isRootWeb: false,
+    };
+}
+
+export function webInfoToMapItems(webInfos: IWebInfo[], siteId: string, hubId: string): SPFxExtensionUrlMapItem[] {
     return webInfos.map((webInfo) => {
-        return {
-            id: webInfo.Id,
-            url: webInfo.Url,
-            siteId: siteId,
-            hubid: hubId,
-            isHubRoot: false,
-            isRootWeb: false,
-            title: webInfo.Title,
-            template: webInfo.WebTemplate,
-        };
+        return webInfoToMapItem(webInfo, siteId, hubId);
     });
 }

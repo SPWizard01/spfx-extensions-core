@@ -1,9 +1,10 @@
 import { Button, Divider, Switch } from "@fluentui/react-components";
 import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
-import { useState } from "preact/hooks";
+import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import type { CollectionEventSiteData } from "../../models/eventData";
-import type { SiteUrlCollectionItem } from "../../models/UrlCollectionMapItem";
+import type { SiteUrlCollectionItem } from "../../models/StructureModels";
+import { selectedAppDeinitionMapItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { Stack } from "./Stack";
 import { Webs } from "./Webs";
@@ -11,7 +12,7 @@ import { Webs } from "./Webs";
 interface SiteCollectionsProps {
   siteCollections: SiteUrlCollectionItem[];
   control: "switch" | "delete";
-  onControlClick?: (data: CollectionEventSiteData) => void;
+  onDeleteClick?: (data: CollectionEventSiteData) => void;
   additionalIcon?: ComponentChild;
   disableControl?: boolean;
 }
@@ -19,13 +20,38 @@ interface SiteCollectionsProps {
 export function SiteCollections({
   siteCollections,
   control,
-  onControlClick,
+  onDeleteClick,
   additionalIcon,
-  disableControl
+  disableControl,
 }: SiteCollectionsProps) {
-  const [websDisabled, setWebsDisabled] = useState(disableControl);
-  function onSwitchChange(data: boolean) {
-    setWebsDisabled(data);
+  function setConfigurationForSite(
+    siteItem: SiteUrlCollectionItem,
+    checked: boolean
+  ) {
+    if (!selectedAppDeinitionMapItem.value) {
+      return;
+    }
+    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
+      JSON.stringify(selectedAppDeinitionMapItem.value)
+    );
+
+    const exIds = copy.config.excludedIds.filter(
+      (a) => !siteItem.webs.some((w) => w.id === a) && siteItem.siteId !== a
+    );
+
+    const inIds = copy.config.includedIds.filter(
+      (a) => !siteItem.webs.some((w) => w.id === a) && siteItem.siteId !== a
+    );
+
+    if (!copy.config.enabledEverywhere && checked) {
+      inIds.push(siteItem.siteId);
+    }
+    if (copy.config.enabledEverywhere && !checked) {
+      exIds.push(siteItem.siteId);
+    }
+    copy.config.excludedIds = exIds;
+    copy.config.includedIds = inIds;
+    selectedAppDeinitionMapItem.value = copy;
   }
   return (
     <>
@@ -46,21 +72,25 @@ export function SiteCollections({
               {/* TODO Enable for all site collection subsites */}
               {control === "switch" ? (
                 <Switch
+                  checked={
+                    (selectedAppDeinitionMapItem.value?.config
+                      ?.enabledEverywhere ||
+                      selectedAppDeinitionMapItem.value?.config?.includedIds?.includes(
+                        site.siteId
+                      )) &&
+                    !selectedAppDeinitionMapItem.value?.config?.excludedIds?.includes(
+                      site.siteId
+                    )
+                  }
+                  disabled={disableControl}
                   onChange={(_e, data) => {
-                    onControlClick?.({
-                      controlType: "switch",
-                      item: site,
-                      itemType: "site",
-                      data: data.checked,
-                    });
-                    onSwitchChange(data.checked);
+                    setConfigurationForSite(site, data.checked);
                   }}
                 />
               ) : (
                 <Button
                   onClick={() =>
-                    onControlClick?.({
-                      controlType: "delete",
+                    onDeleteClick?.({
                       item: site,
                       itemType: "site",
                     })
@@ -72,11 +102,19 @@ export function SiteCollections({
 
             <Webs
               webs={site.webs}
-              control="switch"
-              onControlClick={onControlClick}
+              control={control}
+              onDeleteClick={onDeleteClick}
               additionalIcon={additionalIcon}
-              style={{ paddingLeft: "24px " }}
-              disableControl={disableControl || websDisabled}
+              style={{ paddingLeft: "24px" }}
+              disableControl={
+                disableControl ||
+                selectedAppDeinitionMapItem.value?.config.excludedIds.includes(
+                  site.siteId
+                ) ||
+                selectedAppDeinitionMapItem.value?.config.includedIds.includes(
+                  site.siteId
+                )
+              }
             />
           </Stack>
           <Divider />

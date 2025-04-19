@@ -16,17 +16,18 @@ import type {
   SPFxExtensionCollectionManifest,
   SPFxExtensionUrlMapItem,
 } from "../../../models/appCollectionManifest";
-import type { ConfiguratorURLMapItem } from "../../models/urlMapItemExtended";
+import type { CollectionEventHubData } from "../../models/eventData";
+import type {
+  HubUrlCollectionItem,
+  SiteUrlCollectionItem,
+} from "../../models/StructureModels";
 import {
   configurationIsGlobal,
-  configurationRootWeb,
-  configurationSite,
   configurationWebSP,
-  configurationWebSubWebs,
   contextCollectionConfig,
-  getConfigurationWebIsRootHub,
 } from "../../runtimeStore";
 import { updateAppCollectionConfig } from "../../services/appCollection";
+import { getGlobalStructure } from "../../services/webStructureResolver";
 import { HubSites } from "../common/HubSites";
 import { SiteCollections } from "../common/SiteCollections";
 import { Stack } from "../common/Stack";
@@ -39,75 +40,73 @@ export function ManageSitesDrawer() {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [isResolving, setIsResolving] = useState(false);
   const [modified, setModified] = useState(false);
-  const [collectionUrlMap, setCollectionUrlMap] = useState<
-    ConfiguratorURLMapItem[]
-  >([]);
+  const [prevDefinition, setPrevDefinition] = useState(
+    contextCollectionConfig.value
+  );
+  const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
+  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem[]>(
+    []
+  );
+  const [webStructure, setWebStructure] = useState<SPFxExtensionUrlMapItem[]>(
+    []
+  );
 
   useSignalEffect(() => {
-    const defaultList: ConfiguratorURLMapItem[] = !configurationIsGlobal
-      ? configurationWebSubWebs.map((w) => {
-          return {
-            id: w.Id,
-            siteId: w.Id,
-            hubid: configurationSite.data?.HubSiteId ?? "",
-            url: w.Url,
-            isRootWeb: w.Id === configurationRootWeb.data?.Id,
-            isHubRoot:
-              w.Id === configurationRootWeb.data?.Id &&
-              getConfigurationWebIsRootHub(),
-            canDelete: false,
-          };
-        })
-      : [];
-    contextCollectionConfig.value.urlMap.forEach((item) => {
-      // not in default list
-      if (!defaultList.some((s) => s.id === item.id)) {
-        defaultList.push({
-          ...item,
-          canDelete: true,
-        });
-      }
-    });
-    setCollectionUrlMap(defaultList);
-  });
-
-  function _deleteSite(web: SPFxExtensionUrlMapItem) {
-    const collectionCopy: ConfiguratorURLMapItem[] = JSON.parse(
-      JSON.stringify(collectionUrlMap)
-    );
-
-    const itemIndex = collectionCopy.findIndex((s) => s.id === web.id);
-
-    if (itemIndex < 0) {
+    if (!contextCollectionConfig.value) return;
+    if (!prevDefinition) {
+      setPrevDefinition(contextCollectionConfig.value);
       return;
     }
-    collectionCopy.splice(itemIndex, 1);
-    setModified(true);
-    setCollectionUrlMap(collectionCopy);
+    const copy = JSON.stringify(contextCollectionConfig.value);
+    const current = JSON.stringify(prevDefinition);
+    setPrevDefinition(contextCollectionConfig.value);
+    setModified(copy !== current);
+  });
+
+  useSignalEffect(() => {
+    if (!contextCollectionConfig.value) return;
+    if (configurationIsGlobal) {
+      const globalStructure = getGlobalStructure(contextCollectionConfig.value.urlMap);
+      console.log("globalStructure", globalStructure);
+      setHubStructure(globalStructure.hubs);
+      setSiteStructure(globalStructure.sites);
+      setWebStructure(globalStructure.webs);
+    }
+  });
+
+  function deleteItem(eventData: CollectionEventHubData) {
+    if (!contextCollectionConfig.value) return;
+    const copy: SPFxExtensionCollectionManifest = JSON.parse(
+      JSON.stringify(contextCollectionConfig.value)
+    );
+    if (eventData.itemType === "hub") {
+      copy.urlMap = copy.urlMap.filter(
+        (item) => item.hubid !== eventData.item.hubid
+      );
+    }
+    if (eventData.itemType === "site") {
+      copy.urlMap = copy.urlMap.filter(
+        (item) => item.siteId !== eventData.item.siteId
+      );
+    }
+    if (eventData.itemType === "web") {
+      copy.urlMap = copy.urlMap.filter((item) => item.id !== eventData.item.id);
+    }
+
+    contextCollectionConfig.value = copy;
   }
 
   async function updateCollection() {
+    if (!contextCollectionConfig.value) return;
     setIsResolving(true);
-    const contextCopy: SPFxExtensionCollectionManifest = JSON.parse(
-      JSON.stringify(contextCollectionConfig.value)
-    );
     try {
-      contextCopy.urlMap = collectionUrlMap.map((item) => {
-        return {
-          id: item.id,
-          siteId: item.siteId,
-          hubid: item.hubid,
-          url: item.url,
-          isRootWeb: item.isRootWeb,
-          isHubRoot: item.isHubRoot,
-        };
-      });
-      await updateAppCollectionConfig(configurationWebSP, contextCopy);
-      contextCollectionConfig.value = contextCopy;
+      await updateAppCollectionConfig(
+        configurationWebSP,
+        contextCollectionConfig.value
+      );
     } finally {
       setIsResolving(false);
       setModified(false);
-      setCollectionUrlMap([]);
       ManageSitesDrawerSignal.value = false;
     }
   }
@@ -141,23 +140,42 @@ export function ManageSitesDrawer() {
       <DrawerBody>
         <Stack gap={16} style={{ padding: "8px 0px" }}>
           <Stack gap={4}>
-            <HubSites hubSites={[]} control="delete" />
-            <Stack gap={8}>
-              <Subtitle2 style={{ marginBottom: "8px" }}>
-                Site collections
-              </Subtitle2>
+            {hubStructure.length > 0 ? (
+              <HubSites
+                hubSites={hubStructure}
+                control="delete"
+                onDeleteClick={deleteItem}
+              />
+            ) : null}
+            {siteStructure.length > 0 ? (
               <Stack gap={8}>
-                <Divider />
-                <SiteCollections siteCollections={[]} control="delete" />
+                <Subtitle2 style={{ marginBottom: "8px" }}>
+                  Site collections
+                </Subtitle2>
+                <Stack gap={8}>
+                  <Divider />
+                  <SiteCollections
+                    siteCollections={siteStructure}
+                    control="delete"
+                    onDeleteClick={deleteItem}
+                  />
+                </Stack>
               </Stack>
-            </Stack>
-            <Stack gap={8}>
-              <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
+            ) : null}
+
+            {webStructure.length > 0 ? (
               <Stack gap={8}>
-                <Divider />
-                <Webs webs={[]} control="delete" />
+                <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
+                <Stack gap={8}>
+                  <Divider />
+                  <Webs
+                    webs={webStructure}
+                    control="delete"
+                    onDeleteClick={deleteItem}
+                  />
+                </Stack>
               </Stack>
-            </Stack>
+            ) : null}
           </Stack>
         </Stack>
       </DrawerBody>
