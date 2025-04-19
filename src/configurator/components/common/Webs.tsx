@@ -12,9 +12,17 @@ interface WebsProps {
   onControlClick?: (data: CollectionEventWebData) => void;
   additionalIcon?: ComponentChild;
   style?: React.CSSProperties;
+  disableControl?: boolean;
 }
 
-export function Webs({ webs, control, onControlClick, additionalIcon, style }: WebsProps) {
+export function Webs({
+  webs,
+  control,
+  onControlClick,
+  additionalIcon,
+  style,
+  disableControl,
+}: WebsProps) {
   if (webs.length === 0) {
     return null;
   }
@@ -34,6 +42,7 @@ export function Webs({ webs, control, onControlClick, additionalIcon, style }: W
           </Stack>
           {control === "switch" ? (
             <Switch
+              disabled={disableControl}
               onChange={(_e, data) => {
                 onControlClick?.({
                   controlType: "switch",

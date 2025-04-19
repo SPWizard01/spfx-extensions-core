@@ -4,6 +4,7 @@ import {
   ArrowTurnDownRightRegular,
   Delete16Regular,
 } from "@fluentui/react-icons";
+import { useState } from "preact/hooks";
 import type { CollectionEventHubData } from "../../models/eventData";
 import type { HubUrlCollectionItem } from "../../models/UrlCollectionMapItem";
 import { GetBadge } from "./Badges";
@@ -16,9 +17,14 @@ interface HubSitesProps {
   hubSites: HubUrlCollectionItem[];
   control: "switch" | "delete";
   onControlClick?: (data: CollectionEventHubData) => void;
+  disableControl?: boolean;
 }
 
-export function HubSites({ hubSites, onControlClick, control }: HubSitesProps) {
+export function HubSites({ hubSites, onControlClick, control, disableControl }: HubSitesProps) {
+  const [sitesDisabled, setSitesDisabled] = useState(disableControl);
+  function onSwitchChange(data: boolean) {
+    setSitesDisabled(data);
+  }
   return (
     <Stack gap={8}>
       <Subtitle2 style={{ marginBottom: "8px" }}>Hub sites</Subtitle2>
@@ -47,6 +53,7 @@ export function HubSites({ hubSites, onControlClick, control }: HubSitesProps) {
                           itemType: "hub",
                           data: data.checked,
                         });
+                        onSwitchChange(data.checked);
                       }}
                     />
                   ) : (
@@ -67,12 +74,14 @@ export function HubSites({ hubSites, onControlClick, control }: HubSitesProps) {
                   siteCollections={hubRoot.sites}
                   onControlClick={onControlClick}
                   additionalIcon={<ArrowTurnDownRightRegular />}
+                  disableControl={disableControl || sitesDisabled}
                 />
                 <Webs
                   control="switch"
                   webs={hubRoot.webs}
                   onControlClick={onControlClick}
                   additionalIcon={<ArrowRightRegular />}
+                  disableControl={disableControl || sitesDisabled}
                 />
               </StackItem>
             </Stack>

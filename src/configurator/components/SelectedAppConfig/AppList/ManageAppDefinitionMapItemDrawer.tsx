@@ -29,14 +29,23 @@ import {
   configurationWebSP,
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
+  getConfigurationWebIsSite,
   selectedAppDeinitionMapItem,
   selectedAppItem,
 } from "../../../runtimeStore";
 
 import { useState } from "preact/hooks";
+import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
-import type { HubUrlCollectionItem } from "../../../models/UrlCollectionMapItem";
-import { getHubStructure } from "../../../services/webInfoService";
+import type { CollectionEventSiteData } from "../../../models/eventData";
+import type {
+  HubUrlCollectionItem,
+  SiteUrlCollectionItem,
+} from "../../../models/UrlCollectionMapItem";
+import {
+  getHubStructure,
+  getSiteStructure,
+} from "../../../services/webInfoService";
 import { HubSites } from "../../common/HubSites";
 import { SiteCollections } from "../../common/SiteCollections";
 import { Stack } from "../../common/Stack";
@@ -45,15 +54,14 @@ import { Webs } from "../../common/Webs";
 interface IProps {
   appDefinitions: AppFolderManifestDefinitionItem[];
 }
-
-interface ConfiguratorURLMapItemWithSubSites extends ConfiguratorURLMapItem {
-  webs: ConfiguratorURLMapItem[];
-}
-
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
+  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem>();
+  const [webStructure, setWebStructure] = useState<SPFxExtensionUrlMapItem[]>(
+    []
+  );
   useSignalEffect(() => {
     if (!configurationIsGlobal && getConfigurationWebIsRootHub()) {
       getHubStructure(
@@ -63,16 +71,31 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
         setHubStructure(hub ? [hub] : []);
       });
     }
+    if (getConfigurationWebIsSite() && !getConfigurationWebIsRootHub()) {
+      getSiteStructure(configurationWebSP).then((site) => {
+        setSiteStructure(site);
+      });
+    }
   });
 
+  async function updateMinfestFromSite(data: CollectionEventSiteData) {
+    console.log("updateMinfestFromSite", data);
+    if (data.controlType === "switch" && data.itemType === "site") {
+      const siteItem = data.item;
+      if (data.data) {
+        const filterOutWebsOrSites =
+          selectedAppDeinitionMapItem.value!.config.excludedIds.filter((a) =>
+            siteItem.webs.some((w) => w.id !== a) ||
+            siteItem.id !== a
+          );
+        const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(JSON.stringify(selectedAppDeinitionMapItem.value));
+        copy.config.excludedIds = filterOutWebsOrSites;
+        selectedAppDeinitionMapItem.value = copy;
+      }
+    }
+  }
+
   if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
-
-  const urlsWithSubsites: ConfiguratorURLMapItemWithSubSites[] = [];
-
-  // TODO Group urlList.value by hubs, sites, webs
-  const siteCollections = urlsWithSubsites.filter(
-    (v) => v.isRootWeb && !v.isHubRoot
-  );
 
   return (
     <Drawer
@@ -140,26 +163,33 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               />
             </Stack>
             <Stack gap={12}>
-              <HubSites hubSites={hubStructure} control="switch" />
-              <Stack gap={8}>
-                <Subtitle2 style={{ marginBottom: "8px" }}>
-                  Site collections
-                </Subtitle2>
+              {hubStructure.length > 0 ? (
+                <HubSites hubSites={hubStructure} control="switch" />
+              ) : null}
+              {siteStructure ? (
+                <>
+                  <Subtitle2 style={{ marginBottom: "8px" }}>
+                    Site collections
+                  </Subtitle2>
+                  <Stack gap={8}>
+                    <Divider />
+                    <SiteCollections
+                      siteCollections={[siteStructure]}
+                      control="switch"
+                      onControlClick={updateMinfestFromSite}
+                    />
+                  </Stack>
+                </>
+              ) : null}
+              {webStructure.length > 0 ? (
                 <Stack gap={8}>
-                  <Divider />
-                  <SiteCollections
-                    siteCollections={siteCollections}
-                    control="switch"
-                  />
+                  <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
+                  <Stack gap={8}>
+                    <Divider />
+                    <Webs webs={webStructure} control="switch" />
+                  </Stack>
                 </Stack>
-              </Stack>
-              <Stack gap={8}>
-                <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
-                <Stack gap={8}>
-                  <Divider />
-                  <Webs webs={siteCollections} control="switch" />
-                </Stack>
-              </Stack>
+              ) : null}
             </Stack>
           </Stack>
         </Stack>

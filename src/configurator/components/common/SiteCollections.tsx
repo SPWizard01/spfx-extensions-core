@@ -1,6 +1,7 @@
 import { Button, Divider, Switch } from "@fluentui/react-components";
 import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
+import { useState } from "preact/hooks";
 import type { CollectionEventSiteData } from "../../models/eventData";
 import type { SiteUrlCollectionItem } from "../../models/UrlCollectionMapItem";
 import { GetBadge } from "./Badges";
@@ -12,6 +13,7 @@ interface SiteCollectionsProps {
   control: "switch" | "delete";
   onControlClick?: (data: CollectionEventSiteData) => void;
   additionalIcon?: ComponentChild;
+  disableControl?: boolean;
 }
 
 export function SiteCollections({
@@ -19,7 +21,12 @@ export function SiteCollections({
   control,
   onControlClick,
   additionalIcon,
+  disableControl
 }: SiteCollectionsProps) {
+  const [websDisabled, setWebsDisabled] = useState(disableControl);
+  function onSwitchChange(data: boolean) {
+    setWebsDisabled(data);
+  }
   return (
     <>
       {siteCollections.map((site) => (
@@ -46,6 +53,7 @@ export function SiteCollections({
                       itemType: "site",
                       data: data.checked,
                     });
+                    onSwitchChange(data.checked);
                   }}
                 />
               ) : (
@@ -68,6 +76,7 @@ export function SiteCollections({
               onControlClick={onControlClick}
               additionalIcon={additionalIcon}
               style={{ paddingLeft: "24px " }}
+              disableControl={disableControl || websDisabled}
             />
           </Stack>
           <Divider />
