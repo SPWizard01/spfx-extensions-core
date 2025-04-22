@@ -63,7 +63,7 @@ export function SiteCollections({
             >
               <Stack horizontal verticalAlign="center" gap={8}>
                 {additionalIcon}
-                {GetBadge("warning", "Site collection")}
+                {GetBadge("warning", "Site")}
                 {site.url}
               </Stack>
               {/* TODO Enable for all site collection subsites */}

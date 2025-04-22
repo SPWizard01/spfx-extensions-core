@@ -4,7 +4,6 @@ import {
   ArrowTurnDownRightRegular,
   Delete16Regular,
 } from "@fluentui/react-icons";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventHubData } from "../../models/eventData";
 import type { HubUrlCollectionItem } from "../../models/StructureModels";

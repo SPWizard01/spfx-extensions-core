@@ -2,7 +2,6 @@ import { Body1, Button, Switch } from "@fluentui/react-components";
 import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
 import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
 import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventWebData } from "../../models/eventData";
 import { selectedAppDefinitionItem } from "../../runtimeStore";

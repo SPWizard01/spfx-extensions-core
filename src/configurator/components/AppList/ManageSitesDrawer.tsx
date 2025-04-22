@@ -12,10 +12,7 @@ import {
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { signal, useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
-import type {
-  SPFxExtensionCollectionManifest,
-  SPFxExtensionUrlMapItem,
-} from "../../../models/appCollectionManifest";
+import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
 import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventHubData } from "../../models/eventData";
 import type {
@@ -67,7 +64,9 @@ export function ManageSitesDrawer() {
   useSignalEffect(() => {
     if (!contextCollectionConfig.value) return;
     if (configurationIsGlobal) {
-      const globalStructure = getGlobalStructure(contextCollectionConfig.value.urlMap);
+      const globalStructure = getGlobalStructure(
+        contextCollectionConfig.value.urlMap
+      );
       console.log("globalStructure", globalStructure);
       setHubStructure(globalStructure.hubs);
       setSiteStructure(globalStructure.sites);

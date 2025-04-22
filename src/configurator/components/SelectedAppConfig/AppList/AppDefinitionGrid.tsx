@@ -5,6 +5,7 @@ import {
   EditRegular,
 } from "@fluentui/react-icons";
 import { useSignal, useSignalEffect } from "@preact/signals";
+import { cloneObject } from "../../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
@@ -24,6 +25,15 @@ export function AppDefinitionGrid() {
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
     appDefinitionsDownloaded.value = true;
     appDefinitions.value = allAppDefinitions;
+  }
+
+  function deleteDefinitionItem(item: AppFolderManifestDefinitionItem) {
+    if (!selectedAppItem.value) return;
+    const copy = cloneObject(selectedAppItem.value);
+    copy.manifest.appDefinitionMap = copy.manifest.appDefinitionMap.filter(
+      (a) => a.appId !== item.appId
+    );
+    selectedAppItem.value = copy;
   }
 
   useSignalEffect(() => {
@@ -79,7 +89,9 @@ export function AppDefinitionGrid() {
                 <Button
                   aria-label="Delete configuration item"
                   icon={<Delete16Regular />}
-                  onClick={() => {}}
+                  onClick={() => {
+                    deleteDefinitionItem(appDef);
+                  }}
                 />
               ) : null}
 
