@@ -1,4 +1,4 @@
-import { Button, Divider, Switch } from "@fluentui/react-components";
+import { Button, Switch } from "@fluentui/react-components";
 import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
 import { cloneObject } from "../../../utilities/helpers";
@@ -53,68 +53,62 @@ export function SiteCollections({
   return (
     <>
       {siteCollections.map((site) => (
-        <Stack gap={8}>
-          <Stack>
-            <Stack
-              horizontal
-              gap={8}
-              verticalAlign="center"
-              horizontalAlign="space-between"
-            >
-              <Stack horizontal verticalAlign="center" gap={8}>
-                {additionalIcon}
-                {GetBadge("warning", "Site")}
-                {site.url}
-              </Stack>
-              {/* TODO Enable for all site collection subsites */}
-              {control === "switch" ? (
-                <Switch
-                  checked={
-                    (selectedAppDefinitionItem.value?.config
-                      ?.enabledEverywhere ||
-                      selectedAppDefinitionItem.value?.config?.includedIds?.includes(
-                        site.siteId
-                      )) &&
-                    !selectedAppDefinitionItem.value?.config?.excludedIds?.includes(
-                      site.siteId
-                    )
-                  }
-                  disabled={disableControl}
-                  onChange={(_e, data) => {
-                    setConfigurationForSite(site, data.checked);
-                  }}
-                />
-              ) : (
-                <Button
-                  onClick={() =>
-                    onDeleteClick?.({
-                      item: site,
-                      itemType: "site",
-                    })
-                  }
-                  icon={<Delete16Regular />}
-                />
-              )}
+        <Stack>
+          <Stack
+            horizontal
+            style={{ minHeight: "36px" }}
+            verticalAlign="center"
+            horizontalAlign="space-between"
+          >
+            <Stack horizontal verticalAlign="center" gap={8}>
+              {GetBadge("warning", "Site")}
+              {site.url}
             </Stack>
-
-            <Webs
-              webs={site.webs}
-              control={control}
-              onDeleteClick={onDeleteClick}
-              additionalIcon={additionalIcon}
-              style={{ paddingLeft: "24px" }}
-              disableControl={
-                disableControl ||
-                selectedAppDefinitionItem.value?.config.excludedIds.includes(
-                  site.siteId
-                ) ||
-                selectedAppDefinitionItem.value?.config.includedIds.includes(
-                  site.siteId
-                )
-              }
-            />
+            {/* TODO Enable for all site collection subsites */}
+            {control === "switch" ? (
+              <Switch
+                checked={
+                  (selectedAppDefinitionItem.value?.config?.enabledEverywhere ||
+                    selectedAppDefinitionItem.value?.config?.includedIds?.includes(
+                      site.siteId
+                    )) &&
+                  !selectedAppDefinitionItem.value?.config?.excludedIds?.includes(
+                    site.siteId
+                  )
+                }
+                disabled={disableControl}
+                onChange={(_e, data) => {
+                  setConfigurationForSite(site, data.checked);
+                }}
+              />
+            ) : (
+              <Button
+                onClick={() =>
+                  onDeleteClick?.({
+                    item: site,
+                    itemType: "site",
+                  })
+                }
+                icon={<Delete16Regular />}
+              />
+            )}
           </Stack>
-          <Divider />
+
+          <Webs
+            webs={site.webs}
+            control={control}
+            onDeleteClick={onDeleteClick}
+            additionalIcon={additionalIcon}
+            disableControl={
+              disableControl ||
+              selectedAppDefinitionItem.value?.config.excludedIds.includes(
+                site.siteId
+              ) ||
+              selectedAppDefinitionItem.value?.config.includedIds.includes(
+                site.siteId
+              )
+            }
+          />
         </Stack>
       ))}
     </>

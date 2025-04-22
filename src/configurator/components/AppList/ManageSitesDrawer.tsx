@@ -9,7 +9,10 @@ import {
   Subtitle2,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
-import { Dismiss24Regular } from "@fluentui/react-icons";
+import {
+  ArrowTurnDownRightRegular,
+  Dismiss24Regular,
+} from "@fluentui/react-icons";
 import { signal, useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
@@ -128,7 +131,7 @@ export function ManageSitesDrawer() {
       open={ManageSitesDrawerSignal.value}
       onOpenChange={() => {}}
       position="end"
-      size="medium"
+      size="large"
     >
       <DrawerHeader>
         <DrawerHeaderTitle
@@ -146,48 +149,52 @@ export function ManageSitesDrawer() {
           Manage sites
         </DrawerHeaderTitle>
       </DrawerHeader>
-      <AddSite />
       <DrawerBody>
-        <Stack gap={16} style={{ padding: "8px 0px" }}>
-          <Stack gap={4}>
+        <>
+          <AddSite />
+          <Stack gap={12}>
             {hubStructure.length > 0 ? (
-              <HubSites
-                hubSites={hubStructure}
-                control="delete"
-                onDeleteClick={deleteItem}
-              />
-            ) : null}
-            {siteStructure.length > 0 ? (
-              <Stack gap={8}>
-                <Subtitle2 style={{ marginBottom: "8px" }}>
-                  Site collections
-                </Subtitle2>
-                <Stack gap={8}>
-                  <Divider />
-                  <SiteCollections
-                    siteCollections={siteStructure}
+              <>
+                <Subtitle2>Hub sites</Subtitle2>
+                <Divider />
+                <Stack>
+                  <HubSites
+                    hubSites={hubStructure}
                     control="delete"
                     onDeleteClick={deleteItem}
                   />
                 </Stack>
-              </Stack>
+              </>
             ) : null}
-
+            {siteStructure.length > 0 ? (
+              <>
+                <Subtitle2>Site collections</Subtitle2>
+                <Divider />
+                <Stack>
+                  <SiteCollections
+                    siteCollections={siteStructure}
+                    control="delete"
+                    additionalIcon={<ArrowTurnDownRightRegular />}
+                    onDeleteClick={deleteItem}
+                  />
+                </Stack>
+              </>
+            ) : null}
             {webStructure.length > 0 ? (
-              <Stack gap={8}>
-                <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
-                <Stack gap={8}>
-                  <Divider />
+              <>
+                <Subtitle2>Webs</Subtitle2>
+                <Divider />
+                <Stack>
                   <Webs
                     webs={webStructure}
                     control="delete"
                     onDeleteClick={deleteItem}
                   />
                 </Stack>
-              </Stack>
+              </>
             ) : null}
           </Stack>
-        </Stack>
+        </>
       </DrawerBody>
       <DrawerFooter>
         <Stack horizontal gap={8} horizontalAlign="center">

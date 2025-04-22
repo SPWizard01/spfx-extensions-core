@@ -18,7 +18,12 @@ import {
   Switch,
   useRestoreFocusSource,
 } from "@fluentui/react-components";
-import { Dismiss24Regular, Info16Regular } from "@fluentui/react-icons";
+import {
+  ArrowRightRegular,
+  ArrowTurnDownRightRegular,
+  Dismiss24Regular,
+  Info16Regular,
+} from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
@@ -130,87 +135,78 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           Enable app on sites
         </DrawerHeaderTitle>
       </DrawerHeader>
-      <Stack style={{ padding: "8px 24px", width: "100%" }} gap={8}>
-        <MessageBar intent="info">
-          <MessageBarBody>
-            Choose sites where to enable app{" "}
-            {appDefinitions.find(
-              (a) => a.appId === selectedAppDefinitionItem.value?.appId
-            )?.name ?? selectedAppDefinitionItem.value?.appId}
-          </MessageBarBody>
-        </MessageBar>
-      </Stack>
-
       <DrawerBody>
-        <Stack gap={16} style={{ padding: "8px 0px" }}>
-          <Stack gap={4}>
-            <Stack
-              horizontal
-              horizontalAlign="space-between"
-              verticalAlign="center"
-            >
-              <Stack horizontal gap={8} verticalAlign="center">
-                <Label>Enable everywhere</Label>
-                <Popover withArrow>
-                  <PopoverTrigger disableButtonEnhancement>
-                    <Link>
-                      <Info16Regular />
-                    </Link>
-                  </PopoverTrigger>
-                  <PopoverSurface tabIndex={-1}>
-                    <Body1>
-                      {configWebContext === "global" &&
-                        "Enables app for all listed and unlisted hubs and sites in tenant."}
-                    </Body1>
-                  </PopoverSurface>
-                </Popover>
-              </Stack>
-              <Switch
-                defaultChecked={
-                  selectedAppDefinitionItem.value.config.enabledEverywhere
-                }
-                onChange={(_e, data) => {
-                  const copy = cloneObject(selectedAppDefinitionItem.value!);
-
-                  copy.config.enabledEverywhere = data.checked;
-                  copy.config.includedIds = [];
-                  copy.config.excludedIds = [];
-                  copy.config.includedHubIds = [];
-                  copy.config.excludedHubIds = [];
-                  selectedAppDefinitionItem.value = copy;
-                }}
-              />
+        <>
+          <Stack
+            horizontal
+            horizontalAlign="space-between"
+            verticalAlign="center"
+          >
+            <Stack horizontal verticalAlign="center" gap={8}>
+              <Label>Enable everywhere</Label>
+              <Popover withArrow>
+                <PopoverTrigger disableButtonEnhancement>
+                  <Link>
+                    <Info16Regular />
+                  </Link>
+                </PopoverTrigger>
+                <PopoverSurface tabIndex={-1}>
+                  <Body1>
+                    {configWebContext === "global" &&
+                      "Enables app for all listed and unlisted hubs and sites in tenant."}
+                  </Body1>
+                </PopoverSurface>
+              </Popover>
             </Stack>
-            <Stack gap={12}>
+            <Switch
+              defaultChecked={
+                selectedAppDefinitionItem.value.config.enabledEverywhere
+              }
+              onChange={(_e, data) => {
+                const copy = cloneObject(selectedAppDefinitionItem.value!);
+
+                copy.config.enabledEverywhere = data.checked;
+                copy.config.includedIds = [];
+                copy.config.excludedIds = [];
+                copy.config.includedHubIds = [];
+                copy.config.excludedHubIds = [];
+                selectedAppDefinitionItem.value = copy;
+              }}
+            />
+          </Stack>
+          <Stack gap={12}>
+            <Subtitle2>Hub sites</Subtitle2>
+            <Divider />
+            <Stack>
               {hubStructure.length > 0 ? (
                 <HubSites hubSites={hubStructure} control="switch" />
               ) : null}
+            </Stack>
+
+            <Subtitle2>Site collections</Subtitle2>
+            <Divider />
+            <Stack>
               {siteStructure.length > 0 ? (
-                <>
-                  <Subtitle2 style={{ marginBottom: "8px" }}>
-                    Site collections
-                  </Subtitle2>
-                  <Stack gap={8}>
-                    <Divider />
-                    <SiteCollections
-                      siteCollections={siteStructure}
-                      control="switch"
-                    />
-                  </Stack>
-                </>
+                <SiteCollections
+                  additionalIcon={<ArrowTurnDownRightRegular />}
+                  siteCollections={siteStructure}
+                  control="switch"
+                />
               ) : null}
+            </Stack>
+            <Subtitle2>Webs</Subtitle2>
+            <Divider />
+            <Stack>
               {webStructure.length > 0 ? (
-                <Stack gap={8}>
-                  <Subtitle2 style={{ marginBottom: "8px" }}>Webs</Subtitle2>
-                  <Stack gap={8}>
-                    <Divider />
-                    <Webs webs={webStructure} control="switch" />
-                  </Stack>
-                </Stack>
+                <Webs
+                  additionalIcon={<ArrowRightRegular />}
+                  webs={webStructure}
+                  control="switch"
+                />
               ) : null}
             </Stack>
           </Stack>
-        </Stack>
+        </>
       </DrawerBody>
       <DrawerFooter>
         <Stack horizontal gap={8} horizontalAlign="center">

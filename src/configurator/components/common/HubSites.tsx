@@ -1,4 +1,4 @@
-import { Button, Divider, Subtitle2, Switch } from "@fluentui/react-components";
+import { Button, Switch } from "@fluentui/react-components";
 import {
   ArrowRightRegular,
   ArrowTurnDownRightRegular,
@@ -11,7 +11,6 @@ import { selectedAppDefinitionItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { SiteCollections } from "./SiteCollections";
 import { Stack } from "./Stack";
-import { StackItem } from "./StackItem";
 import { Webs } from "./Webs";
 
 interface HubSitesProps {
@@ -69,85 +68,80 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
     selectedAppDefinitionItem.value = copy;
   }
   return (
-    <Stack gap={8}>
-      <Subtitle2 style={{ marginBottom: "8px" }}>Hub sites</Subtitle2>
-      <Stack gap={8}>
-        <Divider />
-        {hubSites.map((hubRoot) => {
-          return (
-            <Stack gap={8}>
-              <StackItem>
-                <Stack
-                  horizontal
-                  gap={8}
-                  verticalAlign="center"
-                  horizontalAlign="space-between"
-                >
-                  <Stack horizontal verticalAlign="center" gap={8}>
-                    {GetBadge("success", "Hub", "110px")}
-                    {hubRoot.url}
-                  </Stack>
-                  {control === "switch" ? (
-                    <Switch
-                      checked={
-                        (selectedAppDefinitionItem.value?.config
-                          ?.enabledEverywhere ||
-                          selectedAppDefinitionItem.value?.config?.includedHubIds?.includes(
-                            hubRoot.hubid
-                          )) &&
-                        !selectedAppDefinitionItem.value?.config?.excludedHubIds?.includes(
-                          hubRoot.hubid
-                        )
-                      }
-                      onChange={(_e, data) => {
-                        setConfigurationForHub(hubRoot, data.checked);
-                      }}
-                    />
-                  ) : (
-                    <Button
-                      onClick={() =>
-                        onDeleteClick?.({
-                          item: hubRoot,
-                          itemType: "hub",
-                        })
-                      }
-                      icon={<Delete16Regular />}
-                    />
-                  )}
-                </Stack>
-                <SiteCollections
-                  control={control}
-                  siteCollections={hubRoot.sites}
-                  onDeleteClick={onDeleteClick}
-                  additionalIcon={<ArrowTurnDownRightRegular />}
-                  disableControl={
-                    selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
-                      hubRoot.hubid
-                    ) ||
-                    selectedAppDefinitionItem.value?.config.includedHubIds.includes(
-                      hubRoot.hubid
-                    )
-                  }
-                />
-                <Webs
-                  control={control}
-                  webs={hubRoot.webs}
-                  onDeleteClick={onDeleteClick}
-                  additionalIcon={<ArrowRightRegular />}
-                  disableControl={
-                    selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
-                      hubRoot.hubid
-                    ) ||
-                    selectedAppDefinitionItem.value?.config.includedHubIds.includes(
-                      hubRoot.hubid
-                    )
-                  }
-                />
-              </StackItem>
+    <>
+      {hubSites.map((hubRoot) => (
+        <Stack>
+          <Stack
+            horizontal
+            verticalAlign="center"
+            horizontalAlign="space-between"
+          >
+            <Stack
+              horizontal
+              gap={8}
+              verticalAlign="center"
+              style={{ height: "36px" }}
+            >
+              {GetBadge("success", "Hub")}
+              {hubRoot.url}
             </Stack>
-          );
-        })}
-      </Stack>
-    </Stack>
+            {control === "switch" ? (
+              <Switch
+                checked={
+                  (selectedAppDefinitionItem.value?.config?.enabledEverywhere ||
+                    selectedAppDefinitionItem.value?.config?.includedHubIds?.includes(
+                      hubRoot.hubid
+                    )) &&
+                  !selectedAppDefinitionItem.value?.config?.excludedHubIds?.includes(
+                    hubRoot.hubid
+                  )
+                }
+                onChange={(_e, data) => {
+                  setConfigurationForHub(hubRoot, data.checked);
+                }}
+              />
+            ) : (
+              <Button
+                onClick={() =>
+                  onDeleteClick?.({
+                    item: hubRoot,
+                    itemType: "hub",
+                  })
+                }
+                icon={<Delete16Regular />}
+              />
+            )}
+          </Stack>
+          <SiteCollections
+            control={control}
+            siteCollections={hubRoot.sites}
+            onDeleteClick={onDeleteClick}
+            additionalIcon={<ArrowTurnDownRightRegular />}
+            disableControl={
+              selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
+                hubRoot.hubid
+              ) ||
+              selectedAppDefinitionItem.value?.config.includedHubIds.includes(
+                hubRoot.hubid
+              )
+            }
+          />
+          <Webs
+            control={control}
+            webs={hubRoot.webs}
+            onDeleteClick={onDeleteClick}
+            additionalIcon={<ArrowRightRegular />}
+            disableControl={
+              selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
+                hubRoot.hubid
+              ) ||
+              selectedAppDefinitionItem.value?.config.includedHubIds.includes(
+                hubRoot.hubid
+              )
+            }
+          />
+        </Stack>
+      ))}
+    </>
   );
 }
