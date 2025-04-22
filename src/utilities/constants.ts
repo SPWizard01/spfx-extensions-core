@@ -1,13 +1,13 @@
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type {
-    SPFxExtensionAppMapItemConfig,
-    SPFxExtensionFolderManifest,
+  SPFxExtensionAppMapItemConfig,
+  SPFxExtensionFolderManifest,
 } from "../models/appFolderManifest";
 
 /**
  * Found in `SpfxExtensionloaderWebpart.manifest.json`
  */
-export const SPFX_WEBPART_ID = "3be36e80-4431-4b52-99c5-0a339b4e696e";
+export const SPFX_WEBPART_ID = "d6ca1fc2-0591-4c6d-8a25-cae3262c017b";
 export const CONFIGURATOR_APP_ID = "45e75137-13c5-4bb2-a2b3-8ab6382682ee";
 export const CONFIGURATOR_PAGE_NAME = "SPFxExtensionsConfigurator";
 export const CONFIGURATOR_PAGE_URL = `SitePages/${CONFIGURATOR_PAGE_NAME}.aspx`;

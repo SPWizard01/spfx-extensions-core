@@ -7,8 +7,8 @@ if(DEBUG) {
 }
 export async function launch(instance: SPFxExtensionAppInstance) {
     let root: ReturnType<typeof createRoot> | undefined = undefined;
-    if (instance.element) {
-        root = createRoot(instance.element);
+    if (instance.domElement) {
+        root = createRoot(instance.domElement);
         root.render(App({ instance }));
     }
     return () => {
