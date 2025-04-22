@@ -13,7 +13,6 @@ interface WebsProps {
   control: "switch" | "delete";
   onDeleteClick?: (data: CollectionEventWebData) => void;
   additionalIcon?: ComponentChild;
-  style?: React.CSSProperties;
   disableControl?: boolean;
 }
 
@@ -22,7 +21,6 @@ export function Webs({
   control,
   onDeleteClick,
   additionalIcon,
-  style,
   disableControl,
 }: WebsProps) {
   if (webs.length === 0) {
@@ -77,7 +75,7 @@ export function Webs({
           horizontal
           horizontalAlign="space-between"
           verticalAlign="center"
-          style={style}
+          style={{ minHeight: "36px" }}
         >
           <Stack horizontal gap={8} verticalAlign="center">
             {additionalIcon}

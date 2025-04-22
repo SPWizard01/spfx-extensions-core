@@ -12,7 +12,7 @@ export function GetBadge(
     | "warning"
     | undefined,
   text: string,
-  width: string = "72px"
+  width: string = "86px"
 ) {
   return (
     <Badge size="medium" color={color} style={{ width: width }}>
