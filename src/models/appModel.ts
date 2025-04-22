@@ -1,4 +1,4 @@
-import type { SPFxExtensionAppConfig } from "./appConfig";
+import type { SPFxExtensionAppConfig, SPFxExtensionAppRuntimeConfig } from "./appConfig";
 import type {
   SPFxExtensionAppEventCleanup,
   SPFxExtensionAppInstanceEventListener,
@@ -10,7 +10,7 @@ import type {
  */
 export type SPFxExtensionAppCleanup = () => void;
 
-export interface SPFxExtensionAppInstance {
+export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig {
   key: string;
 
   contextId: string;
@@ -21,20 +21,6 @@ export interface SPFxExtensionAppInstance {
    * Used by context change event where app registration remains but new instances might be created.
    */
   hasBeenRequested: boolean;
-  element?: HTMLElement;
-
-  webpartContext?: any;
-
-  openPropertyPane?(): void;
-  closePropertyPane?(): void;
-  /**
-   * Saves configuration inside the webpart
-   * @param config Webpart Configuration that you want to save
-   * @param raiseEvent If set to true, it will raise onConfigurationChange event. Default: `true`
-   */
-  saveConfigValue?(config: SPFxExtensionAppConfig, raiseEvent?: boolean): void;
-  getConfigValue?(): SPFxExtensionAppConfig | undefined;
-
   /**
    * Calls cleanup function provided by `onInstanceRequested` method of the app definition.
    *

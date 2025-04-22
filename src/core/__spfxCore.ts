@@ -26,8 +26,8 @@ const configuratorApp: SPFxExtensionAppRegistration = {
     }
     catch (e) {
       logGenericCoreError("Error launching configurator app", e);
-      if(newInstance.element) {
-        newInstance.element.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Error launching configurator app. ${e}</div>`;
+      if(newInstance.domElement) {
+        newInstance.domElement.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Error launching configurator app. ${e}</div>`;
       }
       return () => { };
     }

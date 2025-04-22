@@ -22,7 +22,7 @@ export interface SPFxExtensionAppRuntimeConfig {
    * @param raiseEvent If set to true, it will raise onConfigurationChange event. Default: `true`
    */
   saveConfigValue?(config: SPFxExtensionAppConfig, raiseEvent?: boolean): void;
-  getConfigValue?(): SPFxExtensionAppConfig | undefined;
+  getConfigValue?(key?: string): SPFxExtensionAppConfig | undefined;
   getSearchableData?(): SPFxExtensionAppSearchableData;
   setSearchableData?(data: SPFxExtensionAppSearchableData): void;
   webpartContext?: any;

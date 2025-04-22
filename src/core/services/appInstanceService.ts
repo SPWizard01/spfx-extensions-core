@@ -89,14 +89,9 @@ export function createAppInstance(
     Promise.withResolvers<void>();
 
   const appInstance: SPFxExtensionAppInstance = {
+    ...runTimeConfig,
     key: window.crypto.randomUUID(),
     contextId: getCurrentContextId(),
-    element: runTimeConfig.domElement,
-    webpartContext: runTimeConfig.webpartContext,
-    openPropertyPane: runTimeConfig.openPropertyPane,
-    closePropertyPane: runTimeConfig.closePropertyPane,
-    saveConfigValue: runTimeConfig.saveConfigValue,
-    getConfigValue: runTimeConfig.getConfigValue,
     hasBeenRequested: false,
     unmount: emptyDummy,
     allEventListeners: [],
