@@ -3,6 +3,7 @@ import { CONFIGURATOR_APP_ID } from "../utilities/constants";
 import { initCoreServices } from "./services/initializationService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo } from "./services/loggingService";
 //solution id 7d56fff0-e90e-40a7-98cf-fcdbc63a9b01
+//feature id 83e13c11-682e-4eaa-9ae0-74617ca28f96
 //wp id d6ca1fc2-0591-4c6d-8a25-cae3262c017b
 //ext id 5f051733-351a-4c5f-b64e-de96d1dc90b3
 //wp prop: DBModernAppConfiguration
