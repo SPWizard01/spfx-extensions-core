@@ -23,8 +23,10 @@ import {
   configurationIsGlobal,
   configurationWebSP,
   contextCollectionConfig,
+  getConfigurationWebIsRootHub,
 } from "../../runtimeStore";
 import { updateAppCollectionConfig } from "../../services/appCollection";
+import { getHubStructure } from "../../services/webInfoService";
 import { getGlobalStructure } from "../../services/webStructureResolver";
 import { HubSites } from "../common/HubSites";
 import { SiteCollections } from "../common/SiteCollections";
@@ -67,10 +69,20 @@ export function ManageSitesDrawer() {
       const globalStructure = getGlobalStructure(
         contextCollectionConfig.value.urlMap
       );
-      console.log("globalStructure", globalStructure);
       setHubStructure(globalStructure.hubs);
       setSiteStructure(globalStructure.sites);
       setWebStructure(globalStructure.webs);
+      return;
+    }
+    if (!configurationIsGlobal && getConfigurationWebIsRootHub()) {
+      getHubStructure(
+        configurationWebSP,
+        contextCollectionConfig.value.urlMap
+      ).then((data) => {
+        if (data) {
+          setHubStructure([data]);
+        }
+      });
     }
   });
 
