@@ -10,6 +10,7 @@ import {
 import { Add16Regular } from "@fluentui/react-icons";
 import { useState } from "preact/hooks";
 import type { SPFxExtensionCollectionManifest } from "../../../models/appCollectionManifest";
+import { cloneObject } from "../../../utilities/helpers";
 import {
   configurationSite,
   contextCollectionConfig,
@@ -56,9 +57,7 @@ export function AddSite() {
         return;
       }
     }
-    const collectionCopy: SPFxExtensionCollectionManifest = JSON.parse(
-      JSON.stringify(contextCollectionConfig.value)
-    );
+    const collectionCopy = cloneObject(contextCollectionConfig.value);
     collectionCopy.urlMap = collectionCopy.urlMap.filter((item) => {
       return !structureResult.data.some((s) => s.id === item.id);
     });

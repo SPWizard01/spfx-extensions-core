@@ -5,6 +5,7 @@ import { signal } from "@preact/signals";
 import { useState } from "react";
 import Dropzone from "react-dropzone";
 import { MANIFEST_NAME } from "../../../../utilities/constants";
+import { cloneObject } from "../../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import {
   configurationWebSP,
@@ -50,9 +51,7 @@ export function FilePicker() {
         file.status = d.success ? "uploaded" : "error";
       }
       if (isManifest && d.success && file) {
-        const updateApp = JSON.parse(
-          JSON.stringify(selectedAppItem.value)
-        ) as AppCollectionConfigurationItem;
+        const updateApp = cloneObject(selectedAppItem.value!);
         const content = new TextDecoder().decode(file.content);
         const manifestJson = JSON.parse(content);
         updateApp.manifest = manifestJson;

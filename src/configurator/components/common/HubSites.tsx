@@ -5,9 +5,10 @@ import {
   Delete16Regular,
 } from "@fluentui/react-icons";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
+import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventHubData } from "../../models/eventData";
 import type { HubUrlCollectionItem } from "../../models/StructureModels";
-import { selectedAppDeinitionMapItem } from "../../runtimeStore";
+import { selectedAppDefinitionItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { SiteCollections } from "./SiteCollections";
 import { Stack } from "./Stack";
@@ -26,12 +27,11 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
     hubItem: HubUrlCollectionItem,
     checked: boolean
   ) {
-    if (!selectedAppDeinitionMapItem.value) {
+    if (!selectedAppDefinitionItem.value) {
       return;
     }
-    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
-      JSON.stringify(selectedAppDeinitionMapItem.value)
-    );
+    const copy = cloneObject(selectedAppDefinitionItem.value);
+
     function notThisHubItems(urlMapItemId: string) {
       //webs do not contain this itemid
       const notThisHubWebs = !hubItem.webs.some(
@@ -67,7 +67,7 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
     copy.config.excludedHubIds = exHubIds;
     copy.config.includedIds = inIds;
     copy.config.includedHubIds = inHubIds;
-    selectedAppDeinitionMapItem.value = copy;
+    selectedAppDefinitionItem.value = copy;
   }
   return (
     <Stack gap={8}>
@@ -91,12 +91,12 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
                   {control === "switch" ? (
                     <Switch
                       checked={
-                        (selectedAppDeinitionMapItem.value?.config
+                        (selectedAppDefinitionItem.value?.config
                           ?.enabledEverywhere ||
-                          selectedAppDeinitionMapItem.value?.config?.includedHubIds?.includes(
+                          selectedAppDefinitionItem.value?.config?.includedHubIds?.includes(
                             hubRoot.hubid
                           )) &&
-                        !selectedAppDeinitionMapItem.value?.config?.excludedHubIds?.includes(
+                        !selectedAppDefinitionItem.value?.config?.excludedHubIds?.includes(
                           hubRoot.hubid
                         )
                       }
@@ -122,10 +122,10 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
                   onDeleteClick={onDeleteClick}
                   additionalIcon={<ArrowTurnDownRightRegular />}
                   disableControl={
-                    selectedAppDeinitionMapItem.value?.config.excludedHubIds.includes(
+                    selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
                       hubRoot.hubid
                     ) ||
-                    selectedAppDeinitionMapItem.value?.config.includedHubIds.includes(
+                    selectedAppDefinitionItem.value?.config.includedHubIds.includes(
                       hubRoot.hubid
                     )
                   }
@@ -136,10 +136,10 @@ export function HubSites({ hubSites, onDeleteClick, control }: HubSitesProps) {
                   onDeleteClick={onDeleteClick}
                   additionalIcon={<ArrowRightRegular />}
                   disableControl={
-                    selectedAppDeinitionMapItem.value?.config.excludedHubIds.includes(
+                    selectedAppDefinitionItem.value?.config.excludedHubIds.includes(
                       hubRoot.hubid
                     ) ||
-                    selectedAppDeinitionMapItem.value?.config.includedHubIds.includes(
+                    selectedAppDefinitionItem.value?.config.includedHubIds.includes(
                       hubRoot.hubid
                     )
                   }

@@ -1,5 +1,8 @@
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
-import type { SPFxExtensionFolderManifest } from "../models/appFolderManifest";
+import type {
+    SPFxExtensionAppMapItemConfig,
+    SPFxExtensionFolderManifest,
+} from "../models/appFolderManifest";
 
 /**
  * Found in `SpfxExtensionloaderWebpart.manifest.json`
@@ -17,6 +20,20 @@ export const SPFX_EXTENSIONS_FOLDER = "SPFxExtensions";
 export const WELL_KNOWN_MANIFEST_LOCATION = `/${SPFX_EXTENSIONS_FOLDER}/`;
 export const SPFX_EXTENSIONS_DATA_SITE = "SPFxExtensionsData";
 export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
-export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = { appDefinitionMap: [], appRelativeEntryPointUrls: [], isESM: true }
-export const EMPTY_COLLECTION_MANIFEST: SPFxExtensionCollectionManifest = { enabledAppCollections: [], urlMap: [] };
+export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = {
+  appDefinitionMap: [],
+  appRelativeEntryPointUrls: [],
+  isESM: true,
+};
+export const EMPTY_APP_DEF_ITEM_CONFIG: SPFxExtensionAppMapItemConfig = {
+  enabledEverywhere: false,
+  excludedHubIds: [],
+  excludedIds: [],
+  includedHubIds: [],
+  includedIds: [],
+};
+export const EMPTY_COLLECTION_MANIFEST: SPFxExtensionCollectionManifest = {
+  enabledAppCollections: [],
+  urlMap: [],
+};
 export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";

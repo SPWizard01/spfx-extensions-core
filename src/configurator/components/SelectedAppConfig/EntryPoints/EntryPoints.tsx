@@ -26,7 +26,7 @@ export const UploadProjectDrawerSignal = signal<"add" | "edit" | undefined>(
   undefined
 );
 
-export default function EntryPoints() {
+export function EntryPoints() {
   const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
   const app = selectedAppItem.value;
   useSignalEffect(() => {
@@ -91,7 +91,7 @@ export default function EntryPoints() {
               </Link>
             </PopoverTrigger>
             <PopoverSurface tabIndex={-1}>
-              <Body1>Switch on if your entry point(s) export ESM module.</Body1>
+              <Body1>Switch on if your entry points are ESM modules with default export.</Body1>
             </PopoverSurface>
           </Popover>
         </Stack>

@@ -20,8 +20,6 @@ import {
 } from "@fluentui/react-components";
 import { Dismiss24Regular, Info16Regular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../../models/appFolderManifest";
-import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
   configurationIsGlobal,
@@ -29,13 +27,14 @@ import {
   contextCollectionConfig,
   getConfigurationWebIsRootHub,
   getConfigurationWebIsSiteCollection,
-  selectedAppDeinitionMapItem,
+  selectedAppDefinitionItem,
   selectedAppItem,
 } from "../../../runtimeStore";
 
 import { useState } from "preact/hooks";
 import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
+import { cloneObject } from "../../../../utilities/helpers";
 import type {
   HubUrlCollectionItem,
   SiteUrlCollectionItem,
@@ -57,7 +56,7 @@ const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [prevDefinition, setPrevDefinition] = useState(
-    selectedAppDeinitionMapItem.value
+    selectedAppDefinitionItem.value
   );
   const [modified, setModified] = useState(false);
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
@@ -68,14 +67,14 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     []
   );
   useSignalEffect(() => {
-    if (!selectedAppDeinitionMapItem.value) return;
+    if (!selectedAppDefinitionItem.value) return;
     if (!prevDefinition) {
-      setPrevDefinition(selectedAppDeinitionMapItem.value);
+      setPrevDefinition(selectedAppDefinitionItem.value);
       return;
     }
-    const copy = JSON.stringify(selectedAppDeinitionMapItem.value);
+    const copy = JSON.stringify(selectedAppDefinitionItem.value);
     const current = JSON.stringify(prevDefinition);
-    setPrevDefinition(selectedAppDeinitionMapItem.value);
+    setPrevDefinition(selectedAppDefinitionItem.value);
     setModified(copy !== current);
   });
 
@@ -105,13 +104,13 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
     }
   });
 
-  if (!selectedAppDeinitionMapItem.value || !selectedAppItem.value) return null;
+  if (!selectedAppDefinitionItem.value || !selectedAppItem.value) return null;
 
   return (
     <Drawer
       {...restoreFocusSourceAttributes}
       separator
-      open={!!selectedAppDeinitionMapItem.value}
+      open={!!selectedAppDefinitionItem.value}
       position="end"
       size="large"
     >
@@ -123,7 +122,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               aria-label="Close"
               icon={<Dismiss24Regular />}
               onClick={() => {
-                selectedAppDeinitionMapItem.value = undefined;
+                selectedAppDefinitionItem.value = undefined;
               }}
             />
           }
@@ -136,8 +135,8 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           <MessageBarBody>
             Choose sites where to enable app{" "}
             {appDefinitions.find(
-              (a) => a.appId === selectedAppDeinitionMapItem.value?.appId
-            )?.name ?? selectedAppDeinitionMapItem.value?.appId}
+              (a) => a.appId === selectedAppDefinitionItem.value?.appId
+            )?.name ?? selectedAppDefinitionItem.value?.appId}
           </MessageBarBody>
         </MessageBar>
       </Stack>
@@ -168,18 +167,17 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
               </Stack>
               <Switch
                 defaultChecked={
-                  selectedAppDeinitionMapItem.value.config.enabledEverywhere
+                  selectedAppDefinitionItem.value.config.enabledEverywhere
                 }
                 onChange={(_e, data) => {
-                  const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
-                    JSON.stringify(selectedAppDeinitionMapItem.value)
-                  );
+                  const copy = cloneObject(selectedAppDefinitionItem.value!);
+
                   copy.config.enabledEverywhere = data.checked;
                   copy.config.includedIds = [];
                   copy.config.excludedIds = [];
                   copy.config.includedHubIds = [];
                   copy.config.excludedHubIds = [];
-                  selectedAppDeinitionMapItem.value = copy;
+                  selectedAppDefinitionItem.value = copy;
                 }}
               />
             </Stack>
@@ -219,7 +217,7 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
           <Button
             appearance="secondary"
             onClick={() => {
-              selectedAppDeinitionMapItem.value = undefined;
+              selectedAppDefinitionItem.value = undefined;
             }}
           >
             Cancel
@@ -229,18 +227,18 @@ export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
             appearance="primary"
             disabled={!modified}
             onClick={() => {
-              if (!selectedAppDeinitionMapItem.value) return;
-              const selectedAppCopy: AppCollectionConfigurationItem =
-                JSON.parse(JSON.stringify(selectedAppItem.value));
-              const selectedDefCopy: SPFxExtensionAppDefinitionMapItem =
-                JSON.parse(JSON.stringify(selectedAppDeinitionMapItem.value));
+              if (!selectedAppDefinitionItem.value) return;
+              const selectedAppCopy = cloneObject(selectedAppItem.value!);
+              const selectedDefCopy = cloneObject(
+                selectedAppDefinitionItem.value!
+              );
               selectedAppCopy.manifest.appDefinitionMap =
                 selectedAppCopy.manifest.appDefinitionMap.filter(
                   (a) => a.appId !== selectedDefCopy.appId
                 );
               selectedAppCopy.manifest.appDefinitionMap.push(selectedDefCopy);
               selectedAppItem.value = selectedAppCopy;
-              selectedAppDeinitionMapItem.value = undefined;
+              selectedAppDefinitionItem.value = undefined;
             }}
           >
             Save

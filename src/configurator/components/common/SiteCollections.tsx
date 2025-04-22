@@ -1,10 +1,10 @@
 import { Button, Divider, Switch } from "@fluentui/react-components";
 import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
+import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventSiteData } from "../../models/eventData";
 import type { SiteUrlCollectionItem } from "../../models/StructureModels";
-import { selectedAppDeinitionMapItem } from "../../runtimeStore";
+import { selectedAppDefinitionItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { Stack } from "./Stack";
 import { Webs } from "./Webs";
@@ -28,13 +28,10 @@ export function SiteCollections({
     siteItem: SiteUrlCollectionItem,
     checked: boolean
   ) {
-    if (!selectedAppDeinitionMapItem.value) {
+    if (!selectedAppDefinitionItem.value) {
       return;
     }
-    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
-      JSON.stringify(selectedAppDeinitionMapItem.value)
-    );
-
+    const copy = cloneObject(selectedAppDefinitionItem.value);
     const exIds = copy.config.excludedIds.filter(
       (a) => !siteItem.webs.some((w) => w.id === a) && siteItem.siteId !== a
     );
@@ -51,7 +48,7 @@ export function SiteCollections({
     }
     copy.config.excludedIds = exIds;
     copy.config.includedIds = inIds;
-    selectedAppDeinitionMapItem.value = copy;
+    selectedAppDefinitionItem.value = copy;
   }
   return (
     <>
@@ -73,12 +70,12 @@ export function SiteCollections({
               {control === "switch" ? (
                 <Switch
                   checked={
-                    (selectedAppDeinitionMapItem.value?.config
+                    (selectedAppDefinitionItem.value?.config
                       ?.enabledEverywhere ||
-                      selectedAppDeinitionMapItem.value?.config?.includedIds?.includes(
+                      selectedAppDefinitionItem.value?.config?.includedIds?.includes(
                         site.siteId
                       )) &&
-                    !selectedAppDeinitionMapItem.value?.config?.excludedIds?.includes(
+                    !selectedAppDefinitionItem.value?.config?.excludedIds?.includes(
                       site.siteId
                     )
                   }
@@ -108,10 +105,10 @@ export function SiteCollections({
               style={{ paddingLeft: "24px" }}
               disableControl={
                 disableControl ||
-                selectedAppDeinitionMapItem.value?.config.excludedIds.includes(
+                selectedAppDefinitionItem.value?.config.excludedIds.includes(
                   site.siteId
                 ) ||
-                selectedAppDeinitionMapItem.value?.config.includedIds.includes(
+                selectedAppDefinitionItem.value?.config.includedIds.includes(
                   site.siteId
                 )
               }

@@ -5,6 +5,7 @@ import { logGenericCoreDebug } from "../core/services/loggingService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type { SPFxExtensionAppDefinitionMapItem } from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
+import { cloneObject } from "../utilities/helpers";
 import type { ApiCallResult } from "./models/apiCallResult";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
 import {
@@ -67,14 +68,14 @@ export const contextCollectionConfigUpdating = signal<boolean>(false);
 export const allAppItems =
   signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
-export const selectedAppDeinitionMapItem = signal<SPFxExtensionAppDefinitionMapItem>();
+export const selectedAppDefinitionItem = signal<SPFxExtensionAppDefinitionMapItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 
 
 export const configurationWebSubWebs: IWebInfo[] = [];
 export const configurationSiteStructure = await getSiteStructure(configurationWebSP);
 effect(() => {
-  logGenericCoreDebug("Configuration", selectedAppDeinitionMapItem.value?.config);
+  logGenericCoreDebug("Configuration", selectedAppDefinitionItem.value?.config);
 })
 
 export function getEmptyAppItem(appName: string) {
@@ -92,9 +93,7 @@ export function getAppItem(appName: string) {
 }
 
 export function updateApp(updatedApp: AppCollectionConfigurationItem) {
-  const apps = JSON.parse(
-    JSON.stringify(allAppItems.value)
-  ) as AppCollectionConfigurationItem[];
+  const apps = cloneObject(allAppItems.value);
   const foundApp = apps.findIndex((w) => w.name === updatedApp.name);
   if (foundApp > -1) {
     apps.splice(foundApp, 1, updatedApp);
@@ -108,7 +107,7 @@ export function updateSelectedApp(
   updatedApp: AppCollectionConfigurationItem,
   withAppUpdate = false
 ) {
-  const newApp = JSON.parse(JSON.stringify(updatedApp));
+  const newApp = cloneObject(updatedApp);
   selectedAppItem.value = newApp;
   if (withAppUpdate) {
     updateApp(newApp);

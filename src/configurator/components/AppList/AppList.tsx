@@ -16,6 +16,7 @@ import {
   WebAsset16Regular,
 } from "@fluentui/react-icons";
 import { signal } from "@preact/signals";
+import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
@@ -30,7 +31,7 @@ import {
   updateAppCollectionConfig,
 } from "../../services/appCollection";
 import { Stack } from "../common/Stack";
-import { AddAppDialog } from "./AddAppDialog";
+import { AddAppCollection } from "./AddAppCollection";
 import { AppCollectionActivator } from "./AppCollectionActivator";
 import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
@@ -80,23 +81,13 @@ interface ApplistProps {
   unused?: boolean;
 }
 
-export const AddAppDialogStateSignal = signal<boolean>(false);
-
 export function AppList(_props: ApplistProps) {
   if (selectedAppItem.value) return null;
   return (
     <Stack gap={16}>
       <Toolbar>
         <Stack gap={8} horizontal>
-          <ToolbarButton
-            onClick={() => {
-              AddAppDialogStateSignal.value = true;
-            }}
-            appearance="primary"
-            icon={<Add16Regular />}
-          >
-            Create collection
-          </ToolbarButton>
+          <AddAppCollection />
           {configurationIsGlobal || getConfigurationWebIsRootHub() ? (
             <ToolbarButton
               appearance="secondary"
@@ -127,7 +118,7 @@ export function AppList(_props: ApplistProps) {
                 <TableCellLayout media={<FolderRegular />}>
                   <Link
                     onClick={() => {
-                      selectedAppItem.value = JSON.parse(JSON.stringify(item));
+                      selectedAppItem.value = cloneObject(item);
                     }}
                   >
                     {item.name}
@@ -156,7 +147,6 @@ export function AppList(_props: ApplistProps) {
           ))}
         </TableBody>
       </Table>
-      <AddAppDialog />
     </Stack>
   );
 }

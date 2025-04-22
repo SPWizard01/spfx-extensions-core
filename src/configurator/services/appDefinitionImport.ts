@@ -2,33 +2,41 @@ import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import type { SPFxExtensionAppMapItemConfig } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
-import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
+import {
+  EMPTY_APP_DEF_ITEM_CONFIG,
+  SPFX_EXTENSIONS_FOLDER,
+} from "../../utilities/constants";
+import { cloneObject } from "../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../models/AppFolderManifestDefinitionItem";
 import { configrationWebUrl } from "../runtimeStore";
 
-const EMPTY_DEF_CONFIG: SPFxExtensionAppMapItemConfig = {
-  enabledEverywhere: false,
-  excludedHubIds: [],
-  excludedIds: [],
-  includedHubIds: [],
-  includedIds: [],
-};
 export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
   if (!app.manifest.isESM) {
-    const nonEsmDefs: AppFolderManifestDefinitionItem[] = [];
+    const returnValue: AppFolderManifestDefinitionItem[] = [];
     for (const element of app.manifest.appRelativeEntryPointUrls) {
       const nonEsmEPConfig: SPFxExtensionAppMapItemConfig =
         app.manifest.appDefinitionMap.find((a) => a.appId === element)
-          ?.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG));
-      nonEsmDefs.push({
+          ?.config ?? cloneObject(EMPTY_APP_DEF_ITEM_CONFIG);
+      returnValue.push({
         appId: element,
         name: element,
         resolved: true,
         config: nonEsmEPConfig,
       });
     }
-    return nonEsmDefs;
+    const additionalDefs: AppFolderManifestDefinitionItem[] =
+      app.manifest.appDefinitionMap
+        .filter(
+          (def) => !returnValue.some((retDef) => retDef.appId === def.appId)
+        )
+        .map((def) => ({
+          ...def,
+          name: `${def.appId}`,
+          resolved: true,
+        }));
+    returnValue.push(...cloneObject(additionalDefs));
+    return returnValue;
   }
   const manifestDefinitions: AppFolderManifestDefinitionItem[] =
     app.manifest.appDefinitionMap.map((def) => {
@@ -36,7 +44,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
         appId: def.appId,
         name: `Unknown_${def.appId}`,
         resolved: false,
-        config: def.config ?? JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
+        config: def.config ?? cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
       };
     });
   for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
@@ -84,7 +92,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
           appId: appDef.id,
           name: appDef.name,
           resolved: true,
-          config: JSON.parse(JSON.stringify(EMPTY_DEF_CONFIG)),
+          config: cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
         });
       }
     } catch (e) {

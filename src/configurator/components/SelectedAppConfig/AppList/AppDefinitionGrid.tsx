@@ -1,11 +1,14 @@
 import { Button, Link, ProgressBar } from "@fluentui/react-components";
-import { AppFolder20Regular, EditRegular } from "@fluentui/react-icons";
-import { useSignalEffect } from "@preact/signals";
-import { useState } from "preact/hooks";
+import {
+  AppFolder20Regular,
+  Delete16Regular,
+  EditRegular,
+} from "@fluentui/react-icons";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
-  selectedAppDeinitionMapItem,
+  selectedAppDefinitionItem,
   selectedAppItem,
 } from "../../../runtimeStore";
 import { getAppDefinitions } from "../../../services/appDefinitionImport";
@@ -13,17 +16,14 @@ import { Stack } from "../../common/Stack";
 import { ManageAppDefinitionMapItemDrawer } from "./ManageAppDefinitionMapItemDrawer";
 
 export function AppDefinitionGrid() {
-  const [appDefinitions, setAppDefinitions] = useState<
-    AppFolderManifestDefinitionItem[]
-  >([]);
-  const [appDefinitionsDownloaded, setAppDefinitionsDownloaded] =
-    useState(false);
+  const appDefinitions = useSignal<AppFolderManifestDefinitionItem[]>([]);
+  const appDefinitionsDownloaded = useSignal(false);
 
   async function downloadData(downloadDataApp: AppCollectionConfigurationItem) {
-    setAppDefinitionsDownloaded(false);
+    appDefinitionsDownloaded.value = false;
     const allAppDefinitions = await getAppDefinitions(downloadDataApp);
-    setAppDefinitionsDownloaded(true);
-    setAppDefinitions(allAppDefinitions);
+    appDefinitionsDownloaded.value = true;
+    appDefinitions.value = allAppDefinitions;
   }
 
   useSignalEffect(() => {
@@ -31,7 +31,7 @@ export function AppDefinitionGrid() {
     downloadData(selectedAppItem.value);
   });
   if (!selectedAppItem.value) return null;
-  if (!appDefinitionsDownloaded) {
+  if (!appDefinitionsDownloaded.value) {
     return (
       <Stack style={{ marginTop: "10px" }}>
         <ProgressBar />
@@ -46,7 +46,7 @@ export function AppDefinitionGrid() {
         borderBottom: "1px solid #eaeaea",
       }}
     >
-      {appDefinitions.map((appDef) => {
+      {appDefinitions.value.map((appDef) => {
         return (
           <Stack
             horizontal
@@ -64,7 +64,7 @@ export function AppDefinitionGrid() {
               <Link
                 size="medium"
                 onClick={() => {
-                  selectedAppDeinitionMapItem.value = {
+                  selectedAppDefinitionItem.value = {
                     appId: appDef.appId,
                     config: appDef.config,
                   };
@@ -74,11 +74,20 @@ export function AppDefinitionGrid() {
               </Link>
             </Stack>
             <Stack gap={8} horizontal>
+              {!selectedAppItem.value!.manifest.isESM ||
+              (selectedAppItem.value!.manifest.isESM && !appDef.resolved) ? (
+                <Button
+                  aria-label="Delete configuration item"
+                  icon={<Delete16Regular />}
+                  onClick={() => {}}
+                />
+              ) : null}
+
               <Button
                 aria-label="Edit sites"
                 icon={<EditRegular />}
                 onClick={() => {
-                  selectedAppDeinitionMapItem.value = {
+                  selectedAppDefinitionItem.value = {
                     appId: appDef.appId,
                     config: appDef.config,
                   };
@@ -88,7 +97,7 @@ export function AppDefinitionGrid() {
           </Stack>
         );
       })}
-      <ManageAppDefinitionMapItemDrawer appDefinitions={appDefinitions} />
+      <ManageAppDefinitionMapItemDrawer appDefinitions={appDefinitions.value} />
     </Stack>
   );
 }

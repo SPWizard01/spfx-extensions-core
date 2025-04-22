@@ -22,3 +22,8 @@ export function extractGUIDFromString(str: string) {
 //   return match ? match[0] : undefined;
     return str.replace("{","").replace("}","");
 }
+
+
+export function cloneObject<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}

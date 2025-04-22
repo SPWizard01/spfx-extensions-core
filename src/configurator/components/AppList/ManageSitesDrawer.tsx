@@ -16,6 +16,7 @@ import type {
   SPFxExtensionCollectionManifest,
   SPFxExtensionUrlMapItem,
 } from "../../../models/appCollectionManifest";
+import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventHubData } from "../../models/eventData";
 import type {
   HubUrlCollectionItem,
@@ -76,9 +77,7 @@ export function ManageSitesDrawer() {
 
   function deleteItem(eventData: CollectionEventHubData) {
     if (!contextCollectionConfig.value) return;
-    const copy: SPFxExtensionCollectionManifest = JSON.parse(
-      JSON.stringify(contextCollectionConfig.value)
-    );
+    const copy = cloneObject(contextCollectionConfig.value);
     if (eventData.itemType === "hub") {
       copy.urlMap = copy.urlMap.filter(
         (item) => item.hubid !== eventData.item.hubid

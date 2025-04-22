@@ -2,8 +2,9 @@ import { Button, Input, Subtitle2, Switch } from "@fluentui/react-components";
 import { GetRandomCacheStringAsync } from "../../../core/services/browserCache";
 import { selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { Stack } from "../common/Stack";
+import { AddAppConfig } from "./AddAppConfig";
 import { AppDefinitionGrid } from "./AppList/AppDefinitionGrid";
-import EntryPoints from "./EntryPoints/EntryPoints";
+import { EntryPoints } from "./EntryPoints/EntryPoints";
 
 export function ManifestConfig() {
   const app = selectedAppItem.value;
@@ -31,9 +32,8 @@ export function ManifestConfig() {
           style={{ minHeight: "32px" }}
         >
           <Stack horizontal gap={16} verticalAlign="center">
-            <Subtitle2>
-              {app.manifest.isESM ? "Applications" : "Entry points"}
-            </Subtitle2>
+            <Subtitle2>App/Entry Point Configuration</Subtitle2>
+            <AddAppConfig />
           </Stack>
           <Stack gap={8} horizontal>
             <Switch

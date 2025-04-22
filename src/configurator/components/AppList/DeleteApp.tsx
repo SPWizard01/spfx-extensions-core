@@ -16,6 +16,7 @@ import {
 import { Delete20Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import { SPFX_EXTENSIONS_FOLDER } from "../../../utilities/constants";
+import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
@@ -31,7 +32,7 @@ interface DeleteAppProps {
 
 async function deleteCollection(app: AppCollectionConfigurationItem) {
   try {
-    deletingAppItem.value = JSON.parse(JSON.stringify(app));
+    deletingAppItem.value = cloneObject(app);
     await removeAppCollection(configurationWebSP, app.name);
     allAppItems.value = allAppItems.value.filter((f) => f.name !== app.name);
   } finally {

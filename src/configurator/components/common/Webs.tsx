@@ -3,8 +3,9 @@ import { Delete16Regular } from "@fluentui/react-icons";
 import type { ComponentChild } from "preact";
 import type { SPFxExtensionUrlMapItem } from "../../../models/appCollectionManifest";
 import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
+import { cloneObject } from "../../../utilities/helpers";
 import type { CollectionEventWebData } from "../../models/eventData";
-import { selectedAppDeinitionMapItem } from "../../runtimeStore";
+import { selectedAppDefinitionItem } from "../../runtimeStore";
 import { GetBadge } from "./Badges";
 import { Stack } from "./Stack";
 
@@ -32,12 +33,10 @@ export function Webs({
     webItem: SPFxExtensionUrlMapItem,
     checked: boolean
   ) {
-    if (!selectedAppDeinitionMapItem.value) {
+    if (!selectedAppDefinitionItem.value) {
       return;
     }
-    const copy: SPFxExtensionAppDefinitionMapItem = JSON.parse(
-      JSON.stringify(selectedAppDeinitionMapItem.value)
-    );
+    const copy = cloneObject(selectedAppDefinitionItem.value);
     const exIds = copy.config.excludedIds.filter((a) => webItem.id !== a);
 
     const exHubIds = copy.config.excludedHubIds.filter((a) => webItem.id !== a);
@@ -55,19 +54,19 @@ export function Webs({
     copy.config.excludedHubIds = exHubIds;
     copy.config.includedIds = inIds;
     copy.config.includedHubIds = inHubIds;
-    selectedAppDeinitionMapItem.value = copy;
+    selectedAppDefinitionItem.value = copy;
   }
 
   function getSwitchCheckedForWeb(subSite: SPFxExtensionUrlMapItem) {
-    if (!selectedAppDeinitionMapItem.value) {
+    if (!selectedAppDefinitionItem.value) {
       return false;
     }
-    if (selectedAppDeinitionMapItem.value.config.enabledEverywhere) {
-      return !selectedAppDeinitionMapItem.value.config.excludedIds.includes(
+    if (selectedAppDefinitionItem.value.config.enabledEverywhere) {
+      return !selectedAppDefinitionItem.value.config.excludedIds.includes(
         subSite.id
       );
     }
-    return selectedAppDeinitionMapItem.value.config.includedIds.includes(
+    return selectedAppDefinitionItem.value.config.includedIds.includes(
       subSite.id
     );
   }

@@ -1,13 +1,18 @@
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
-import {
-  ALLOWEDAPPSLIST_NAME,
-} from "../../utilities/constants";
+import { ALLOWEDAPPSLIST_NAME } from "../../utilities/constants";
 import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getCoreConfig } from "./coreConfigService";
-import { addOrUpdateAllowedAppsToCache, evictAllowedAppsCache, getAllAllowedAppsFromDB } from "./coreIdbService";
-import { logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
-
+import {
+  addOrUpdateAllowedAppsToCache,
+  evictAllowedAppsCache,
+  getAllAllowedAppsFromDB,
+} from "./coreIdbService";
+import {
+  logGenericCoreError,
+  logGenericCoreInfo,
+  logGenericCoreWarning,
+} from "./loggingService";
 
 const AllowedAppsListDataPromise = getAllowedFilesDataCached();
 
@@ -33,10 +38,18 @@ async function getAllowedFilesDataCached() {
 
 export async function getAllowedFilesFromApi(fresh = false) {
   const coreConfig = await getCoreConfig(fresh);
-  const appWhiteListEnabled = coreConfig.find(c => c.Title === "EnableAppWhiteList")?.Data === "true";
+  const appWhiteListEnabled =
+    coreConfig.find((c) => c.Title === "EnableAppWhiteList")?.Data === "true";
   if (!appWhiteListEnabled) {
-    return [{ Id: 1, Title: "All apps allowed", EntryPointUrl: "*", date: new Date().toISOString(), expires: new Date().toISOString() }];
-    ;
+    return [
+      {
+        Id: 1,
+        Title: "All apps allowed",
+        EntryPointUrl: "*",
+        date: new Date().toISOString(),
+        expires: new Date().toISOString(),
+      },
+    ];
   }
   return fetchAllowedFilesFromListInternal();
 }
@@ -74,31 +87,44 @@ function fileIsAllowed(
 ) {
   const allAllowed = allowedList.some((e) => e.EntryPointUrl === "*");
   if (allAllowed) return true;
-  const fileOriginAndPath = (absoluteFileUrl.origin + absoluteFileUrl.pathname).toLowerCase();
+  const fileOriginAndPath = (
+    absoluteFileUrl.origin + absoluteFileUrl.pathname
+  ).toLowerCase();
   return allowedList.some((allowedEntry) => {
     try {
       const entryURL = new URL(allowedEntry.EntryPointUrl);
       const entryOriginAndPath = entryURL.origin + entryURL.pathname;
       return fileOriginAndPath === entryOriginAndPath.toLowerCase();
-    }
-    catch (err) {
-      logGenericCoreError("Error while parsing allowed entry URL", allowedEntry.EntryPointUrl, err);
+    } catch (err) {
+      logGenericCoreError(
+        "Error while parsing allowed entry URL",
+        allowedEntry.EntryPointUrl,
+        err
+      );
       return false;
     }
   });
 }
 
-export async function isFileAllowedToRun(absoluteFileUrl: URL, manifestName: string, fresh = false) {
+export async function isFileAllowedToRun(
+  absoluteFileUrl: URL,
+  manifestName: string,
+  fresh = false
+) {
   if (isFileInDebug(absoluteFileUrl)) return true;
 
   // Service should load list data from whatever source which can be reached by everyone.
-  const allowedList = fresh ? await getAllowedFilesFromApi(fresh) : await AllowedAppsListDataPromise;
+  const allowedList = fresh
+    ? await getAllowedFilesFromApi(fresh)
+    : await AllowedAppsListDataPromise;
   if (!fileIsAllowed(absoluteFileUrl, allowedList)) {
     logGenericCoreWarning(
       "File",
       absoluteFileUrl,
-      `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.
-      If you are a developer you can enable this app by adding localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
+      `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.`
+    );
+    logGenericCoreWarning(
+      `If you are a developer you can enable this app by adding localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
     );
 
     return false;
