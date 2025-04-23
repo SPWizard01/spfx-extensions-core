@@ -18,7 +18,7 @@
     "@preact/signals": "^2.0.4",
     "@types/bun": "^1.2.10",
     "bun-dev-server": "^0.9.84",
-    "esbuild": "^0.25.2",
+    "esbuild": "^0.25.3",
     "esbuild-hot-reload": "^1.0.6",
     "eslint": "^9.25.1",
     "eslint-js": "eslint/js",
