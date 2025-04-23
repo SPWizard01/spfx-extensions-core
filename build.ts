@@ -10,6 +10,7 @@ const result = await build({
     format: "esm",
     define: {
         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
+        "DEBUG": JSON.stringify(prod ? false : true),
     },
     drop: ["console.debug", "console.log"],
     minify: prod,
