@@ -13,18 +13,17 @@ import { StackItem } from "../common/StackItem";
 import { ManifestConfig } from "./ManifestConfig";
 
 export function SelectedAppConfig() {
-  const [prevDefinition, setPrevDefinition] = useState(selectedAppItem.value);
+  const [prevDefinition, setPrevDefinition] = useState("");
   const [modified, setModified] = useState(false);
   useSignalEffect(() => {
     if (!selectedAppItem.value) return;
+    const currentCopy = JSON.stringify(selectedAppItem.value);
     if (!prevDefinition) {
-      setPrevDefinition(selectedAppItem.value);
+      setPrevDefinition(currentCopy);
       return;
     }
-    const copy = JSON.stringify(selectedAppItem.value);
-    const current = JSON.stringify(prevDefinition);
-    setPrevDefinition(selectedAppItem.value);
-    setModified(copy !== current);
+    setPrevDefinition(currentCopy);
+    setModified(prevDefinition !== currentCopy);
   });
 
   async function saveManifest() {
