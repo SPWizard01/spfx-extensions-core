@@ -9,7 +9,8 @@ export function getWebId(): string {
 }
 
 export function getWebAbsoluteUrl() {
-    return (initialContext.contextType === "SPOModernContext" ? initialContext.context.web.absoluteUrl : initialContext.context.webAbsoluteUrl) as string;
+    const absoluteUrl = (initialContext.contextType === "SPOModernContext" ? initialContext.context.web.absoluteUrl : initialContext.context.webAbsoluteUrl) as string;
+    return absoluteUrl.replace(/\/$/, "");
 }
 
 export function getSiteId() {

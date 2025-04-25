@@ -2,14 +2,14 @@ import { Caching } from "@pnp/queryable";
 import type { SPFI } from "@pnp/sp";
 import { logGenericCoreError } from "../../core/services/loggingService";
 import {
-    MANIFEST_NAME,
-    SPFX_EXTENSIONS_FOLDER,
+  MANIFEST_NAME,
+  SPFX_EXTENSIONS_FOLDER,
 } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { AppCollectionFiles } from "../models/appCollectionFiles";
 import {
-    addAppCollection,
-    ensureAppCollectionNestedPath,
+  addAppCollection,
+  ensureAppCollectionNestedPath,
 } from "./appCollection";
 import { getWebUrlFromSP } from "./pnpService";
 
@@ -154,13 +154,14 @@ export async function getAllAppFiles(sp: SPFI, appName: string) {
     )
     .top(100);
   const relativeFiles: string[] = [];
+  const webInfoUrl = webInfo.ServerRelativeUrl.replace(/\/$/, "");
   for await (const iteratorResult of filesIterator) {
     const files = iteratorResult as AppCollectionFiles[];
     // /sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp > "."
     // /sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp/someFolder > ./someFolder
     files.forEach((file) => {
       const filePath = file.FileDirRef.replace(
-        `${webInfo.ServerRelativeUrl}/${SPFX_EXTENSIONS_FOLDER}/${appName}`,
+        `${webInfoUrl}/${SPFX_EXTENSIONS_FOLDER}/${appName}`,
         "."
       );
       const fileName = file.FileLeafRef;
