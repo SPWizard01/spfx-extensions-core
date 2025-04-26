@@ -5,5 +5,8 @@
     "typescript.preferences.organizeImports": {
         "typeOrder": "auto"
     },
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "terminal.integrated.env.windows": {
+        "NPM_CONFIG_TOKEN": "${env:CORE_NPM_TOKEN}"
+    }
 }
