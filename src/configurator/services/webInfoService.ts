@@ -1,5 +1,5 @@
 import { SPBrowser, type SPFI } from "@pnp/sp";
-import "@pnp/sp/hubSites";
+import "@pnp/sp/hubsites";
 import type { ISiteInfo } from "@pnp/sp/sites/types";
 import { SPCollection } from "@pnp/sp/spqueryable";
 import type { IWebInfo } from "@pnp/sp/webs";
