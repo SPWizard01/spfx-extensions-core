@@ -1,7 +1,7 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
 
-name: Node.js Package 
+name: Node.js Package
 
 on:
   push:
@@ -12,17 +12,37 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun run build
-
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun publish
+        with:
+          fetch-depth: 2
+      - uses: salsify/action-detect-and-tag-new-version@v2
+        id: tagauto
+        with:
+          create-tag: false
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@v1 # Don't use @master or @v1 unless you're happy to test the latest version
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # if you don't want to set write permissions use a PAT token
+          WITH_V: false
+          DRY_RUN: true
+      
+      - name: list tag output
+        run: |
+          echo "old ${{ steps.autotag.outputs.old_tag }}"
+          echo "new ${{ steps.autotag.outputs.new_tag }}"
+          echo "tag ${{ steps.autotag.outputs.tag }}"
+          echo "part ${{ steps.autotag.outputs.part }}"
+          echo "previous-version ${{ steps.tagauto.outputs.previous-version }}"
+          echo "current-version ${{ steps.tagauto.outputs.current-version }}"
+          echo "tagautotag ${{ steps.tagauto.outputs.tag }}"
+      
+      - uses: oven-sh/setup-bun@v2
+        name: Setup Bun
+      - run: bun install
+      - run: bun run build
+      # - run: bun publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{secrets.npm_token}}
