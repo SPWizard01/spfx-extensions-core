@@ -26,11 +26,12 @@ export async function unmountInstancesOnContextChange(contextId: string) {
     (a) => !a.isWebPartApp && !a.keepOnContextChange && a.id !== CONFIGURATOR_APP_ID
   );
   for (const alreadyRegisteredApp of instancesToUnmount) {
-    logGenericCoreDebug(alreadyRegisteredApp, `---Unmounting on context change`)
     for (const appInstance of alreadyRegisteredApp.instances.filter(
       (i) => i.contextId !== contextId
     )) {
-      appInstance.unmount();
+      if (appInstance.instanceExecuted) {
+        appInstance.unmount();
+      }
     }
   }
 }
@@ -39,9 +40,9 @@ export function loadAppInstance(
   foundApp: SPFxExtensionAppDefinition,
   appInstance: SPFxExtensionAppInstance
 ) {
-  if (appInstance.hasBeenRequested) return;
+  if (appInstance.instanceRequested) return;
   try {
-    appInstance.hasBeenRequested = true;
+    appInstance.instanceRequested = true;
     foundApp
       .onInstanceRequested(appInstance)
       .then((userCleanupFunc) => {
@@ -49,6 +50,7 @@ export function loadAppInstance(
           unmountAppInstance(foundApp, appInstance.key, userCleanupFunc);
         };
         appInstance.instanceLoadPromiseResolver();
+        appInstance.instanceExecuted = true;
       })
       .catch((e) => {
         logInstanceRequestedError(foundApp, e);

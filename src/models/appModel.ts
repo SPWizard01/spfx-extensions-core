@@ -20,7 +20,11 @@ export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig 
    *
    * Used by context change event where app registration remains but new instances might be created.
    */
-  hasBeenRequested: boolean;
+  instanceRequested: boolean;
+  /**
+   * Only set to true if onInstanceRequested was called without errors.
+   */
+  instanceExecuted: boolean;
   /**
    * Calls cleanup function provided by `onInstanceRequested` method of the app definition.
    *

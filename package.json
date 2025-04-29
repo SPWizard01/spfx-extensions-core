@@ -16,7 +16,7 @@
     "@fluentui/react-migration-v8-v9": "^9.7.10",
     "@pnp/sp": "^4.12.0",
     "@preact/signals": "^2.0.4",
-    "@types/bun": "^1.2.10",
+    "@types/bun": "^1.2.11",
     "bun-dev-server": "^0.9.84",
     "esbuild": "^0.25.3",
     "esbuild-hot-reload": "^1.0.6",
@@ -32,7 +32,7 @@
     "react-dom": "npm:@preact/compat",
     "react-dropzone": "^14.3.8",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.0",
+    "typescript-eslint": "^8.31.1",
     "webpack": "^5.99.7"
   },
   "exports": {

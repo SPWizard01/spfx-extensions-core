@@ -89,7 +89,9 @@ export function registerAppService() {
       }
       logGenericCoreDebug(`Unregistering app`, appDefinition[0].id, appDefinition[0].name);
       appDefinition[0].instances.forEach((appInstance) => {
-        appInstance.unmount();
+        if (appInstance.instanceExecuted) {
+          appInstance.unmount();
+        }
       });
 
       return appDefinition[0];
