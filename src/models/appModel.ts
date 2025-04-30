@@ -1,4 +1,4 @@
-import type { SPFxExtensionAppConfig, SPFxExtensionAppRuntimeConfig } from "./appConfig";
+import type { SPFxExtensionAppRuntimeConfig } from "./appConfig";
 import type {
   SPFxExtensionAppEventCleanup,
   SPFxExtensionAppInstanceEventListener,

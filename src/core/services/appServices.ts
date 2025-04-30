@@ -3,7 +3,7 @@ import type {
   SPFxExtensionAppInstance,
 } from "../../models/appModel";
 import { CONFIGURATOR_APP_ID } from "../../utilities/constants";
-import { logGenericCoreDebug, logInstanceRequestedError } from "./loggingService";
+import { logInstanceRequestedError } from "./loggingService";
 
 export function unmountAppInstance(
   appDef: SPFxExtensionAppDefinition,
