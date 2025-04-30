@@ -4,7 +4,6 @@ import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbS
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 
-const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
 
 async function ensureAppWhiteListFields() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')/fields
@@ -59,6 +58,8 @@ async function ensureTextField(fieldsUrl: string, fieldInternalName: string, req
     }
 }
 async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string, description: string, required: boolean) {
+    const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
     const addFieldReq = await fetch(
         fieldsUrl,
         {
@@ -85,7 +86,7 @@ async function ensureMultiLineField(fieldsUrl: string, fieldInternalName: string
         logGenericCoreError(fieldInternalName, "Unable to add field.");
     }
 }
-async function createAppWhiteList() {
+async function ensureWhitelistCreated() {
     // /sites/appcatalog/_api/web/lists/GetByTitle('SPFxExtensionsConfiguration')
     try {
         const req = await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${ALLOWEDAPPSLIST_NAME}')?$select=*`,
@@ -99,6 +100,8 @@ async function createAppWhiteList() {
         const newList = req.status === 404;
         if (newList) {
             logGenericCoreInfo("Creating app white list.");
+            const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
             // Create the list
             const createReq = await fetch(
                 `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists`,
@@ -143,7 +146,7 @@ export async function ensureAppWhiteList() {
     if (cachedData?.Data) {
         return cachedData.Data;
     }
-    const apiData = await createAppWhiteList();
+    const apiData = await ensureWhitelistCreated();
     if (apiData) {
         await addOrUpdateExtensionConfig({ Title: "AppWhiteList", Data: apiData, date: "", expires: "" }, 480);
     }

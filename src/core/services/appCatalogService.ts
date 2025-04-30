@@ -47,7 +47,7 @@ export async function getAppCatalogUrlCached(baseUrl = "") {
 
 export async function getAppCatalogDigest(catalogSubWeb = "") {
 
-    const appCatalogUrl = await getAppCatalogUrlFromAPI();
+    const appCatalogUrl = await getAppCatalogUrlCached();
     const url = `${appCatalogUrl}${(catalogSubWeb ? `/${catalogSubWeb}` : ``)}`;
     return getDigest(url);
 }

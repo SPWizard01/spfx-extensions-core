@@ -6,7 +6,6 @@ import { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } from "./core
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 const MINIMAL_CONFIG_COUNT = Object.keys(ConfigurationNames).length;
-const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
 
 
 let configurationListDataPromise: Promise<ConfigurationListData[]> | undefined;
@@ -33,6 +32,8 @@ async function ensureConfigurationListDataField() {
                 return;
             }
             if (!titleField.EnforceUniqueValues) {
+                const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
                 // Update the Title field
                 const updateFieldReq = await fetch(
                     `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/fields('${titleField.Id}')`,
@@ -61,6 +62,8 @@ async function ensureConfigurationListDataField() {
                 }
             }
             if (!fieldNames.includes("Data")) {
+                const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
                 // Add the Data field
                 const addFieldReq = await fetch(
                     fieldsUrl,
@@ -103,6 +106,8 @@ async function ensureConfigurationList() {
         );
         newList = req.status === 404;
         if (newList) {
+            const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
             logGenericCoreInfo("Creating configuration list.");
             // Create the list
             const createReq = await fetch(
@@ -164,6 +169,8 @@ async function getConfigurationListItemsFromAPI() {
 }
 
 async function createDefaultListItems() {
+    const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+
     for (const item of getCoreDefaultConfiguration(SPFX_EXTENSIONS_SITE_URL)) {
         const addReq = await fetch(
             `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items`, {

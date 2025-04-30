@@ -11,12 +11,12 @@ import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbS
 // random guid to track instance of the configurator app
 const CONFIGURATOR_APP_INSTANCEID = "f3ab710f-2c08-422e-a7ad-5d93eb51e7a3";
 
-const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
 
 const acceptHeader = { "accept": "application/json", }
-const digestHeader = { "X-RequestDigest": digest }
 const contentType = { "Content-Type": "application/json" }
 async function createFullPage() {
+    const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+    const digestHeader = { "X-RequestDigest": digest }
     const response = await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages`, {
         "headers": {
             ...acceptHeader,
@@ -122,6 +122,8 @@ const save = {
 }
 
 async function setPageContent(pageId: number) {
+    const digest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
+    const digestHeader = { "X-RequestDigest": digest }
     await fetch(`${SPFX_EXTENSIONS_SITE_URL}/_api/sitepages/pages(${pageId})/savepage`, {
         "headers": {
             "Content-Type": "application/json",
@@ -147,9 +149,9 @@ async function createConfiguratorPage() {
 }
 
 async function getConfiguratorPageDataCached() {
-    const cachedData = await getExtensionConfigFromDB("ConfiguratorPageData");
-    if (cachedData?.Data) {
-        return cachedData.Data;
+    const cache = await getExtensionConfigFromDB("ConfiguratorPageData");
+    if (cache?.Data) {
+        return cache.Data;
     }
     const apiData = await getConfiguratorPageData();
     if (apiData) {

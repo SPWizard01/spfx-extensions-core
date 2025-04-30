@@ -35,7 +35,7 @@ async function createWeb(webUrl: string) {
 async function getWebData(): Promise<ApiCallResult<any>> {
     const appCatalog = await getAppCatalogUrlFromAPI();
     const appCatalogDigest = await getAppCatalogDigest();
-    const response = await fetch(`${appCatalog}/_api/web/webs`, {
+    const response = await fetch(`${appCatalog}/${SPFX_EXTENSIONS_DATA_SITE}/_api/web`, {
         method: "GET",
         headers: {
             "Accept": "application/json;odata=nometadata",
@@ -43,17 +43,25 @@ async function getWebData(): Promise<ApiCallResult<any>> {
         }
     });
     if (!response.ok) {
-        logGenericCoreError(`Failed to fetch data from ${appCatalog}/_api/web/webs`);
+        if (response.status === 404) {
+            return {
+                data: undefined,
+                isError: false,
+                error: "",
+                warnings: [`SPFxExtensionsData web not found in ${appCatalog}`]
+            }
+        }
+        logGenericCoreError(`Failed to fetch data from ${appCatalog}/${SPFX_EXTENSIONS_DATA_SITE}/_api/web`);
         return {
-            data: [],
+            data: undefined,
             isError: true,
-            error: `Failed to fetch data from ${appCatalog}/_api/web/webs`,
+            error: `Failed to fetch data from ${appCatalog}/${SPFX_EXTENSIONS_DATA_SITE}/_api/web`,
             warnings: []
         }
     }
     const data = await response.json();
     return {
-        data: data.value,
+        data: data,
         isError: false,
         error: "",
         warnings: []
@@ -61,11 +69,11 @@ async function getWebData(): Promise<ApiCallResult<any>> {
 }
 
 async function getWebDataCached() {
-    const appCatalogWebs = await getExtensionConfigFromDB("AppCatalogWebs");
-    return appCatalogWebs?.Data ?? [];
+    const appCatalogWebs = await getExtensionConfigFromDB("SPFxDataSite");
+    return appCatalogWebs?.Data;
 }
 let ensureWebDataPromise: Promise<any> | undefined;
-export async function ensureSPFxWeb() {
+export function ensureSPFxWeb() {
     if (ensureWebDataPromise) {
         return ensureWebDataPromise;
     }
@@ -75,15 +83,13 @@ export async function ensureSPFxWeb() {
 }
 async function ensureWebDataInternal() {
     const webData = await getWebDataCached();
-    const hasExtensionWeb = webData.some((web: any) => web.ServerRelativeUrl.endsWith(SPFX_EXTENSIONS_DATA_SITE));
-    if (!hasExtensionWeb) {
+    if (!webData) {
         const apiResponse = await getWebData();
-        const apiDataHasExtensionWeb = apiResponse.data.some((web: any) => web.ServerRelativeUrl.endsWith(SPFX_EXTENSIONS_DATA_SITE));
-        if (!apiResponse.isError && !apiDataHasExtensionWeb) {
+        if (!apiResponse.isError && !apiResponse.data) {
             const result = await createWeb(SPFX_EXTENSIONS_DATA_SITE);
-            apiResponse.data.push(result);
-            await addOrUpdateExtensionConfig({ Title: "AppCatalogWebs", Data: apiResponse.data, date: "", expires: "" }, 240)
+            apiResponse.data = result;
         }
+        await addOrUpdateExtensionConfig({ Title: "SPFxDataSite", Data: apiResponse.data, date: "", expires: "" }, 240)
         return apiResponse.data;
     }
     return webData;

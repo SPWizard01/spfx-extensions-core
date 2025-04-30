@@ -7,7 +7,7 @@ export const ConfigurationNames = {
     InterceptHistory: "InterceptHistory",
     EnableAppWhiteList: "EnableAppWhiteList",
     AppCatalogUrl: "AppCatalogUrl",
-    AppCatalogWebs: "AppCatalogWebs",
+    SPFxDataSite: "SPFxDataSite",
     ConfiguratorPageData: "ConfiguratorPageData",
     AppWhiteList: "AppWhiteList",
     Version: BUILD_DATE,

@@ -1,6 +1,11 @@
 import { logGenericCoreError } from "./loggingService";
-
-export async function getDigest(webUrl: string) {
+const digestCache = new Map<string, string>();
+export async function getDigest(webUrl: string, fresh = false) {
+    let digest = "";
+    if (digestCache.has(webUrl) && !fresh) {
+        digest = digestCache.get(webUrl) || "";
+    }
+    if (digest) return digest;
     const req = await fetch(
         `${webUrl}/_api/contextinfo`,
         {
@@ -13,7 +18,9 @@ export async function getDigest(webUrl: string) {
     );
     if (req.status === 200) {
         const data = await req.json();
-        return data.d.GetContextWebInformation.FormDigestValue;
+        const newDigest = data.d.GetContextWebInformation.FormDigestValue;
+        digestCache.set(webUrl, newDigest);
+        return newDigest;
     } else {
         logGenericCoreError("Error while getting digest", req.status);
     }
