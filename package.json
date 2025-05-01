@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -54,7 +54,7 @@
   "scripts": {
     "esbuild": "bun run esbuild.ts",
     "esserve": "bun run esserve.ts",
-    "build": "bun run build.ts",
+    "build": "bun run build.ts --prod",
     "serve": "bun run serve.ts"
   },
   "type": "module"
