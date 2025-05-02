@@ -266,9 +266,16 @@ function isEntryEnabledInCurrentContext(foundMapItem: SPFxExtensionAppDefinition
   const currentHubId = getHubSiteId().toLowerCase();
 
   const isEnabledEverywhere = foundMapItem.config.enabledEverywhere;
-  const appEnabled = isEnabledEverywhere ?
-    foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
+
+  const appNotExcluded = foundMapItem.config.excludedIds.indexOf(currentWebId) === -1 &&
     foundMapItem.config.excludedIds.indexOf(currentSiteId) === -1 &&
-    foundMapItem.config.excludedHubIds.indexOf(currentHubId) === -1 : true;
+    foundMapItem.config.excludedHubIds.indexOf(currentHubId) === -1;
+
+  const appIsIncluded = foundMapItem.config.includedIds.indexOf(currentWebId) !== -1 ||
+    foundMapItem.config.includedIds.indexOf(currentSiteId) !== -1 ||
+    foundMapItem.config.includedHubIds.indexOf(currentHubId) !== -1;
+
+  const appEnabled = isEnabledEverywhere ?
+    appNotExcluded : appIsIncluded;
   return appEnabled;
 }
