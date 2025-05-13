@@ -194,20 +194,25 @@ function handleContextChange(contextId: string) {
 async function unregisterNonApplicable(
   allExports: SPFxExtensionAppRegistration[]
 ) {
+  const shouldInregisterIds: string[] = [];
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
     const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
     if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
-      //unregister app as it does not belong to this context
-      const unregistered = await window.__SPFxExtensions.UnregisterApp(
-        alreadyRegisteredApp.id
-      );
-      if (unregistered) {
-        logGenericCoreWarning(
-          `Unregistered App ${alreadyRegisteredApp.id} (${alreadyRegisteredApp.name}) as it does not belong in this context`,
-        );
-      }
+      shouldInregisterIds.push(alreadyRegisteredApp.id);
     }
   }
+  for (const appId of shouldInregisterIds) {
+    //unregister app as it does not belong to this context
+    const unregistered = await window.__SPFxExtensions.UnregisterApp(
+      appId
+    );
+    if (unregistered) {
+      logGenericCoreWarning(
+        `Unregistered App ${unregistered.id} (${unregistered.name}) as it does not belong in this context`,
+      );
+    }
+  }
+
 }
 
 async function executeRegistrations(
