@@ -14,7 +14,10 @@ export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig 
   key: string;
 
   contextId: string;
-
+  /**
+   * Determines whether the app wants to be unmounted when render method is called.
+   */
+  unmountOnRender: boolean;
   /**
    * Ensures that subsiquent `onInstanceRequested` are not called for the same instance.
    *
@@ -129,7 +132,17 @@ export interface SPFxExtensionAppDefinition {
    * Setting this to 0 will prevent any instances of the app to be created.
    */
   maxInstances?: number;
-
+  /**
+   * If set to true, the app will be unmounted when the app is re-rendered.
+   * 
+   * If set to false the app instance will be informed with `onRender` event
+   * that the webpart is re-rendered and it can decide what to do.
+   * 
+   * Only applicable for apps that have `isWebPartApp` set to `true`.
+   * 
+   * Default value is `true`.
+   */
+  unmountOnRender?: boolean;
   /**
    * Internal registry of all the instances of this app
    */

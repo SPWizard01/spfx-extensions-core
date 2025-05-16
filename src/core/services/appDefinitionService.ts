@@ -27,6 +27,7 @@ export function ensureApp(appId: string) {
       name: APP_LOADING,
       description: APP_LOADING,
       isWebPartApp: false,
+      unmountOnRender: true,
       keepOnContextChange: false,
       autoExecute: false,
       maxInstances: Infinity,
@@ -55,12 +56,12 @@ export function registerAppService() {
       if (appDefinition.registrationCompleted) {
         return appDefinition;
       }
-      appDefinition.registrationCompleted = true;
       appDefinition.name = newAppDefinition.name;
       appDefinition.description = newAppDefinition.description;
       appDefinition.isWebPartApp = newAppDefinition.isWebPartApp;
       appDefinition.keepOnContextChange = newAppDefinition.keepOnContextChange ?? false;
       appDefinition.autoExecute = newAppDefinition.autoExecute ?? false;
+      appDefinition.unmountOnRender = newAppDefinition.unmountOnRender ?? true;
       appDefinition.maxInstances =
         newAppDefinition.maxInstances ?? Infinity;
       appDefinition.hideAppSelectorWhenAppLoaded =
@@ -68,6 +69,7 @@ export function registerAppService() {
       appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
       appDefinition.icon = newAppDefinition.icon;
       appDefinition.onInstanceRequested = newAppDefinition.onInstanceRequested;
+      appDefinition.registrationCompleted = true;
       executeAppAddedEvents(appDefinition);
       appDefinition.instances.forEach((appInstance) => {
         loadAppInstance(appDefinition, appInstance);

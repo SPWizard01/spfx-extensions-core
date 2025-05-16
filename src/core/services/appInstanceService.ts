@@ -94,6 +94,7 @@ export function createAppInstance(
     contextId: getCurrentContextId(),
     instanceRequested: false,
     instanceExecuted: false,
+    unmountOnRender: true,
     unmount: emptyDummy,
     allEventListeners: [],
     addEventListener: emptyDummy,
@@ -115,6 +116,7 @@ export function registerAppInstanceService() {
       const foundApp = ensureApp(appId);
       logGenericCoreDebug(`Creating app instance for app`, appId);
       const appInstance = createAppInstance(runTimeConfig);
+      appInstance.unmountOnRender = foundApp.unmountOnRender ?? true;
       foundApp.instances.push(appInstance);
 
       executeInstanceAddedListeners(foundApp, appInstance);

@@ -24,6 +24,7 @@ export type SPFxExtensionAppInstanceEvents = {
   contextRefresh: ContextChangeEventDetails;
   onPlaceholdersChanged: any;
   onAppCustomizerDisposed: undefined;
+  onRender: undefined;
 };
 
 export type SPFxExtensionAppInstanceEventListener = {
