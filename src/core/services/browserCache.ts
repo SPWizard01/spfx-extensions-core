@@ -1,35 +1,38 @@
 import { getContentDigest } from "../../utilities/digest";
 import { getCoreConfig } from "./coreConfigService";
 import { addOrUpdateExtensionConfig } from "./coreIdbService";
-import { logGenericCoreDebug } from "./loggingService";
+import { logGenericCoreInfo } from "./loggingService";
 export async function cleanCacheOnUpgrade() {
     let coreConfig = await getCoreConfig();
     const keyParts = [
-        "spfxextensions",
-        "ff36e5d0-f7c7-421d-9e21-0a422626209a"
+        "7d56fff0-e90e-40a7-98cf-fcdbc63a9b01"
     ]
     if (coreConfig.find(c => c.Title === "Version")?.Data !== BUILD_DATE) {
         coreConfig = await getCoreConfig(true);
         addOrUpdateExtensionConfig({ Title: "Version", Data: BUILD_DATE, date: "", expires: "" }, 240);
-        const allStorages = await caches.keys();
-        let somethingDeleted = false;
-        for (const storageKey of allStorages) {
-            const storage = await caches.open(storageKey);
-            const allKeys = await storage.keys();
-            const allPromises: Promise<boolean>[] = [];
-            for (const key of allKeys) {
-                const url = key.url.toLowerCase();
-                if (keyParts.some(k => url.indexOf(k) > -1)) {
-                    logGenericCoreDebug("Deleting cache key", key);
-                    somethingDeleted = true;
-                    allPromises.push(storage.delete(key, { ignoreMethod: true, ignoreSearch: true }));
-                }
+        await cleanStorageCache(keyParts, true);
+    }
+}
+
+export async function cleanStorageCache(keyParts: string[], reloadOnClean: boolean) {
+    const allStorages = await window.caches.keys();
+    let somethingDeleted = false;
+    for (const storageKey of allStorages) {
+        const storage = await window.caches.open(storageKey);
+        const allKeys = await storage.keys();
+        const allPromises: Promise<boolean>[] = [];
+        for (const key of allKeys) {
+            const url = key.url.toLowerCase();
+            if (keyParts.some(k => url.indexOf(k.toLowerCase()) > -1)) {
+                logGenericCoreInfo("Deleting cache key", key, "from", storageKey);
+                somethingDeleted = true;
+                allPromises.push(storage.delete(key, { ignoreMethod: true, ignoreSearch: true, ignoreVary: true }));
             }
-            await Promise.allSettled(allPromises);
         }
-        if (somethingDeleted) {
-            window.location.reload();
-        }
+        await Promise.allSettled(allPromises);
+    }
+    if (somethingDeleted && reloadOnClean) {
+        window.location.reload();
     }
 }
 

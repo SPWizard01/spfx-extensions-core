@@ -5,6 +5,7 @@ import type { ConfigurationListData } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
 import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import { cleanStorageCache } from "./browserCache";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
 interface SPFxExtensionSchema {
@@ -241,6 +242,8 @@ export async function evictManifestTXTCache(
         if (matchingItem) {
             if (matchingItem.hash !== item.hash) {
                 await removeAppFolderManifestFromCache(item.url);
+                const pathUrl = item.url.toLowerCase().replace(`/${MANIFEST_NAME}`,"")
+                await cleanStorageCache([pathUrl], false);
                 logGenericCoreWarning(
                     `Evicted ${MANIFEST_NAME} ${matchingItem.url} from cache. Because of hash mismatch.`
                 );
@@ -258,6 +261,7 @@ export async function evictAppsTXTCache(
         if (matchingItem) {
             if (matchingItem.hash !== item.hash) {
                 await removeAppCollectionManifestFromCache(item.url)
+                await cleanStorageCache([item.url], false);
                 logGenericCoreWarning(
                     `Evicted ${APPCOLLECTION_MANIFEST_NAME} ${matchingItem.url} from cache. Because of hash mismatch.`
                 );

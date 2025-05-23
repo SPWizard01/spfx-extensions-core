@@ -4,7 +4,7 @@ import { logGenericCoreDebug, logGenericCoreError, logGenericCoreInfo } from "./
 import { fetchAppCollectionConfigFromAllLocations } from "./txtAppsService";
 import { getManifestTXTFromAllLocations } from "./txtManifestService";
 const CORE_MANIFEST_CHECK = "CORE_MANIFEST_CHECK";
-const CORE_MANIFEST_CHECK_INTERVAL = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE)) > 0 ? 100000 : 60000;
+const CORE_MANIFEST_CHECK_INTERVAL = Number(localStorage.getItem(DEBUG_KEYS.SPFXEXT_CORE)) > 0 ? 10000 : 90000;
 let manifestWatch: number = 0;
 
 export function registerManifestWatcher(
@@ -34,7 +34,7 @@ export async function performManifestCheck(
       const lastCheck = new Date(item);
       const now = new Date();
       const diff = now.getTime() - lastCheck.getTime();
-      const maxDiff = CORE_MANIFEST_CHECK_INTERVAL - 2000; //2 seconds buffer
+      const maxDiff = CORE_MANIFEST_CHECK_INTERVAL; //2 seconds buffer
       //add 2 seconds since interval is not reliable and exact
       if (diff < maxDiff) {
         logGenericCoreDebug("Manifest check already performed recently, skipping.", `${diff} < ${maxDiff}`);
