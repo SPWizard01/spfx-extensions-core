@@ -39,7 +39,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
     return returnValue;
   }
   const manifestDefinitions: AppFolderManifestDefinitionItem[] =
-    app.manifest.appDefinitionMap.map((def) => {
+    (app.manifest.appDefinitionMap ?? []).map((def) => {
       return {
         appId: def.appId,
         name: `Unknown_${def.appId}`,

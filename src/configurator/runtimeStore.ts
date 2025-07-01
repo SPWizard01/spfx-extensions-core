@@ -78,7 +78,7 @@ effect(() => {
   logGenericCoreDebug("Configuration", selectedAppDefinitionItem.value?.config);
 })
 
-export function getEmptyAppItem(appName: string) {
+export function getEmptyAppItem(appName: string): AppCollectionConfigurationItem {
   return {
     name: appName,
     manifest: EMPTY_APP_MANIFEST,

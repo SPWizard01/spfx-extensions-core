@@ -11,11 +11,9 @@ import {
   ToolbarButton,
 } from "@fluentui/react-components";
 import {
-  Add16Regular,
   FolderRegular,
   WebAsset16Regular,
 } from "@fluentui/react-icons";
-import { signal } from "@preact/signals";
 import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {

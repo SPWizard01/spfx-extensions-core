@@ -41,7 +41,7 @@ export async function updateAppManifest(sp: SPFI, appName: string, manifest: SPF
     await getAppManifest(sp, appName);
     const manifestQuery = sp.web.getFileByUrl(`${SPFX_EXTENSIONS_FOLDER}/${appName}/${MANIFEST_NAME}`);
     try {
-        await manifestQuery.setContent(JSON.stringify(manifest));
+        await manifestQuery.setContent(JSON.stringify(fixupManifest(manifest)));
         return true;
     }
     catch (error) {
@@ -49,4 +49,17 @@ export async function updateAppManifest(sp: SPFI, appName: string, manifest: SPF
         logGenericCoreError(`Error while updating ${MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER}/${appName} folder in ${webUrl}`, error);
         return false;
     }
+}
+
+function fixupManifest(manifest: SPFxExtensionFolderManifest) {
+    if (!manifest.appDefinitionMap) {
+        manifest.appDefinitionMap = [];
+    }
+    if (!manifest.appRelativeEntryPointUrls) {
+        manifest.appRelativeEntryPointUrls = [];
+    }
+    if (manifest.isESM === undefined) {
+        manifest.isESM = false;
+    }
+    return manifest;
 }
