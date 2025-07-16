@@ -1,6 +1,5 @@
 import { Button } from '@fluentui/react-components'
 import { ChevronLeftFilled } from '@fluentui/react-icons'
-import React from 'react'
 import { selectedAppItem } from '../runtimeStore'
 
 export function AppProperties() {

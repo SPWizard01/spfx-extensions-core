@@ -1,18 +1,18 @@
-import { createRoot } from 'react-dom/client';
+import { render } from "preact";
 import type { SPFxExtensionAppInstance } from "../models/appModel";
 import { App } from './app';
 
-if(DEBUG) {
+if (DEBUG) {
     import("preact/debug");
 }
 export async function launch(instance: SPFxExtensionAppInstance) {
-    let root: ReturnType<typeof createRoot> | undefined = undefined;
     if (instance.domElement) {
-        root = createRoot(instance.domElement);
-        root.render(App({ instance }));
+        render(App({ instance }), instance.domElement);
     }
     return () => {
-        root?.unmount();
+        if (instance.domElement) {
+            render(null, instance.domElement);
+        }
     }
 }
 

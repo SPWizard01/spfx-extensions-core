@@ -18,7 +18,7 @@ import {
 } from "@fluentui/react-components";
 import { Add16Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import { useSignal } from "@preact/signals";
-import { useState } from "react";
+import { useState } from "preact/hooks";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import { configurationWebSP } from "../../runtimeStore";
 import { addAppCollection } from "../../services/appCollection";

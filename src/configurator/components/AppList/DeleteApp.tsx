@@ -14,7 +14,7 @@ import {
   type DialogOpenChangeEvent,
 } from "@fluentui/react-components";
 import { Delete20Regular } from "@fluentui/react-icons";
-import { useState } from "react";
+import { useState } from "preact/hooks";
 import { SPFX_EXTENSIONS_FOLDER } from "../../../utilities/constants";
 import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";

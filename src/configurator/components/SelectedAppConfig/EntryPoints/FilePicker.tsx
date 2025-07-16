@@ -2,11 +2,10 @@ import { Button } from "@fluentui/react-button";
 import { Field, ProgressBar } from "@fluentui/react-components";
 import { Body1Strong, Text } from "@fluentui/react-text";
 import { signal } from "@preact/signals";
-import { useState } from "react";
+import { useState } from "preact/hooks";
 import Dropzone from "react-dropzone";
 import { MANIFEST_NAME } from "../../../../utilities/constants";
 import { cloneObject } from "../../../../utilities/helpers";
-import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import {
   configurationWebSP,
   selectedAppItem,

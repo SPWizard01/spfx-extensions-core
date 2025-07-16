@@ -6,7 +6,7 @@ import {
   PopoverSurface,
   PopoverTrigger,
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useState } from "preact/hooks";
 import { DEBUG_KEYS, isAppInDebug } from "../../../utilities/debug";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 
