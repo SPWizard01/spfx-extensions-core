@@ -26,4 +26,5 @@ export interface SPFxExtensionAppRuntimeConfig {
   getSearchableData?(): SPFxExtensionAppSearchableData;
   setSearchableData?(data: SPFxExtensionAppSearchableData): void;
   webpartContext?: any;
+  webpart?: any;
 }
