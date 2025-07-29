@@ -15,7 +15,7 @@ export function unmountAppInstance(
     const splicedInstance = appDef.instances.splice(idx, 1);
     if (splicedInstance.length < 1) return;
     const instance = splicedInstance[0];
-    instance.executeListeners("onConfigurationClose", undefined);
+    instance.executeListeners("onConfigurationClose", { domElement: undefined });
     instance.allEventListeners.splice(0, instance.allEventListeners.length);
     userCleanupFunc?.();
   }

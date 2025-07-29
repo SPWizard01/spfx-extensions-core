@@ -17,12 +17,13 @@ export type SPFxExtensionAppEventCleanup = () => void;
 
 export type SPFxExtensionAppInstanceEvents = {
   onConfigurationRender: SPFxExtensionAppPropertyPaneConfigRender;
-  onConfigurationClose: undefined;
+  onConfigurationClose: Partial<SPFxExtensionAppPropertyPaneConfigRender>;
   onConfigurationChange: SPFxExtensionAppConfig;
   onDisplayModeChange: CompatibleDisplayMode;
   contextChange: ContextChangeEventDetails;
   contextRefresh: ContextChangeEventDetails;
   onPlaceholdersChanged: any;
+  onThemeChange: any;
   onAppCustomizerDisposed: undefined;
   onRender: undefined;
 };
