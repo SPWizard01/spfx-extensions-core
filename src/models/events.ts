@@ -14,7 +14,10 @@ import type { CompatibleDisplayMode } from "./environment";
  * It will be called automatically on app unmount. Unless you want to call it earlier.
  */
 export type SPFxExtensionAppEventCleanup = () => void;
-
+export type SPFxExntensiononTopActionEvent = {
+  actionName: string;
+  updatedValue: any;
+}
 export type SPFxExtensionAppInstanceEvents = {
   onConfigurationRender: SPFxExtensionAppPropertyPaneConfigRender;
   onConfigurationClose: Partial<SPFxExtensionAppPropertyPaneConfigRender>;
@@ -24,6 +27,7 @@ export type SPFxExtensionAppInstanceEvents = {
   contextRefresh: ContextChangeEventDetails;
   onPlaceholdersChanged: any;
   onThemeChange: any;
+  onTopActionExecute: SPFxExntensiononTopActionEvent;
   onAppCustomizerDisposed: undefined;
   onRender: undefined;
 };
