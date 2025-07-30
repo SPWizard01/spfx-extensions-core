@@ -1,3 +1,4 @@
+import type { CacheableAppFolderManifest } from "./cache";
 import type { CompatibleEnvironmentType } from "./environment";
 
 export interface SPFxExtensionUtilsPlaceHolderProvider {
@@ -30,7 +31,7 @@ export interface SPFxExtensionAppUtils {
    * 
    * Used by SPFx webpart `renderEditMode` to track assets that are in progress of loading
    */
-  appManifestPromises: Promise<any>[];
+  appManifestPromises: Promise<CacheableAppFolderManifest>[];
   fluentIconsInitialized: boolean;
   /**
    * Url to the configurator page.
