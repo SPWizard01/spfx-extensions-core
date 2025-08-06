@@ -14,10 +14,15 @@ import type { CompatibleDisplayMode } from "./environment";
  * It will be called automatically on app unmount. Unless you want to call it earlier.
  */
 export type SPFxExtensionAppEventCleanup = () => void;
-export type SPFxExntensiononTopActionEvent = {
+export type SPFxExtensionTopActionEvent = {
   actionName: string;
   updatedValue: any;
 }
+
+export type SPFxExtensionResizeEvent = {
+  newWidth: number;
+}
+
 export type SPFxExtensionAppInstanceEvents = {
   onConfigurationRender: SPFxExtensionAppPropertyPaneConfigRender;
   onConfigurationClose: Partial<SPFxExtensionAppPropertyPaneConfigRender>;
@@ -27,15 +32,17 @@ export type SPFxExtensionAppInstanceEvents = {
   contextRefresh: ContextChangeEventDetails;
   onPlaceholdersChanged: any;
   onThemeChange: any;
-  onTopActionExecute: SPFxExntensiononTopActionEvent;
+  onTopActionExecute: SPFxExtensionTopActionEvent;
   onAppCustomizerDisposed: undefined;
   onRender: undefined;
+  onPropertyPaneChangesApplied: undefined;
+  onAfterResize: SPFxExtensionResizeEvent;
 };
 
-export type SPFxExtensionAppInstanceEventListener = {
+export type SPFxExtensionAppInstanceEventListener<T extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents> = {
   key: string;
-  eventName: keyof SPFxExtensionAppInstanceEvents;
-  handler(eventData?: any): void;
+  eventName: T;
+  handler(eventData?: SPFxExtensionAppInstanceEvents[T]): void;
 };
 
 export type SPFxExtensionAppEvents = {
@@ -46,8 +53,8 @@ export type SPFxExtensionAppEvents = {
   };
 };
 
-export type SPFxExtensionAppEventListener = {
+export type SPFxExtensionAppEventListener<T extends keyof SPFxExtensionAppEvents = keyof SPFxExtensionAppEvents> = {
   key: string;
-  eventName: keyof SPFxExtensionAppEvents;
-  handler(eventData?: any): void;
+  eventName: T;
+  handler(eventData?: SPFxExtensionAppEvents[T]): void;
 };

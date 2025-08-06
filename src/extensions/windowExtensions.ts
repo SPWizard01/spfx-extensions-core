@@ -116,11 +116,10 @@ declare global {
 
       AppEventListeners: SPFxExtensionAppEventListener[];
       AddAppEventListener<
-        K extends keyof SPFxExtensionAppEvents,
-        R extends SPFxExtensionAppEvents[K]
+        K extends keyof SPFxExtensionAppEvents = keyof SPFxExtensionAppEvents,
       >(
         event: K,
-        handler: (obj: R) => void
+        handler: (obj: SPFxExtensionAppEvents[K]) => void
       ): SPFxExtensionAppEventListener;
 
       RemoveAppEventListener(

@@ -15,7 +15,7 @@ import { getWebUrlFromSP } from "./pnpService";
 
 export interface FileContents {
   fileName: string;
-  content: Uint8Array;
+  content: Uint8Array<ArrayBuffer>;
 }
 
 export async function parseUploadFiles(
@@ -120,6 +120,7 @@ export async function* addFiles(
       }
     }
     try {
+      
       await folderQuery.files.addUsingPath(
         fileNameWithoutFolder,
         new Blob([file.content]),

@@ -43,21 +43,19 @@ export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig 
    * @param callback call back function that will be called once event is raised.
    */
   addEventListener<
-    K extends keyof SPFxExtensionAppInstanceEvents,
-    R extends SPFxExtensionAppInstanceEvents[K]
+    K extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents,
   >(
     eventName: K,
-    callback: (eventData: R) => void
+    callback: (eventData: SPFxExtensionAppInstanceEvents[K]) => void
   ): SPFxExtensionAppEventCleanup;
 
   // removeEventListener(listener: SPFxExtensionAppInstanceEventListener): void;
 
   executeListeners<
-    K extends keyof SPFxExtensionAppInstanceEvents,
-    R extends SPFxExtensionAppInstanceEvents[K]
+    K extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents,
   >(
     eventName: K,
-    eventData: R
+    eventData: SPFxExtensionAppInstanceEvents[K]
   ): void;
   allEventListeners: SPFxExtensionAppInstanceEventListener[];
   /**

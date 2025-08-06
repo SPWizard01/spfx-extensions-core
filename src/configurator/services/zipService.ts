@@ -55,7 +55,7 @@ export async function getZipManifestContents(data: File): Promise<ApiCallResult<
         result.warnings.push(...nonBasePathFiles.map((file) => `File: ${file}`));
     }
     basePathFiles.forEach((name) => {
-        const content = unzippedFiles[name];
+        const content = unzippedFiles[name] as Uint8Array<ArrayBuffer>;
         const fileName = name.substring(basePath.length);
         if (content.length > 0) {
             result.data.push({ fileName, content });

@@ -26,11 +26,10 @@ function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   };
 
   const addInstanceEventListener = <
-    EVENT_TYPE extends keyof SPFxExtensionAppInstanceEvents,
-    RETURN_TYPE extends SPFxExtensionAppInstanceEvents[EVENT_TYPE]
+    EVENT_TYPE extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents
   >(
     eventName: EVENT_TYPE,
-    callback: (eventData: RETURN_TYPE) => void
+    callback: (eventData: SPFxExtensionAppInstanceEvents[EVENT_TYPE]) => void
   ) => {
     const eventListener: SPFxExtensionAppInstanceEventListener = {
       key: window.crypto.randomUUID(),
@@ -44,11 +43,10 @@ function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   };
 
   const executeInstanceListeners = <
-    K extends keyof SPFxExtensionAppInstanceEvents,
-    R extends SPFxExtensionAppInstanceEvents[K]
+    K extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents,
   >(
     eventName: K,
-    eventData: R
+    eventData: SPFxExtensionAppInstanceEvents[K]
   ) => {
     for (const eventListener of appInstance.allEventListeners) {
       if (eventListener.eventName != eventName) continue;

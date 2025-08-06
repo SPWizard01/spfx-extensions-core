@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.8.7",
+  "version": "0.9.0",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -11,9 +11,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@fluentui/react-components": "^9.68.0",
+    "@fluentui/react-components": "^9.68.2",
     "@fluentui/react-icons": "^2.0.307",
-    "@fluentui/react-migration-v8-v9": "^9.9.1",
+    "@fluentui/react-migration-v8-v9": "^9.9.3",
     "@pnp/sp": "^4.15.0",
     "@preact/signals": "^2.2.1",
     "@types/bun": "^1.2.19",
@@ -31,8 +31,8 @@
     "react": "npm:@preact/compat",
     "react-dom": "npm:@preact/compat",
     "react-dropzone": "^14.3.8",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0",
     "webpack": "^5.101.0"
   },
   "exports": {
