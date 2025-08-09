@@ -10,6 +10,8 @@ const result = await build({
     outdir: "./dist",
     platform: "browser",
     format: "esm",
+    // Target only the latest browsers – keep modern syntax, no polyfills/transforms
+    target: "esnext",
     define: {
         "BUILD_DATE": JSON.stringify(new Date().toISOString()),
     },

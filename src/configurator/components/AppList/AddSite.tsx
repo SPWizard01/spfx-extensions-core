@@ -9,7 +9,6 @@ import {
 } from "@fluentui/react-components";
 import { Add16Regular } from "@fluentui/react-icons";
 import { useState } from "preact/hooks";
-import type { SPFxExtensionCollectionManifest } from "../../../models/appCollectionManifest";
 import { cloneObject } from "../../../utilities/helpers";
 import {
   configurationSite,

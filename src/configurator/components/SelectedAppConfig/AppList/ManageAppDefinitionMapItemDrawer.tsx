@@ -9,8 +9,6 @@ import {
   DrawerHeaderTitle,
   Label,
   Link,
-  MessageBar,
-  MessageBarBody,
   Popover,
   PopoverSurface,
   PopoverTrigger,
@@ -55,10 +53,10 @@ import { Stack } from "../../common/Stack";
 import { Webs } from "../../common/Webs";
 
 interface IProps {
-  appDefinitions: AppFolderManifestDefinitionItem[];
+  _appDefinitions: AppFolderManifestDefinitionItem[];
 }
 const configWebContext = GetWebConfigContext();
-export function ManageAppDefinitionMapItemDrawer({ appDefinitions }: IProps) {
+export function ManageAppDefinitionMapItemDrawer({ _appDefinitions }: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
   const [prevDefinition, setPrevDefinition] = useState(
     selectedAppDefinitionItem.value

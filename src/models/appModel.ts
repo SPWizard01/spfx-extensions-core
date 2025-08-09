@@ -1,14 +1,9 @@
 import type { SPFxExtensionAppRuntimeConfig } from "./appConfig";
 import type {
-  SPFxExtensionAppEventCleanup,
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
+  SPFxExtensionCleanup,
 } from "./events";
-
-/**
- * A method that will be called by Core when app is unmounted
- */
-export type SPFxExtensionAppCleanup = () => void;
 
 export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig {
   key: string;
@@ -47,7 +42,7 @@ export interface SPFxExtensionAppInstance extends SPFxExtensionAppRuntimeConfig 
   >(
     eventName: K,
     callback: (eventData: SPFxExtensionAppInstanceEvents[K]) => void
-  ): SPFxExtensionAppEventCleanup;
+  ): SPFxExtensionCleanup;
 
   // removeEventListener(listener: SPFxExtensionAppInstanceEventListener): void;
 
@@ -159,7 +154,7 @@ export interface SPFxExtensionAppDefinition {
    */
   onInstanceRequested(
     newInstance: SPFxExtensionAppInstance
-  ): Promise<SPFxExtensionAppCleanup>;
+  ): Promise<SPFxExtensionCleanup>;
 }
 
 export type SPFxExtensionAppRegistration = Omit<

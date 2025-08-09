@@ -10,10 +10,9 @@ import type { ContextChangeEventDetails } from "./customEvents";
 import type { CompatibleDisplayMode } from "./environment";
 
 /**
- * A method that can be called to remove the registered Event Listener for the instance.
  * It will be called automatically on app unmount. Unless you want to call it earlier.
  */
-export type SPFxExtensionAppEventCleanup = () => void;
+export type SPFxExtensionCleanup = () => void;
 export type SPFxExtensionTopActionEvent = {
   actionName: string;
   updatedValue: any;

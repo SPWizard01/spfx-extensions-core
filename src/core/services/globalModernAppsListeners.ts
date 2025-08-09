@@ -1,3 +1,18 @@
+import type { SPFxExtensionAppEventListener } from "../../models/events";
+import { logGenericCoreDebug } from "./loggingService";
+
+function removeAppEventListener(
+  eventListener: SPFxExtensionAppEventListener
+) {
+  const idx = window.__SPFxExtensions.AppEventListeners.findIndex(
+    (el) => el.key === eventListener.key
+  );
+  if (idx > -1) {
+    logGenericCoreDebug("Removing event listener", eventListener);
+    window.__SPFxExtensions.AppEventListeners.splice(idx, 1);
+  }
+};
+
 export function registerGlobalListeners() {
   if (!window.__SPFxExtensions.AppEventListeners) {
     window.__SPFxExtensions.AppEventListeners = [];
@@ -11,7 +26,9 @@ export function registerGlobalListeners() {
         handler: handler,
       };
       window.__SPFxExtensions.AppEventListeners.push(el);
-      return el;
+      return () => {
+        removeAppEventListener(el);
+      };
     };
   }
 

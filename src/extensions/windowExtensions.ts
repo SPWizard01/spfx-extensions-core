@@ -10,6 +10,7 @@ import type {
   SPFxExtensionAppEventListener,
   SPFxExtensionAppEvents,
   SPFxExtensionAppInstanceEventListener,
+  SPFxExtensionCleanup,
 } from "../models/events";
 import type { SPOPageContext } from "../models/spoContextInitializationData";
 
@@ -120,7 +121,7 @@ declare global {
       >(
         event: K,
         handler: (obj: SPFxExtensionAppEvents[K]) => void
-      ): SPFxExtensionAppEventListener;
+      ): SPFxExtensionCleanup;
 
       RemoveAppEventListener(
         list: SPFxExtensionAppInstanceEventListener

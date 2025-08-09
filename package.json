@@ -1,6 +1,6 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
@@ -10,17 +10,17 @@
     "@types/sharepoint": "^2016.1.14"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
-    "@fluentui/react-components": "^9.68.2",
+    "@eslint/js": "^9.33.0",
+    "@fluentui/react-components": "^9.68.3",
     "@fluentui/react-icons": "^2.0.307",
-    "@fluentui/react-migration-v8-v9": "^9.9.3",
+    "@fluentui/react-migration-v8-v9": "^9.9.4",
     "@pnp/sp": "^4.15.0",
     "@preact/signals": "^2.2.1",
     "@types/bun": "^1.2.19",
     "bun-dev-server": "^0.9.84",
     "esbuild": "^0.25.8",
     "esbuild-hot-reload": "^1.0.6",
-    "eslint": "^9.32.0",
+    "eslint": "^9.33.0",
     "eslint-js": "eslint/js",
     "fflate": "^0.8.2",
     "fluentui-preact": "^1.0.1",

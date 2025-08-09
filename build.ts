@@ -6,6 +6,7 @@ const result = await build({
     entrypoints: coreEntryPoints,
     sourcemap: "none",
     outdir: "./dist",
+    // Bun supports 'browser'|'node'|'bun' – keep 'browser' (we already emit ESNext from TS)
     target: "browser",
     format: "esm",
     define: {
