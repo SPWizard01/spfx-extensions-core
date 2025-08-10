@@ -1,10 +1,18 @@
 {
-    "editor.codeActionsOnSave": {
-        "source.sortImports": "always"
-    },
-    "typescript.preferences.organizeImports": {
-        "typeOrder": "auto"
-    },
-    "typescript.tsdk": "node_modules\\typescript\\lib",
-    "typescript.experimental.useTsgo": false
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "editor.codeActionsOnSave": {
+    "source.sortImports": "always"
+  },
+  "prettier.singleQuote": false,
+  "prettier.jsxSingleQuote": false,
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "typescript.experimental.useTsgo": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

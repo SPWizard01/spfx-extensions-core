@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     // Enable latest features
-  "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
@@ -29,6 +29,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
+    // "types": ["vitest"],
     "paths": {
       "react": ["./node_modules/preact/compat/"],
       "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
@@ -37,12 +38,16 @@
     }
   },
   "exclude": [
+    "**/__tests__/**",
     "esbuild.ts",
     "esserve.ts",
     "serve.ts",
+    "buntest.config.ts",
+    "vitest.config.ts",
     "eslint.config.ts",
     "entrypoints.ts",
     "build.ts",
-    "dist"
+    "dist",
+    "coverage"
   ]
 }
