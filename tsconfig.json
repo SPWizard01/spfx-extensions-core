@@ -39,6 +39,7 @@
   },
   "exclude": [
     "**/__tests__/**",
+    "**/__coverage__/**",
     "esbuild.ts",
     "esserve.ts",
     "serve.ts",
