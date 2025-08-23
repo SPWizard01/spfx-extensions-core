@@ -23,7 +23,7 @@ export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = {
   appDefinitionMap: [],
   appRelativeEntryPointUrls: [],
-  isESM: true,
+  manualDefinitions: [],
 };
 export const EMPTY_APP_DEF_ITEM_CONFIG: SPFxExtensionAppMapItemConfig = {
   enabledEverywhere: false,

@@ -38,14 +38,8 @@ import { useState } from "preact/hooks";
 import type { SPFxExtensionUrlMapItem } from "../../../../models/appCollectionManifest";
 import { GetWebConfigContext } from "../../../../utilities/getConfigWebContext";
 import { cloneObject } from "../../../../utilities/helpers";
-import type {
-  HubUrlCollectionItem,
-  SiteUrlCollectionItem,
-} from "../../../models/StructureModels";
-import {
-  getHubStructure,
-  getSiteStructure,
-} from "../../../services/webInfoService";
+import type { HubUrlCollectionItem, SiteUrlCollectionItem } from "../../../models/StructureModels";
+import { getHubStructure, getSiteStructure } from "../../../services/webInfoService";
 import { getGlobalStructure } from "../../../services/webStructureResolver";
 import { HubSites } from "../../common/HubSites";
 import { SiteCollections } from "../../common/SiteCollections";
@@ -58,17 +52,11 @@ interface IProps {
 const configWebContext = GetWebConfigContext();
 export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
   const restoreFocusSourceAttributes = useRestoreFocusSource();
-  const [prevDefinition, setPrevDefinition] = useState(
-    selectedAppDefinitionItem.value
-  );
+  const [prevDefinition, setPrevDefinition] = useState(selectedAppDefinitionItem.value);
   const [modified, setModified] = useState(false);
   const [hubStructure, setHubStructure] = useState<HubUrlCollectionItem[]>([]);
-  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem[]>(
-    []
-  );
-  const [webStructure, setWebStructure] = useState<SPFxExtensionUrlMapItem[]>(
-    []
-  );
+  const [siteStructure, setSiteStructure] = useState<SiteUrlCollectionItem[]>([]);
+  const [webStructure, setWebStructure] = useState<SPFxExtensionUrlMapItem[]>([]);
   useSignalEffect(() => {
     if (!selectedAppDefinitionItem.value) return;
     if (!prevDefinition) {
@@ -84,17 +72,11 @@ export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
   useSignalEffect(() => {
     if (!configurationIsGlobal) {
       if (getConfigurationWebIsRootHub()) {
-        getHubStructure(
-          configurationWebSP,
-          contextCollectionConfig.value.urlMap
-        ).then((hub) => {
+        getHubStructure(configurationWebSP, contextCollectionConfig.value.urlMap).then((hub) => {
           setHubStructure(hub ? [hub] : []);
         });
       }
-      if (
-        getConfigurationWebIsSiteCollection() &&
-        !getConfigurationWebIsRootHub()
-      ) {
+      if (getConfigurationWebIsSiteCollection() && !getConfigurationWebIsRootHub()) {
         getSiteStructure(configurationWebSP).then((site) => {
           setSiteStructure(site ? [site] : []);
         });
@@ -135,11 +117,7 @@ export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
       </DrawerHeader>
       <DrawerBody>
         <>
-          <Stack
-            horizontal
-            horizontalAlign="space-between"
-            verticalAlign="center"
-          >
+          <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
             <Stack horizontal verticalAlign="center" gap={8}>
               <Label>Enable everywhere</Label>
               <Popover withArrow>
@@ -157,9 +135,7 @@ export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
               </Popover>
             </Stack>
             <Switch
-              defaultChecked={
-                selectedAppDefinitionItem.value.config.enabledEverywhere
-              }
+              defaultChecked={selectedAppDefinitionItem.value.config.enabledEverywhere}
               onChange={(_e, data) => {
                 const copy = cloneObject(selectedAppDefinitionItem.value!);
 
@@ -196,11 +172,7 @@ export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
             <Divider />
             <Stack>
               {webStructure.length > 0 ? (
-                <Webs
-                  additionalIcon={<ArrowRightRegular />}
-                  webs={webStructure}
-                  control="switch"
-                />
+                <Webs additionalIcon={<ArrowRightRegular />} webs={webStructure} control="switch" />
               ) : null}
             </Stack>
           </Stack>
@@ -223,9 +195,7 @@ export function ManageAppDefinitionMapItemDrawer(_props: IProps) {
             onClick={() => {
               if (!selectedAppDefinitionItem.value) return;
               const selectedAppCopy = cloneObject(selectedAppItem.value!);
-              const selectedDefCopy = cloneObject(
-                selectedAppDefinitionItem.value!
-              );
+              const selectedDefCopy = cloneObject(selectedAppDefinitionItem.value!);
               selectedAppCopy.manifest.appDefinitionMap =
                 selectedAppCopy.manifest.appDefinitionMap.filter(
                   (a) => a.appId !== selectedDefCopy.appId

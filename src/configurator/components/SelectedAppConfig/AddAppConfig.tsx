@@ -7,52 +7,72 @@ import {
   DialogSurface,
   DialogTitle,
   DialogTrigger,
+  Dropdown,
   Input,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
+  Option,
   ToolbarButton,
   type DialogOpenChangeData,
   type DialogOpenChangeEvent,
+  type OptionOnSelectData,
+  type SelectionEvents,
 } from "@fluentui/react-components";
 import { Add16Regular, Dismiss24Regular } from "@fluentui/react-icons";
-import { useSignal } from "@preact/signals";
-import type { SPFxExtensionAppDefinitionMapItem } from "../../../models/appFolderManifest";
-import { EMPTY_APP_DEF_ITEM_CONFIG } from "../../../utilities/constants";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { cloneObject } from "../../../utilities/helpers";
-import { selectedAppItem } from "../../runtimeStore";
+import {
+  selectedAppItem,
+  selectedAppJSFiles,
+  selectedAppManualDefinitionItem,
+} from "../../runtimeStore";
+import { EMPTY_MANUAL_DEFINITION_ITEM } from "../../utils/constants";
+import { Stack } from "../common/Stack";
 
 export function AddAppConfig() {
-  const input = useSignal<string>("");
+  const manualApp = useSignal(cloneObject(EMPTY_MANUAL_DEFINITION_ITEM));
   const addAppConfigDialogOpen = useSignal(false);
-  async function dialogOpenChange(
-    _event: DialogOpenChangeEvent,
-    data: DialogOpenChangeData
-  ) {
+  useSignalEffect(() => {
+    if (selectedAppManualDefinitionItem.value) {
+      manualApp.value = cloneObject(selectedAppManualDefinitionItem.value);
+    }
+    addAppConfigDialogOpen.value = !!selectedAppManualDefinitionItem.value;
+  });
+  async function dialogOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
     addAppConfigDialogOpen.value = data.open;
   }
-
+  if (!selectedAppItem.value) return null;
+  const app = selectedAppItem.value;
   async function addAppDefItem() {
     if (
-      !input.value ||
-      !selectedAppItem.value ||
-      selectedAppItem.value.manifest.appDefinitionMap.some(
-        (a) => a.appId === input.value
-      )
+      !manualApp.value.appId ||
+      !manualApp.value.name ||
+      !manualApp.value.entryPoint ||
+      app.manifest.appDefinitionMap.some((a) => a.appId === manualApp.value.appId) ||
+      app.manifest.manualDefinitions.some((a) => a.appId === manualApp.value.appId)
     )
       return;
 
-    const emptyDefinition: SPFxExtensionAppDefinitionMapItem = {
-      appId: input.value,
-      config: cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
-    };
+    // const emptyDefinition: SPFxExtensionManualAppDefinitionItem = {
+    //   appId: appId.value,
+    //   name: appName.value,
+    //   entryPoint: entryPoint.value,
+    //   config: cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
+    // };
 
-    const copy = cloneObject(selectedAppItem.value);
-    copy.manifest.appDefinitionMap.push(emptyDefinition);
-    selectedAppItem.value = copy;
-    addAppConfigDialogOpen.value = false;
+    // const copy = cloneObject(app);
+    // copy.manifest.manualDefinitions.push(emptyDefinition);
+    // selectedAppItem.value = copy;
+    // addAppConfigDialogOpen.value = false;
   }
 
-  if (!selectedAppItem.value || selectedAppItem.value.manifest.isESM)
-    return null;
-
+  const unselectedJSFiles = selectedAppJSFiles.value.filter((file) => {
+    return (
+      !app.manifest.manualDefinitions.some((app) => app.entryPoint === file) &&
+      !app.manifest.appRelativeEntryPointUrls.includes(file)
+    );
+  });
   return (
     <Dialog
       open={addAppConfigDialogOpen.value}
@@ -70,25 +90,76 @@ export function AddAppConfig() {
           <DialogTitle
             action={
               <DialogTrigger disableButtonEnhancement action="close">
-                <Button
-                  appearance="subtle"
-                  aria-label="close"
-                  icon={<Dismiss24Regular />}
-                />
+                <Button appearance="subtle" aria-label="close" icon={<Dismiss24Regular />} />
               </DialogTrigger>
             }
           >
             Create new app config
           </DialogTitle>
           <DialogContent style={{ padding: "16px 0" }}>
-            <Input
-              value={input.value}
-              style={{ width: "100%" }}
-              placeholder="Enter application id or entrypoint path"
-              onChange={(_, d) => {
-                input.value = d.value;
-              }}
-            />
+            <Stack gap={16}>
+              <Stack gap={8} horizontal>
+                <Input
+                  defaultValue={manualApp.value.appId}
+                  style={{ width: "100%" }}
+                  placeholder="Enter application id (guid) or click Generate"
+                  onChange={(_, d) => {
+                    manualApp.value = {
+                      ...manualApp.value,
+                      appId: d.value,
+                    };
+                  }}
+                />
+                <Button
+                  onClick={() => {
+                    manualApp.value = {
+                      ...manualApp.value,
+                      appId: window.crypto.randomUUID(),
+                    };
+                  }}
+                >
+                  Generate
+                </Button>
+              </Stack>
+
+              <Input
+                defaultValue={manualApp.value.name}
+                style={{ width: "100%" }}
+                placeholder="Enter application name to be shown below"
+                onChange={(_, d) => {
+                  manualApp.value = {
+                    ...manualApp.value,
+                    name: d.value,
+                  };
+                }}
+              />
+              <Dropdown
+                placeholder="Select entry point"
+                defaultValue={manualApp.value.entryPoint}
+                onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
+                  manualApp.value = {
+                    ...manualApp.value,
+                    entryPoint: data.optionValue ?? "",
+                  };
+                }}
+              >
+                {unselectedJSFiles.map((file) => (
+                  <Option key={file} value={file}>
+                    {file}
+                  </Option>
+                ))}
+              </Dropdown>
+              <MessageBar>
+                <MessageBarBody>
+                  <MessageBarTitle>Remember:</MessageBarTitle>
+                  While adding your app manually, you have to ensure that the code inside entry
+                  point calls window.__SPFxExtensions.RegisterApp and/or
+                  window.__SPFxExtensions.InstantiateApp methods. This ensures proper lifecycle
+                  management of your SPFx application. If you want just a side-effect, you do not
+                  need to call those methods.
+                </MessageBarBody>
+              </MessageBar>
+            </Stack>
           </DialogContent>
           <DialogActions>
             <DialogTrigger disableButtonEnhancement action="close">
@@ -97,10 +168,11 @@ export function AddAppConfig() {
             <Button
               appearance="primary"
               disabled={
-                !input.value ||
-                selectedAppItem.value?.manifest.appDefinitionMap.some(
-                  (a) => a.appId === input.value
-                )
+                !manualApp.value.appId ||
+                !manualApp.value.name ||
+                !manualApp.value.entryPoint ||
+                app.manifest.appDefinitionMap.some((a) => a.appId === manualApp.value.appId) ||
+                app.manifest.manualDefinitions.some((a) => a.appId === manualApp.value.appId)
               }
               onClick={() => {
                 addAppDefItem();

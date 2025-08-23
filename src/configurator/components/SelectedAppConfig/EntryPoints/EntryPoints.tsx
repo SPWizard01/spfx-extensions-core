@@ -7,40 +7,23 @@ import {
   PopoverTrigger,
   Subtitle2,
   Switch,
+  Text,
   type PositioningImperativeRef,
 } from "@fluentui/react-components";
 import { Info16Regular, Javascript24Regular } from "@fluentui/react-icons";
-import { signal, useSignalEffect } from "@preact/signals";
-import { useCallback, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
+import { useCallback, useRef } from "preact/hooks";
 import {
-  configurationWebSP,
   selectedAppItem,
+  selectedAppJSFiles,
   updateSelectedApp,
+  uploadProjectDrawerOpen,
 } from "../../../runtimeStore";
-import { getAllAppJSFiles } from "../../../services/fileService";
 import { Stack } from "../../common/Stack";
-import { filesToUpload, finishedUploadSignal } from "./FilePicker";
-import UploadProjectDrawer from "./UploadProjectDrawer";
-
-export const UploadProjectDrawerSignal = signal<"add" | "edit" | undefined>(
-  undefined
-);
+import { UploadProjectDrawer } from "./UploadProjectDrawer";
 
 export function EntryPoints() {
-  const [allJSFiles, setAllJSFiles] = useState<string[]>([]);
   const app = selectedAppItem.value;
-  useSignalEffect(() => {
-    if (!selectedAppItem.value) return;
-    getJsFiles();
-  });
-
-  useSignalEffect(() => {
-    if (finishedUploadSignal.value === true) {
-      getJsFiles();
-      finishedUploadSignal.value = false;
-      filesToUpload.value = [];
-    }
-  });
 
   const positioningRef = useRef<PositioningImperativeRef>(null);
   const switchRef = useCallback(
@@ -49,15 +32,6 @@ export function EntryPoints() {
     },
     [positioningRef]
   );
-
-  async function getJsFiles() {
-    if (!selectedAppItem.value) return;
-    const allAvailableJS = await getAllAppJSFiles(
-      configurationWebSP,
-      selectedAppItem.value.name
-    );
-    setAllJSFiles(allAvailableJS);
-  }
 
   if (!app) return null;
   return (
@@ -73,17 +47,6 @@ export function EntryPoints() {
       >
         <Subtitle2>Entry points</Subtitle2>
         <Stack horizontal verticalAlign="center">
-          <Switch
-            ref={switchRef}
-            checked={app.manifest.isESM}
-            label={"ESM"}
-            labelPosition="before"
-            onChange={(_, d) => {
-              app.manifest.isESM = d.checked;
-              updateSelectedApp(app);
-            }}
-          />
-
           <Popover positioning={{ positioningRef }} withArrow>
             <PopoverTrigger disableButtonEnhancement>
               <Link>
@@ -91,16 +54,19 @@ export function EntryPoints() {
               </Link>
             </PopoverTrigger>
             <PopoverSurface tabIndex={-1}>
-              <Body1>Switch on if your entry points are ESM modules with default export.</Body1>
+              <Body1>
+                <Text>
+                  Select files that export an array of <i>SPFxExtensionAppRegistration</i> as
+                  default export.
+                </Text>
+              </Body1>
             </PopoverSurface>
           </Popover>
         </Stack>
       </Stack>
-      {allJSFiles
+      {selectedAppJSFiles.value
         .filter((jsFile) =>
-          app!.manifest.appRelativeEntryPointUrls.some(
-            (selected) => jsFile === selected
-          )
+          app!.manifest.appRelativeEntryPointUrls.some((selected) => jsFile === selected)
         )
         .map((ep) => (
           <Stack horizontal gap={4} verticalAlign="center">
@@ -109,12 +75,12 @@ export function EntryPoints() {
         ))}
       <Button
         onClick={() => {
-          UploadProjectDrawerSignal.value = "edit";
+          uploadProjectDrawerOpen.value = true;
         }}
       >
         Upload / Edit
       </Button>
-      <UploadProjectDrawer jsFiles={allJSFiles} />
+      <UploadProjectDrawer jsFiles={selectedAppJSFiles.value} />
     </>
   );
 }

@@ -3,15 +3,16 @@ import { effect, signal } from "@preact/signals";
 import { getWebAbsoluteUrl } from "../core/services/contextService";
 import { logGenericCoreDebug } from "../core/services/loggingService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
-import type { SPFxExtensionAppDefinitionMapItem } from "../models/appFolderManifest";
+import type {
+  SPFxExtensionAppDefinitionMapItem,
+  SPFxExtensionManualAppDefinitionItem,
+} from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import { cloneObject } from "../utilities/helpers";
 import type { ApiCallResult } from "./models/apiCallResult";
 import type { AppCollectionConfigurationItem } from "./models/appCollectionConfigurationItem";
-import {
-  getAllAppCollections,
-  getAppCollectionConfig,
-} from "./services/appCollection";
+import type { AppFolderManifestDefinitionItem } from "./models/AppFolderManifestDefinitionItem";
+import { getAllAppCollections, getAppCollectionConfig } from "./services/appCollection";
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
@@ -21,21 +22,23 @@ export const configrationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUr
 
 export const configurationWebSP = getPnPSPForConfigurationWeb();
 export const configurationSite = await getSite(configurationWebSP);
-export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.isError ? await getRootWeb(configurationWebSP) : {
-  data: {} as IWebInfo,
-  warnings: [],
-  error: `Unable to get root web since site is not available`,
-  isError: true
-};
+export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.isError
+  ? await getRootWeb(configurationWebSP)
+  : {
+      data: {} as IWebInfo,
+      warnings: [],
+      error: `Unable to get root web since site is not available`,
+      isError: true,
+    };
 export const configurationWeb = await getWeb(configurationWebSP);
-export const configurationIsGlobal = !queryWeb
-
-
+export const configurationIsGlobal = !queryWeb;
 
 export function getConfigurationWebIsRootHub() {
-  if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError) return false;
-  return configurationSite.data.IsHubSite &&
-    configurationRootWeb.data.Id === configurationWeb.data.Id;
+  if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError)
+    return false;
+  return (
+    configurationSite.data.IsHubSite && configurationRootWeb.data.Id === configurationWeb.data.Id
+  );
 }
 
 export function getConfigurationWebIsHubChild() {
@@ -63,20 +66,25 @@ const allApiAppItems = await getAllAppItems(
   enabledAppsData.data.enabledAppCollections
 );
 
-export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(enabledAppsData.data);
+export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(
+  enabledAppsData.data
+);
 export const contextCollectionConfigUpdating = signal<boolean>(false);
-export const allAppItems =
-  signal<AppCollectionConfigurationItem[]>(allApiAppItems);
+export const allAppItems = signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppDefinitionItem = signal<SPFxExtensionAppDefinitionMapItem>();
+export const selectedAppManualDefinitionItem = signal<SPFxExtensionManualAppDefinitionItem>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
-
+export const selectedAppJSFiles = signal<string[]>([]);
+export const uploadProjectDrawerOpen = signal<boolean>(false);
 
 export const configurationWebSubWebs: IWebInfo[] = [];
 export const configurationSiteStructure = await getSiteStructure(configurationWebSP);
-effect(() => {
-  logGenericCoreDebug("Configuration", selectedAppDefinitionItem.value?.config);
-})
+if (DEBUG) {
+  effect(() => {
+    logGenericCoreDebug("Configuration", selectedAppDefinitionItem.value?.config);
+  });
+}
 
 export function getEmptyAppItem(appName: string): AppCollectionConfigurationItem {
   return {
@@ -86,10 +94,7 @@ export function getEmptyAppItem(appName: string): AppCollectionConfigurationItem
   };
 }
 export function getAppItem(appName: string) {
-  return (
-    allAppItems.value.find((w) => w.name === appName) ??
-    getEmptyAppItem(appName)
-  );
+  return allAppItems.value.find((w) => w.name === appName) ?? getEmptyAppItem(appName);
 }
 
 export function updateApp(updatedApp: AppCollectionConfigurationItem) {

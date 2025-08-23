@@ -2,5 +2,6 @@ import type { SPFxExtensionAppDefinitionMapItem } from "../../models/appFolderMa
 
 export interface AppFolderManifestDefinitionItem extends SPFxExtensionAppDefinitionMapItem {
   name: string;
+  isManual: boolean;
   resolved: boolean;
 }

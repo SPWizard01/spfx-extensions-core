@@ -6,16 +6,8 @@ import { useState } from "preact/hooks";
 import Dropzone from "react-dropzone";
 import { MANIFEST_NAME } from "../../../../utilities/constants";
 import { cloneObject } from "../../../../utilities/helpers";
-import {
-  configurationWebSP,
-  selectedAppItem,
-  updateSelectedApp,
-} from "../../../runtimeStore";
-import {
-  type FileContents,
-  addFiles,
-  parseUploadFiles,
-} from "../../../services/fileService";
+import { configurationWebSP, selectedAppItem, updateSelectedApp } from "../../../runtimeStore";
+import { type FileContents, addFiles, parseUploadFiles } from "../../../services/fileService";
 import { getZipManifestContents } from "../../../services/zipService";
 import { Stack } from "../../common/Stack";
 import { acceptStyle, baseStyle, focusedStyle, rejectStyle } from "../../style";
@@ -34,11 +26,7 @@ export function FilePicker() {
   const [uploadedFilesCount, setUploadedFilesCount] = useState(0);
   async function uploadFiles(files: UploadStatus[]) {
     filesToUpload.value = [...files];
-    const uploadFlow = addFiles(
-      configurationWebSP,
-      selectedAppItem.value!.name,
-      files
-    );
+    const uploadFlow = addFiles(configurationWebSP, selectedAppItem.value!.name, files);
     let result = await uploadFlow.next();
     let uploadedFiles = 1;
     while (!result.done) {
@@ -61,6 +49,7 @@ export function FilePicker() {
     }
     setTimeout(() => {
       finishedUploadSignal.value = true;
+      filesToUpload.value = [];
       setUploadedFilesCount(0);
     }, 3000);
   }
@@ -97,14 +86,7 @@ export function FilePicker() {
           noClick
           noKeyboard
         >
-          {({
-            getRootProps,
-            getInputProps,
-            isFocused,
-            isDragAccept,
-            isDragReject,
-            open,
-          }) => (
+          {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject, open }) => (
             <div
               {...getRootProps({
                 style: {
@@ -115,9 +97,7 @@ export function FilePicker() {
                 },
               })}
             >
-              {filesToUpload.value.some(
-                (file) => file.status === "uploading"
-              ) ? (
+              {filesToUpload.value.some((file) => file.status === "uploading") ? (
                 <Field
                   validationMessage={`Uploaded ${uploadedFilesCount} of ${filesToUpload.value.length} files `}
                   validationState="none"

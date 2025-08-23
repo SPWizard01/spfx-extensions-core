@@ -3,14 +3,18 @@ import {
   AppFolder20Regular,
   Delete16Regular,
   EditRegular,
+  TargetRegular,
+  Warning20Regular,
 } from "@fluentui/react-icons";
 import { useSignal, useSignalEffect } from "@preact/signals";
+import type { SPFxExtensionManualAppDefinitionItem } from "../../../../models/appFolderManifest";
 import { cloneObject } from "../../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
 import {
   selectedAppDefinitionItem,
   selectedAppItem,
+  selectedAppManualDefinitionItem,
 } from "../../../runtimeStore";
 import { getAppDefinitions } from "../../../services/appDefinitionImport";
 import { Stack } from "../../common/Stack";
@@ -70,39 +74,42 @@ export function AppDefinitionGrid() {
             }}
           >
             <Stack horizontal verticalAlign="center" gap={8} grow>
-              <AppFolder20Regular />{" "}
+              {appDef.isManual ? <Warning20Regular /> : <AppFolder20Regular />}{" "}
               <Link
                 size="medium"
                 onClick={() => {
-                  selectedAppDefinitionItem.value = {
-                    appId: appDef.appId,
-                    config: appDef.config,
-                  };
+                  selectedAppDefinitionItem.value = cloneObject(appDef);
                 }}
               >
                 {appDef.name}
               </Link>
             </Stack>
             <Stack gap={8} horizontal>
-              {!selectedAppItem.value!.manifest.isESM ||
-              (selectedAppItem.value!.manifest.isESM && !appDef.resolved) ? (
-                <Button
-                  aria-label="Delete configuration item"
-                  icon={<Delete16Regular />}
-                  onClick={() => {
-                    deleteDefinitionItem(appDef);
-                  }}
-                />
-              ) : null}
-
+              <Button
+                aria-label="Delete configuration item"
+                icon={<Delete16Regular />}
+                disabled={!appDef.isManual}
+                onClick={() => {
+                  deleteDefinitionItem(appDef);
+                }}
+              />
+              <Button
+                aria-label="Edit item"
+                icon={<EditRegular />}
+                disabled={!appDef.isManual}
+                onClick={() => {
+                  const manualDef = selectedAppItem.value?.manifest.manualDefinitions.find(
+                    (def) => def.appId === appDef.appId
+                  );
+                  if (!manualDef) return;
+                  selectedAppManualDefinitionItem.value = cloneObject(manualDef);
+                }}
+              />
               <Button
                 aria-label="Edit sites"
-                icon={<EditRegular />}
+                icon={<TargetRegular />}
                 onClick={() => {
-                  selectedAppDefinitionItem.value = {
-                    appId: appDef.appId,
-                    config: appDef.config,
-                  };
+                  selectedAppDefinitionItem.value = cloneObject(appDef);
                 }}
               />
             </Stack>

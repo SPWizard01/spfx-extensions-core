@@ -1,16 +1,12 @@
 import { Caching } from "@pnp/queryable";
 import type { SPFI } from "@pnp/sp";
+import { effect } from "@preact/signals";
 import { logGenericCoreError } from "../../core/services/loggingService";
-import {
-  MANIFEST_NAME,
-  SPFX_EXTENSIONS_FOLDER,
-} from "../../utilities/constants";
+import { MANIFEST_NAME, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import type { ApiCallResult } from "../models/apiCallResult";
 import type { AppCollectionFiles } from "../models/appCollectionFiles";
-import {
-  addAppCollection,
-  ensureAppCollectionNestedPath,
-} from "./appCollection";
+import { configurationWebSP, selectedAppItem, selectedAppJSFiles } from "../runtimeStore";
+import { addAppCollection, ensureAppCollectionNestedPath } from "./appCollection";
 import { getWebUrlFromSP } from "./pnpService";
 
 export interface FileContents {
@@ -18,9 +14,7 @@ export interface FileContents {
   content: Uint8Array<ArrayBuffer>;
 }
 
-export async function parseUploadFiles(
-  files: File[]
-): Promise<ApiCallResult<FileContents[]>> {
+export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<FileContents[]>> {
   const result: ApiCallResult<FileContents[]> = {
     data: [],
     warnings: [],
@@ -29,9 +23,7 @@ export async function parseUploadFiles(
   };
 
   // dist/somdir/manifest.txt
-  const manifestFile = files.find((fl) =>
-    fl.path.toLowerCase().endsWith(MANIFEST_NAME)
-  );
+  const manifestFile = files.find((fl) => fl.path.toLowerCase().endsWith(MANIFEST_NAME));
   let basePathIdx = -1;
   let basePath = "/";
   if (!manifestFile) {
@@ -71,18 +63,12 @@ export async function parseUploadFiles(
     nonBasePathFiles = files.filter((fl) => !fl.path.startsWith(basePath));
     if (nonBasePathFiles.length > 0) {
       result.warnings.push("Some files are outside of manifest.txt directory.");
-      result.warnings.push(
-        ...nonBasePathFiles.map((file) => `File: ${file.relativePath}`)
-      );
+      result.warnings.push(...nonBasePathFiles.map((file) => `File: ${file.relativePath}`));
     }
   }
   return result;
 }
-export async function* addFiles(
-  sp: SPFI,
-  appName: string,
-  fileContents: FileContents[]
-) {
+export async function* addFiles(sp: SPFI, appName: string, fileContents: FileContents[]) {
   await addAppCollection(sp, appName);
   const webUrl = getWebUrlFromSP(sp);
   const result: ApiCallResult<string[]> = {
@@ -106,11 +92,7 @@ export async function* addFiles(
     if (hasFolder) {
       if (!ensuredFilePaths.includes(subpathBeforeFile)) {
         try {
-          await ensureAppCollectionNestedPath(
-            sp,
-            appName,
-            subpathBeforeFile.split("/")
-          );
+          await ensureAppCollectionNestedPath(sp, appName, subpathBeforeFile.split("/"));
           ensuredFilePaths.push(subpathBeforeFile);
         } catch (error) {
           result.error = `Error while creating ${subpathBeforeFile} in ${fullPath} folder in ${webUrl}. ${error}`;
@@ -120,12 +102,9 @@ export async function* addFiles(
       }
     }
     try {
-      
-      await folderQuery.files.addUsingPath(
-        fileNameWithoutFolder,
-        new Blob([file.content]),
-        { Overwrite: true }
-      );
+      await folderQuery.files.addUsingPath(fileNameWithoutFolder, new Blob([file.content]), {
+        Overwrite: true,
+      });
       const msg = `${fileNameWithoutFolder} uploaded successfully`;
       result.data.push(msg);
       yield { data: msg, success: true, fileName: file.fileName };
@@ -150,9 +129,7 @@ export async function getAllAppFiles(sp: SPFI, appName: string) {
   const filesIterator = sp.web.lists
     .getByTitle(SPFX_EXTENSIONS_FOLDER)
     .items.select("FileLeafRef", "FileDirRef")
-    .filter(
-      `FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`
-    )
+    .filter(`FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`)
     .top(100);
   const relativeFiles: string[] = [];
   const webInfoUrl = webInfo.ServerRelativeUrl.replace(/\/$/, "");
@@ -177,6 +154,14 @@ export async function getAllAppJSFiles(sp: SPFI, appName: string) {
   const allFiles = await getAllAppFiles(sp, appName);
   return allFiles.filter((file) => /\.js$/.test(file));
 }
+
+effect(() => {
+  if (selectedAppItem.value?.name) {
+    getAllAppJSFiles(configurationWebSP, selectedAppItem.value.name).then((files) => {
+      selectedAppJSFiles.value = files;
+    });
+  }
+});
 
 //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200&startswith(FileDirRef,%27/sites/CommunicationNoDeletePolicy/SPFxExtensions/someApp%27)
 //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)

@@ -14,19 +14,16 @@ import {
   Dismiss24Regular,
   DismissCircle24Regular,
 } from "@fluentui/react-icons";
-import { selectedAppItem, updateSelectedApp } from "../../../runtimeStore";
+import { selectedAppItem, updateSelectedApp, uploadProjectDrawerOpen } from "../../../runtimeStore";
 import { Stack } from "../../common/Stack";
 
-import { UploadProjectDrawerSignal } from "./EntryPoints";
 import { FilePicker, filesToUpload } from "./FilePicker";
 
 interface UploadProjectDrawerProps {
   jsFiles: string[];
 }
 
-export default function UploadProjectDrawer({
-  jsFiles,
-}: UploadProjectDrawerProps) {
+export function UploadProjectDrawer({ jsFiles }: UploadProjectDrawerProps) {
   const app = selectedAppItem.value;
   const restoreFocusSourceAttributes = useRestoreFocusSource();
 
@@ -37,10 +34,9 @@ export default function UploadProjectDrawer({
     }
 
     if (!checked) {
-      app.manifest.appRelativeEntryPointUrls =
-        app.manifest.appRelativeEntryPointUrls.filter(
-          (epUrl) => epUrl !== checkedEpName
-        );
+      app.manifest.appRelativeEntryPointUrls = app.manifest.appRelativeEntryPointUrls.filter(
+        (epUrl) => epUrl !== checkedEpName
+      );
     }
     updateSelectedApp(app, true);
   }
@@ -51,11 +47,9 @@ export default function UploadProjectDrawer({
     <Drawer
       {...restoreFocusSourceAttributes}
       separator
-      open={UploadProjectDrawerSignal.value}
+      open={uploadProjectDrawerOpen.value}
       onOpenChange={(_: any, { open }: { open: boolean }) => {
-        UploadProjectDrawerSignal.value = open
-          ? UploadProjectDrawerSignal.value
-          : undefined;
+        uploadProjectDrawerOpen.value = open;
       }}
       style={{ width: "440px" }}
     >
@@ -66,7 +60,7 @@ export default function UploadProjectDrawer({
               appearance="subtle"
               aria-label="Close"
               icon={<Dismiss24Regular />}
-              onClick={() => (UploadProjectDrawerSignal.value = undefined)}
+              onClick={() => (uploadProjectDrawerOpen.value = false)}
             />
           }
         >
@@ -94,16 +88,9 @@ export default function UploadProjectDrawer({
                 }}
               />
             ))}
-            <Stack
-              gap={20}
-              style={{ marginTop: "10px", padding: "0px 10px 0 8px" }}
-            >
+            <Stack gap={20} style={{ marginTop: "10px", padding: "0px 10px 0 8px" }}>
               {filesToUpload.value.map((file) => (
-                <Stack
-                  key={file.fileName}
-                  horizontalAlign="space-between"
-                  horizontal
-                >
+                <Stack key={file.fileName} horizontalAlign="space-between" horizontal>
                   <Stack>{file.fileName}</Stack>
 
                   {file.status === "uploaded" && (
