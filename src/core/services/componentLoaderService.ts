@@ -212,14 +212,19 @@ function handleContextChange(contextId: string) {
 }
 
 async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[]) {
-  const shouldInregisterIds: string[] = [];
+  const shouldUnregisterIds: string[] = [];
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
     const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
-    if (!foundApp && alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID) {
-      shouldInregisterIds.push(alreadyRegisteredApp.id);
+    debugger;
+    if (
+      !foundApp &&
+      !alreadyRegisteredApp.isManual &&
+      alreadyRegisteredApp.id !== CONFIGURATOR_APP_ID
+    ) {
+      shouldUnregisterIds.push(alreadyRegisteredApp.id);
     }
   }
-  for (const appId of shouldInregisterIds) {
+  for (const appId of shouldUnregisterIds) {
     //unregister app as it does not belong to this context
     const unregistered = await window.__SPFxExtensions.UnregisterApp(appId);
     if (unregistered) {

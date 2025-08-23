@@ -6,15 +6,15 @@ import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
 function executeAppAddedEvents(appDef: SPFxExtensionAppDefinition) {
   logGenericCoreDebug(`Executing appAdded event for`, appDef.id);
-  window.__SPFxExtensions.AppEventListeners.filter(
-    (l) => l.eventName === "appAdded"
-  ).forEach((listener) => {
-    try {
-      listener.handler(appDef);
-    } catch (e) {
-      logGenericCoreError("Error executing appAdded event", e);
+  window.__SPFxExtensions.AppEventListeners.filter((l) => l.eventName === "appAdded").forEach(
+    (listener) => {
+      try {
+        listener.handler(appDef);
+      } catch (e) {
+        logGenericCoreError("Error executing appAdded event", e);
+      }
     }
-  });
+  );
 }
 
 export function ensureApp(appId: string) {
@@ -34,6 +34,7 @@ export function ensureApp(appId: string) {
       hideAppSelectorWhenAppLoaded: false,
       hideConfiguratorButton: false,
       registrationCompleted: false,
+      isManual: false,
       instances: [],
       async onInstanceRequested() {
         return emptyDummy;
@@ -43,7 +44,6 @@ export function ensureApp(appId: string) {
   }
   return foundApp;
 }
-
 
 export function registerAppService() {
   if (!window.__SPFxExtensions.Apps) {
@@ -61,9 +61,9 @@ export function registerAppService() {
       appDefinition.isWebPartApp = newAppDefinition.isWebPartApp;
       appDefinition.keepOnContextChange = newAppDefinition.keepOnContextChange ?? false;
       appDefinition.autoExecute = newAppDefinition.autoExecute ?? false;
+      appDefinition.isManual = newAppDefinition.isManual ?? false;
       appDefinition.unmountOnRender = newAppDefinition.unmountOnRender ?? true;
-      appDefinition.maxInstances =
-        newAppDefinition.maxInstances ?? Infinity;
+      appDefinition.maxInstances = newAppDefinition.maxInstances ?? Infinity;
       appDefinition.hideAppSelectorWhenAppLoaded =
         newAppDefinition.hideAppSelectorWhenAppLoaded ?? false;
       appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
@@ -85,7 +85,7 @@ export function registerAppService() {
       if (appDefinitionIdx < 0) {
         return;
       }
-      const appDefinition = window.__SPFxExtensions.Apps.splice(appDefinitionIdx, 1)
+      const appDefinition = window.__SPFxExtensions.Apps.splice(appDefinitionIdx, 1);
       if (appDefinition.length < 1) {
         return;
       }
@@ -100,5 +100,3 @@ export function registerAppService() {
     };
   }
 }
-
-

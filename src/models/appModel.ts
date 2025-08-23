@@ -115,9 +115,13 @@ export interface SPFxExtensionAppDefinition {
   keepOnContextChange?: boolean;
 
   /**
+   * Should be set to true when calling `window.__SPFxExtensions.RegisterApp` method inside manual registration, otherwise it will be unregistered automatically.
+   */
+  isManual?: boolean;
+  /**
    * If set to true, the app will be automatically executed when the app is registered.
    *
-   * Only applicable when `isESM` is set to true is set in the manifest
+   * Only applicable for non-manually added apps
    */
   autoExecute?: boolean;
   /**

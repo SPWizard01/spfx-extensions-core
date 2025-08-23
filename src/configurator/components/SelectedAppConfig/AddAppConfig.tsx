@@ -64,10 +64,7 @@ export function AddAppConfig() {
   }
 
   const unselectedJSFiles = selectedAppJSFiles.value.filter((file) => {
-    return (
-      !app.manifest.manualEntries.some((app) => app.entryPoint === file) &&
-      !app.manifest.appRelativeEntryPointUrls.includes(file)
-    );
+    return !app.manifest.appRelativeEntryPointUrls.includes(file);
   });
   return (
     <Dialog
