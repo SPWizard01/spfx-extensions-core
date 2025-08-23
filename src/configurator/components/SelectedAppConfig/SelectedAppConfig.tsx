@@ -2,11 +2,7 @@ import { Button, Subtitle1 } from "@fluentui/react-components";
 import { ArrowLeft16Regular } from "@fluentui/react-icons";
 import { useSignalEffect } from "@preact/signals";
 import { useState } from "preact/hooks";
-import {
-  configurationWebSP,
-  selectedAppItem,
-  updateSelectedApp,
-} from "../../runtimeStore";
+import { configurationWebSP, selectedAppItem, updateSelectedApp } from "../../runtimeStore";
 import { updateAppManifest } from "../../services/appManifest";
 import { Stack } from "../common/Stack";
 import { StackItem } from "../common/StackItem";
@@ -53,11 +49,7 @@ export function SelectedAppConfig() {
         </Stack>
         <Stack horizontal gap={15}>
           <StackItem>
-            <Button
-              appearance="primary"
-              disabled={!modified}
-              onClick={saveManifest}
-            >
+            <Button appearance="primary" disabled={!modified} onClick={saveManifest}>
               Save
             </Button>
           </StackItem>

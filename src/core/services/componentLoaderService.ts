@@ -1,5 +1,5 @@
 import type {
-  SPFxExtensionAppDefinitionMapItem,
+  SPFxExtensionAppDefinitionConfig,
   SPFxExtensionFolderManifest,
 } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
@@ -128,7 +128,7 @@ async function parseManifestAndImportEntryPoints(manifestToParse: CacheableAppFo
     }
   }
 
-  for (const manualEntry of manifestToParse.manifest.manualDefinitions) {
+  for (const manualEntry of manifestToParse.manifest.manualEntries) {
     const executablePromise = await checkFileAndGetExecutablePromise(
       manualEntry.entryPoint,
       cdnLoc,
@@ -278,7 +278,7 @@ async function executeRegistrations(
   return successfullyRegistered;
 }
 
-function isEntryEnabledInCurrentContext(foundMapItem: SPFxExtensionAppDefinitionMapItem) {
+function isEntryEnabledInCurrentContext(foundMapItem: SPFxExtensionAppDefinitionConfig) {
   const currentWebId = getWebId().toLowerCase();
   const currentSiteId = getSiteId().toLowerCase();
   const currentHubId = getHubSiteId().toLowerCase();

@@ -7,8 +7,8 @@ export function fixupManifest(manifest: SPFxExtensionFolderManifest) {
   if (!manifest.appRelativeEntryPointUrls) {
     manifest.appRelativeEntryPointUrls = [];
   }
-  if (!manifest.manualDefinitions) {
-    manifest.manualDefinitions = [];
+  if (!manifest.manualEntries) {
+    manifest.manualEntries = [];
   }
   return manifest;
 }

@@ -1,6 +1,6 @@
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type {
-  SPFxExtensionAppMapItemConfig,
+  SPFxExtensionAppItemConfig,
   SPFxExtensionFolderManifest,
 } from "../models/appFolderManifest";
 
@@ -23,9 +23,9 @@ export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = {
   appDefinitionMap: [],
   appRelativeEntryPointUrls: [],
-  manualDefinitions: [],
+  manualEntries: [],
 };
-export const EMPTY_APP_DEF_ITEM_CONFIG: SPFxExtensionAppMapItemConfig = {
+export const EMPTY_APP_DEF_ITEM_CONFIG: SPFxExtensionAppItemConfig = {
   enabledEverywhere: false,
   excludedHubIds: [],
   excludedIds: [],

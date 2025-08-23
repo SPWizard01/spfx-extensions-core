@@ -4,8 +4,8 @@ import { getWebAbsoluteUrl } from "../core/services/contextService";
 import { logGenericCoreDebug } from "../core/services/loggingService";
 import type { SPFxExtensionCollectionManifest } from "../models/appCollectionManifest";
 import type {
-  SPFxExtensionAppDefinitionMapItem,
-  SPFxExtensionManualAppDefinitionItem,
+  SPFxExtensionAppDefinitionConfig,
+  SPFxExtensionManualAppEntry,
 } from "../models/appFolderManifest";
 import { EMPTY_APP_MANIFEST, EMPTY_GUID } from "../utilities/constants";
 import { cloneObject } from "../utilities/helpers";
@@ -72,8 +72,8 @@ export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(
 export const contextCollectionConfigUpdating = signal<boolean>(false);
 export const allAppItems = signal<AppCollectionConfigurationItem[]>(allApiAppItems);
 export const selectedAppItem = signal<AppCollectionConfigurationItem>();
-export const selectedAppDefinitionItem = signal<SPFxExtensionAppDefinitionMapItem>();
-export const selectedAppManualDefinitionItem = signal<SPFxExtensionManualAppDefinitionItem>();
+export const selectedAppDefinitionItem = signal<SPFxExtensionAppDefinitionConfig>();
+export const selectedAppManualDefinitionItem = signal<SPFxExtensionManualAppEntry>();
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppJSFiles = signal<string[]>([]);
 export const uploadProjectDrawerOpen = signal<boolean>(false);

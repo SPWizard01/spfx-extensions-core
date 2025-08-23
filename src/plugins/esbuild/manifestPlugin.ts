@@ -27,7 +27,7 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
         const manifestToWrite: SPFxExtensionFolderManifest = {
           appRelativeEntryPointUrls: options.appRelativeEntryPointUrls ?? [],
           appDefinitionMap: options.appDefinitionMap ?? [],
-          manualDefinitions: options.manualDefinitions ?? [],
+          manualEntries: options.manualEntries ?? [],
           enableCaching: options.enableCaching ?? false,
           cacheString: options.cacheString ?? "",
         };

@@ -1,6 +1,6 @@
-import type { SPFxExtensionAppDefinitionMapItem } from "../../models/appFolderManifest";
+import type { SPFxExtensionAppDefinitionConfig } from "../../models/appFolderManifest";
 
-export interface AppFolderManifestDefinitionItem extends SPFxExtensionAppDefinitionMapItem {
+export interface AppFolderManifestDefinitionItem extends SPFxExtensionAppDefinitionConfig {
   name: string;
   isManual: boolean;
   resolved: boolean;

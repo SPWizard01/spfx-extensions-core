@@ -1,6 +1,6 @@
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { logGenericCoreError } from "../../core/services/loggingService";
-import type { SPFxExtensionAppMapItemConfig } from "../../models/appFolderManifest";
+import type { SPFxExtensionAppItemConfig } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { EMPTY_APP_DEF_ITEM_CONFIG, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import { cloneObject } from "../../utilities/helpers";
@@ -78,7 +78,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
       continue;
     }
   }
-  for (const element of app.manifest.manualDefinitions) {
+  for (const element of app.manifest.manualEntries) {
     addOrUpdateDefinition(element.appId, element.name, true, manifestDefinitions);
   }
   return manifestDefinitions;

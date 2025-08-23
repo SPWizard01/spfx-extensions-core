@@ -21,6 +21,7 @@ import {
 } from "@fluentui/react-components";
 import { Add16Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import { useSignal, useSignalEffect } from "@preact/signals";
+import { EMPTY_APP_DEF_ITEM_CONFIG } from "../../../utilities/constants";
 import { cloneObject } from "../../../utilities/helpers";
 import {
   selectedAppItem,
@@ -32,44 +33,39 @@ import { Stack } from "../common/Stack";
 
 export function AddAppConfig() {
   const manualApp = useSignal(cloneObject(EMPTY_MANUAL_DEFINITION_ITEM));
+  const isEditing = useSignal(false);
   const addAppConfigDialogOpen = useSignal(false);
   useSignalEffect(() => {
     if (selectedAppManualDefinitionItem.value) {
       manualApp.value = cloneObject(selectedAppManualDefinitionItem.value);
+      isEditing.value = true;
+      addAppConfigDialogOpen.value = true;
     }
-    addAppConfigDialogOpen.value = !!selectedAppManualDefinitionItem.value;
   });
-  async function dialogOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
-    addAppConfigDialogOpen.value = data.open;
-  }
+
   if (!selectedAppItem.value) return null;
   const app = selectedAppItem.value;
+
+  async function dialogOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
+    addAppConfigDialogOpen.value = data.open;
+    if (!data.open) {
+      selectedAppManualDefinitionItem.value = undefined;
+    }
+  }
   async function addAppDefItem() {
-    if (
-      !manualApp.value.appId ||
-      !manualApp.value.name ||
-      !manualApp.value.entryPoint ||
-      app.manifest.appDefinitionMap.some((a) => a.appId === manualApp.value.appId) ||
-      app.manifest.manualDefinitions.some((a) => a.appId === manualApp.value.appId)
-    )
-      return;
-
-    // const emptyDefinition: SPFxExtensionManualAppDefinitionItem = {
-    //   appId: appId.value,
-    //   name: appName.value,
-    //   entryPoint: entryPoint.value,
-    //   config: cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
-    // };
-
-    // const copy = cloneObject(app);
-    // copy.manifest.manualDefinitions.push(emptyDefinition);
-    // selectedAppItem.value = copy;
-    // addAppConfigDialogOpen.value = false;
+    if (!manualApp.value.appId || !manualApp.value.name || !manualApp.value.entryPoint) return;
+    const copy = cloneObject(app);
+    copy.manifest.manualEntries = copy.manifest.manualEntries.filter(
+      (a) => a.appId !== manualApp.value.appId
+    );
+    copy.manifest.manualEntries.push(cloneObject(manualApp.value));
+    selectedAppItem.value = copy;
+    addAppConfigDialogOpen.value = false;
   }
 
   const unselectedJSFiles = selectedAppJSFiles.value.filter((file) => {
     return (
-      !app.manifest.manualDefinitions.some((app) => app.entryPoint === file) &&
+      !app.manifest.manualEntries.some((app) => app.entryPoint === file) &&
       !app.manifest.appRelativeEntryPointUrls.includes(file)
     );
   });
@@ -100,7 +96,8 @@ export function AddAppConfig() {
             <Stack gap={16}>
               <Stack gap={8} horizontal>
                 <Input
-                  defaultValue={manualApp.value.appId}
+                  disabled={isEditing.value}
+                  value={manualApp.value.appId}
                   style={{ width: "100%" }}
                   placeholder="Enter application id (guid) or click Generate"
                   onChange={(_, d) => {
@@ -111,6 +108,7 @@ export function AddAppConfig() {
                   }}
                 />
                 <Button
+                  disabled={isEditing.value}
                   onClick={() => {
                     manualApp.value = {
                       ...manualApp.value,
@@ -168,17 +166,13 @@ export function AddAppConfig() {
             <Button
               appearance="primary"
               disabled={
-                !manualApp.value.appId ||
-                !manualApp.value.name ||
-                !manualApp.value.entryPoint ||
-                app.manifest.appDefinitionMap.some((a) => a.appId === manualApp.value.appId) ||
-                app.manifest.manualDefinitions.some((a) => a.appId === manualApp.value.appId)
+                !manualApp.value.appId || !manualApp.value.name || !manualApp.value.entryPoint
               }
               onClick={() => {
                 addAppDefItem();
               }}
             >
-              Create
+              {isEditing.value ? "Save" : "Add"}
             </Button>
           </DialogActions>
         </DialogBody>

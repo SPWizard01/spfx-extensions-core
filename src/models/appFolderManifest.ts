@@ -1,4 +1,4 @@
-export interface SPFxExtensionAppMapItemConfig {
+export interface SPFxExtensionAppItemConfig {
   /**
    * If enabled `excludedIds` and `excludedHubIds` will be scanned for exclusion.
    *
@@ -23,7 +23,7 @@ export interface SPFxExtensionAppMapItemConfig {
   excludedHubIds: string[];
 }
 
-export interface SPFxExtensionAppDefinitionMapItem {
+export interface SPFxExtensionAppDefinitionConfig {
   /**
    * Id of app definition item, must be unique GUID
    */
@@ -31,10 +31,10 @@ export interface SPFxExtensionAppDefinitionMapItem {
   /**
    * Configuration of said app definition item.
    */
-  config: SPFxExtensionAppMapItemConfig;
+  config: SPFxExtensionAppItemConfig;
 }
 
-export interface SPFxExtensionManualAppDefinitionItem {
+export interface SPFxExtensionManualAppEntry {
   /**
    * Id of app definition item, must be unique GUID
    */
@@ -53,7 +53,7 @@ export interface SPFxExtensionManualAppDefinitionItem {
 }
 
 export interface SPFxExtensionFolderManifest {
-  appDefinitionMap: SPFxExtensionAppDefinitionMapItem[];
+  appDefinitionMap: SPFxExtensionAppDefinitionConfig[];
   /**
    * Files selected as entry points inside manual definitions
    *
@@ -63,7 +63,7 @@ export interface SPFxExtensionFolderManifest {
    *
    * If not called, this will be just a side-effect file that can be executed repeatedly.
    */
-  manualDefinitions: SPFxExtensionManualAppDefinitionItem[];
+  manualEntries: SPFxExtensionManualAppEntry[];
   /**
    * Relative path from manifest to the app entry point i.e. `./app.js` or `./somefolder/app.js?v=hash`
    * It MUST export `SPFxExtensionAppRegistration[]` as default export.

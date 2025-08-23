@@ -1,7 +1,7 @@
 import type {
-  SPFxExtensionAppDefinitionMapItem,
+  SPFxExtensionAppDefinitionConfig,
   SPFxExtensionFolderManifest,
-  SPFxExtensionManualAppDefinitionItem,
+  SPFxExtensionManualAppEntry,
 } from "../../models/appFolderManifest";
 import type {
   CacheableAppCollectionManifest,

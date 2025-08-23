@@ -7,7 +7,7 @@ import {
   Warning20Regular,
 } from "@fluentui/react-icons";
 import { useSignal, useSignalEffect } from "@preact/signals";
-import type { SPFxExtensionManualAppDefinitionItem } from "../../../../models/appFolderManifest";
+import type { SPFxExtensionManualAppEntry } from "../../../../models/appFolderManifest";
 import { cloneObject } from "../../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../../../models/AppFolderManifestDefinitionItem";
@@ -37,6 +37,7 @@ export function AppDefinitionGrid() {
     copy.manifest.appDefinitionMap = copy.manifest.appDefinitionMap.filter(
       (a) => a.appId !== item.appId
     );
+    copy.manifest.manualEntries = copy.manifest.manualEntries.filter((a) => a.appId !== item.appId);
     selectedAppItem.value = copy;
   }
 
@@ -78,7 +79,10 @@ export function AppDefinitionGrid() {
               <Link
                 size="medium"
                 onClick={() => {
-                  selectedAppDefinitionItem.value = cloneObject(appDef);
+                  selectedAppDefinitionItem.value = {
+                    appId: appDef.appId,
+                    config: appDef.config,
+                  };
                 }}
               >
                 {appDef.name}
@@ -88,7 +92,7 @@ export function AppDefinitionGrid() {
               <Button
                 aria-label="Delete configuration item"
                 icon={<Delete16Regular />}
-                disabled={!appDef.isManual}
+                disabled={!appDef.isManual && appDef.resolved}
                 onClick={() => {
                   deleteDefinitionItem(appDef);
                 }}
@@ -98,7 +102,7 @@ export function AppDefinitionGrid() {
                 icon={<EditRegular />}
                 disabled={!appDef.isManual}
                 onClick={() => {
-                  const manualDef = selectedAppItem.value?.manifest.manualDefinitions.find(
+                  const manualDef = selectedAppItem.value?.manifest.manualEntries.find(
                     (def) => def.appId === appDef.appId
                   );
                   if (!manualDef) return;
@@ -109,7 +113,10 @@ export function AppDefinitionGrid() {
                 aria-label="Edit sites"
                 icon={<TargetRegular />}
                 onClick={() => {
-                  selectedAppDefinitionItem.value = cloneObject(appDef);
+                  selectedAppDefinitionItem.value = {
+                    appId: appDef.appId,
+                    config: appDef.config,
+                  };
                 }}
               />
             </Stack>
