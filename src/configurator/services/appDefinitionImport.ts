@@ -1,12 +1,11 @@
 import { isFileAllowedToRun } from "../../core/services/allowedAppsService";
 import { logGenericCoreError } from "../../core/services/loggingService";
-import type { SPFxExtensionAppItemConfig } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppDefinition } from "../../models/appModel";
 import { EMPTY_APP_DEF_ITEM_CONFIG, SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 import { cloneObject } from "../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../models/appCollectionConfigurationItem";
 import type { AppFolderManifestDefinitionItem } from "../models/AppFolderManifestDefinitionItem";
-import { configrationWebUrl } from "../runtimeStore";
+import { configurationWebUrl } from "../runtimeStore";
 
 function addOrUpdateDefinition(
   appId: string,
@@ -44,7 +43,7 @@ export async function getAppDefinitions(app: AppCollectionConfigurationItem) {
   );
   for (const entryUrl of app.manifest.appRelativeEntryPointUrls) {
     const ep = entryUrl.replace(/\.\.\/?/g, "").replace(/\.\//g, "");
-    const fullUrl = new URL(`${configrationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${ep}`);
+    const fullUrl = new URL(`${configurationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${app.name}/${ep}`);
     const isAllowed = await isFileAllowedToRun(fullUrl, app.name, true);
     if (!isAllowed) {
       continue;

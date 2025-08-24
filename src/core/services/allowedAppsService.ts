@@ -8,11 +8,7 @@ import {
   evictAllowedAppsCache,
   getAllAllowedAppsFromDB,
 } from "./coreIdbService";
-import {
-  logGenericCoreError,
-  logGenericCoreInfo,
-  logGenericCoreWarning,
-} from "./loggingService";
+import { logGenericCoreError, logGenericCoreInfo, logGenericCoreWarning } from "./loggingService";
 
 const AllowedAppsListDataPromise = getAllowedFilesDataCached();
 
@@ -81,26 +77,17 @@ async function fetchAllowedFilesWithIterate(url: string) {
   return allowedAppsListData;
 }
 
-function fileIsAllowed(
-  absoluteFileUrl: URL,
-  allowedList: AllowedAppsListData[]
-) {
+function fileIsAllowed(absoluteFileUrl: URL, allowedList: AllowedAppsListData[]) {
   const allAllowed = allowedList.some((e) => e.EntryPointUrl === "*");
   if (allAllowed) return true;
-  const fileOriginAndPath = (
-    absoluteFileUrl.origin + absoluteFileUrl.pathname
-  ).toLowerCase();
+  const fileOriginAndPath = (absoluteFileUrl.origin + absoluteFileUrl.pathname).toLowerCase();
   return allowedList.some((allowedEntry) => {
     try {
       const entryURL = new URL(allowedEntry.EntryPointUrl);
       const entryOriginAndPath = entryURL.origin + entryURL.pathname;
       return fileOriginAndPath === entryOriginAndPath.toLowerCase();
     } catch (err) {
-      logGenericCoreError(
-        "Error while parsing allowed entry URL",
-        allowedEntry.EntryPointUrl,
-        err
-      );
+      logGenericCoreError("Error while parsing allowed entry URL", allowedEntry.EntryPointUrl, err);
       return false;
     }
   });
@@ -124,7 +111,7 @@ export async function isFileAllowedToRun(
       `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.`
     );
     logGenericCoreWarning(
-      `If you are a developer you can enable this app by adding localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
+      `If you are a developer you can enable this app by adding window.localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
     );
 
     return false;

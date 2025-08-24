@@ -215,7 +215,6 @@ async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[
   const shouldUnregisterIds: string[] = [];
   for (const alreadyRegisteredApp of window.__SPFxExtensions.Apps) {
     const foundApp = allExports.find((a) => a.id === alreadyRegisteredApp.id);
-    debugger;
     if (
       !foundApp &&
       !alreadyRegisteredApp.isManual &&

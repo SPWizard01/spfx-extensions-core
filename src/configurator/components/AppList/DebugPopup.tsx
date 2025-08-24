@@ -16,7 +16,7 @@ interface DebugPopupProps {
 
 export function DebugPopup({ app }: DebugPopupProps) {
   const [port, setPort] = useState(
-    localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`) ?? ""
+    window.localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`) ?? ""
   );
   const [popoverOpen, setOpen] = useState(false);
   return (
@@ -40,7 +40,7 @@ export function DebugPopup({ app }: DebugPopupProps) {
         <Button
           appearance="primary"
           onClick={() => {
-            localStorage.setItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`, port);
+            window.localStorage.setItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`, port);
             setOpen(false);
           }}
         >

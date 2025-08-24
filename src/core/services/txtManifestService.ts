@@ -113,7 +113,7 @@ async function fetchAndCacheManifestTXT(
 function getManifestTXTLocation(baseUrl: string, appKey: string) {
   const siteLocation = `${baseUrl}${appKey}/${MANIFEST_NAME}`;
   const lsKey = `${DEBUG_KEYS.SPFXEXT}${appKey}`;
-  const devSitePort = Number(localStorage.getItem(lsKey));
+  const devSitePort = Number(window.localStorage.getItem(lsKey));
   if (devSitePort > 0) {
     const debugLoc = `https://localhost:${devSitePort}/${MANIFEST_NAME}`;
     logGenericCoreInfo(`<${appKey}> App is in debug mode, loading from`, debugLoc);

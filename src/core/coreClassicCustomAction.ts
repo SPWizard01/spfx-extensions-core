@@ -1,5 +1,5 @@
 (async () => {
-  const debugPort = Number(localStorage.getItem("SPFXEXT"));
+  const debugPort = Number(window.localStorage.getItem("SPFXEXT"));
   const isDebugging = debugPort > 0;
   const classicWrapperLocation = isDebugging
     ? `https://localhost:${debugPort}/__spfxWrapperClassic.js?v=${Date.now()}`
@@ -7,8 +7,7 @@
   try {
     const module = await import(classicWrapperLocation);
     module.init();
-  }
-  catch (e) {
+  } catch (e) {
     console.error("Error loading classic wrapper", e);
   }
 })();

@@ -20,8 +20,8 @@ import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
   allAppItems,
-  configrationWebUrl,
   configurationWebSP,
+  configurationWebUrl,
   deletingAppItem,
 } from "../../runtimeStore";
 import { removeAppCollection } from "../../services/appCollection";
@@ -42,10 +42,7 @@ async function deleteCollection(app: AppCollectionConfigurationItem) {
 
 export function DeleteApp({ item }: DeleteAppProps) {
   const [dialogOpen, setOpen] = useState(false);
-  function dialogOpenChange(
-    _event: DialogOpenChangeEvent,
-    data: DialogOpenChangeData
-  ) {
+  function dialogOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
     setOpen(data.open);
   }
   return (
@@ -58,9 +55,7 @@ export function DeleteApp({ item }: DeleteAppProps) {
       >
         <div style={{ display: "flex" }}>
           <Delete20Regular />
-          {deletingAppItem.value?.name === item.name && (
-            <Spinner size="extra-small" />
-          )}
+          {deletingAppItem.value?.name === item.name && <Spinner size="extra-small" />}
         </div>
       </Link>
       <Dialog
@@ -74,8 +69,7 @@ export function DeleteApp({ item }: DeleteAppProps) {
             <DialogTitle>Delete {item.name}?</DialogTitle>
             <DialogContent>
               <Text>
-                Are you sure you want to delete app collection{" "}
-                <b>{item.name}</b>?
+                Are you sure you want to delete app collection <b>{item.name}</b>?
               </Text>
               <br />
               <Text>
@@ -84,7 +78,7 @@ export function DeleteApp({ item }: DeleteAppProps) {
                   target="_blank"
                   onClick={() => {
                     window.open(
-                      `${configrationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${item.name}`,
+                      `${configurationWebUrl}/${SPFX_EXTENSIONS_FOLDER}/${item.name}`,
                       "_blank"
                     );
                   }}

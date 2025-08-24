@@ -18,20 +18,29 @@ import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
 import { getRootWeb, getSite, getSiteStructure, getWeb } from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
-export const configrationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
-
+export const configurationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
 export const configurationWebSP = getPnPSPForConfigurationWeb();
-export const configurationSite = await getSite(configurationWebSP);
+
+// --- Parallel initial fetches (site, web, collections, enabled config) ---------
+const [configurationSite, configurationWeb, allAppCollectionsData, enabledAppsData] =
+  await Promise.all([
+    getSite(configurationWebSP),
+    getWeb(configurationWebSP),
+    getAllAppCollections(configurationWebSP),
+    getAppCollectionConfig(configurationWebSP),
+  ]);
+export { configurationSite, configurationWeb };
+export const configurationIsGlobal = !queryWeb;
+
+// Root web depends on site success
 export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.isError
   ? await getRootWeb(configurationWebSP)
   : {
       data: {} as IWebInfo,
       warnings: [],
-      error: `Unable to get root web since site is not available`,
+      error: "Unable to get root web since site is not available",
       isError: true,
     };
-export const configurationWeb = await getWeb(configurationWebSP);
-export const configurationIsGlobal = !queryWeb;
 
 export function getConfigurationWebIsRootHub() {
   if (configurationSite.isError || configurationRootWeb.isError || configurationWeb.isError)
@@ -56,15 +65,16 @@ export function getConfigurationWebIsSubsite() {
   return configurationRootWeb.data.Id !== configurationWeb.data.Id;
 }
 
-const allAppCollectionsData = await getAllAppCollections(configurationWebSP);
-const enabledAppsData = await getAppCollectionConfig(configurationWebSP);
-
-// export const selectedManifest = signal<SPFxExtensionAppManifest>(EMPTY_APP_MANIFEST);
-const allApiAppItems = await getAllAppItems(
-  configurationWebSP,
-  allAppCollectionsData,
-  enabledAppsData.data.enabledAppCollections
-);
+// Second wave: site structure + app items (both depend on earlier results)
+const [configurationSiteStructure, allApiAppItems] = await Promise.all([
+  getSiteStructure(configurationWebSP),
+  getAllAppItems(
+    configurationWebSP,
+    allAppCollectionsData,
+    enabledAppsData.data.enabledAppCollections
+  ),
+]);
+export { configurationSiteStructure };
 
 export const contextCollectionConfig = signal<SPFxExtensionCollectionManifest>(
   enabledAppsData.data
@@ -79,7 +89,6 @@ export const selectedAppJSFiles = signal<string[]>([]);
 export const uploadProjectDrawerOpen = signal<boolean>(false);
 
 export const configurationWebSubWebs: IWebInfo[] = [];
-export const configurationSiteStructure = await getSiteStructure(configurationWebSP);
 if (DEBUG) {
   effect(() => {
     logGenericCoreDebug("Configuration", selectedAppDefinitionItem.value?.config);

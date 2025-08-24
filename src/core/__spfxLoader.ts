@@ -1,9 +1,7 @@
 import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
 import type { CompatibleEnvironmentType } from "../models/environment";
 
-
 const SPFXPREFIX = "[SPFxExtensions/Core]";
-
 
 interface SuggestedUrls {
   coreUrl: string;
@@ -14,7 +12,7 @@ type SuggestedUrlResolver = () => Promise<SuggestedUrls>;
 
 /**
  * Points to core location, the holy grail that makes everything working.
- * Setting `localStorage["SPFXEXT"]` to a number i.e. `33343` makes it load
+ * Setting `window.localStorage["SPFXEXT"]` to a number i.e. `33343` makes it load
  * from `https://localhost:33343/`.
  *
  * Default URL: ```/sites/appcatalog/CDN/SPFxExtensionAppsCore/core.js```
@@ -23,8 +21,8 @@ async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
   const devPort = Number(localStorage.getItem("SPFXEXT"));
   const coreUrls = {
     core: "",
-    configuratorUrl: ""
-  }
+    configuratorUrl: "",
+  };
   if (devPort > 0) {
     const t = Date.now();
     coreUrls.core = `https://localhost:${devPort}/__spfxCore.js?v=${t}`;
@@ -58,8 +56,10 @@ function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThrou
   }
 
   if (!window.__SPFxExtensions.Utils) {
-    const { promise: placeHolderProviderPromise, resolve: placeHolderResolver } = Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
-    const { promise: spAppInitializationPromise, resolve: spAppInitializationPromiseResolver } = Promise.withResolvers<void>();
+    const { promise: placeHolderProviderPromise, resolve: placeHolderResolver } =
+      Promise.withResolvers<SPFxExtensionUtilsPlaceHolderProvider>();
+    const { promise: spAppInitializationPromise, resolve: spAppInitializationPromiseResolver } =
+      Promise.withResolvers<void>();
 
     window.__SPFxExtensions.Utils = {
       environmentType,
@@ -70,7 +70,8 @@ function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThrou
       spAppInitializationPromise,
       spAppInitializationPromiseResolver,
       fluentIconsInitialized: false,
-      ConfiguratorPageUrl: "/sites/appcatalog/SPFxExtensionsData/SitePages/SPFxExtensionsConfigurator.aspx",
+      ConfiguratorPageUrl:
+        "/sites/appcatalog/SPFxExtensionsData/SitePages/SPFxExtensionsConfigurator.aspx",
     };
   }
 }
@@ -79,7 +80,11 @@ function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThrou
  * Should only be used inside of SPFx or content script in classic pages on SP
  * @returns Singleton promise that resolves once the core is loaded
  */
-export async function loadCoreForSPFxOrClassic(suggestedUrlResolver: SuggestedUrlResolver, envType: CompatibleEnvironmentType, initializedThroughSPFX: boolean) {
+export async function loadCoreForSPFxOrClassic(
+  suggestedUrlResolver: SuggestedUrlResolver,
+  envType: CompatibleEnvironmentType,
+  initializedThroughSPFX: boolean
+) {
   if (window.__SPFxExtensions?.__CorePromise) {
     return window.__SPFxExtensions.__CorePromise;
   }

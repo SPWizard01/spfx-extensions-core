@@ -86,8 +86,8 @@ describe("runtimeStore", () => {
     const url = "https://contoso.sharepoint.com/sites/root";
     const mod = await importRuntimeStoreWithMocks({ queryWeb: "", webAbsoluteUrl: url });
     expect(mod.configurationIsGlobal).toBe(true);
-    expect(mod.configrationWebUrl).toBeInstanceOf(URL);
-    expect(mod.configrationWebUrl.href).toBe(new URL(url).href);
+    expect(mod.configurationWebUrl).toBeInstanceOf(URL);
+    expect(mod.configurationWebUrl.href).toBe(new URL(url).href);
 
     // Site equals rootWeb -> site collection
     expect(mod.getConfigurationWebIsSiteCollection()).toBe(true);
@@ -98,7 +98,7 @@ describe("runtimeStore", () => {
     const query = "https://contoso.sharepoint.com/sites/config";
     const mod = await importRuntimeStoreWithMocks({ queryWeb: query });
     expect(mod.configurationIsGlobal).toBe(false);
-    expect(mod.configrationWebUrl.href).toBe(new URL(query).href);
+    expect(mod.configurationWebUrl.href).toBe(new URL(query).href);
   });
 
   it("computes hub-related flags correctly (root hub and hub child)", async () => {
@@ -165,15 +165,6 @@ describe("runtimeStore", () => {
     expect(mod.allAppItems.value.find((i: any) => i.name === "MyApp")?.activated).toBe(true);
   });
 
-  it("logs configuration when selectedAppDefinitionItem changes (effect coverage)", async () => {
-    const spy = vi.fn();
-    const mod = await importRuntimeStoreWithMocks({ logSpy: spy });
-    // Trigger effect by updating selectedAppDefinitionItem
-    mod.selectedAppDefinitionItem.value = { config: { foo: "bar" } } as any;
-    // Effect in @preact/signals runs sync on change
-    expect(spy).toHaveBeenCalledWith("Configuration", { foo: "bar" });
-  });
-
   it("getAppItem returns empty item when not found (covers getEmptyAppItem)", async () => {
     const mod = await importRuntimeStoreWithMocks({ appItems: [] });
     const { EMPTY_APP_MANIFEST } = await import("../../utilities/constants");
@@ -183,5 +174,25 @@ describe("runtimeStore", () => {
       activated: false,
       manifest: EMPTY_APP_MANIFEST,
     });
+  });
+
+  it("changing selectedAppItem alone does not update allAppItems (documents divergence)", async () => {
+    const { EMPTY_APP_MANIFEST } = await import("../../utilities/constants");
+    const baseApp = { name: "SoloApp", manifest: EMPTY_APP_MANIFEST, activated: false };
+    const mod = await importRuntimeStoreWithMocks({ appItems: [baseApp] });
+    // Sanity
+    expect(mod.allAppItems.value[0]).toMatchObject({ name: "SoloApp", activated: false });
+    const originalRef = mod.allAppItems.value[0];
+    // Create a modified clone and assign ONLY to selectedAppItem
+    const modified = { ...originalRef, activated: true };
+    mod.selectedAppItem.value = modified as any;
+    // Divergence expectations
+    expect(mod.selectedAppItem.value).toMatchObject({ name: "SoloApp", activated: true });
+    // allAppItems still holds the original object reference & data
+    expect(mod.allAppItems.value[0]).toBe(originalRef);
+    expect(mod.allAppItems.value[0].activated).toBe(false);
+    // Now reconcile via explicit update
+    mod.updateApp(mod.selectedAppItem.value as any);
+    expect(mod.allAppItems.value[0].activated).toBe(true);
   });
 });

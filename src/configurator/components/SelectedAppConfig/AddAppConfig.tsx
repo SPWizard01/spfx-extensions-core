@@ -58,6 +58,15 @@ export function AddAppConfig() {
     copy.manifest.manualEntries = copy.manifest.manualEntries.filter(
       (a) => a.appId !== manualApp.value.appId
     );
+    copy.manifest.appDefinitionMap = copy.manifest.appDefinitionMap.filter(
+      (a) => a.appId !== manualApp.value.appId
+    );
+
+    copy.manifest.appDefinitionMap.push({
+      appId: manualApp.value.appId,
+      config: cloneObject(EMPTY_APP_DEF_ITEM_CONFIG),
+    });
+
     copy.manifest.manualEntries.push(cloneObject(manualApp.value));
     selectedAppItem.value = copy;
     addAppConfigDialogOpen.value = false;

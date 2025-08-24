@@ -5,66 +5,67 @@ import { manifestPlugin } from "./src/plugins/esbuild/manifestPlugin";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
 const result = await build({
-    entryPoints: coreEntryPoints,
-    sourcemap: "linked",
-    outdir: "./dist",
-    platform: "browser",
-    format: "esm",
-    // Target only the latest browsers – keep modern syntax, no polyfills/transforms
-    target: "esnext",
-    define: {
-        "BUILD_DATE": JSON.stringify(new Date().toISOString()),
-    },
-    pure: ["console.debug", "console.log"],
-    color: true,
-    legalComments: "inline",
-    bundle: true,
-    treeShaking: true,
+  entryPoints: coreEntryPoints,
+  sourcemap: "linked",
+  outdir: "./dist",
+  platform: "browser",
+  format: "esm",
+  // Target only the latest browsers – keep modern syntax, no polyfills/transforms
+  target: "esnext",
+  define: {
+    BUILD_DATE: JSON.stringify(new Date().toISOString()),
+  },
+  pure: ["console.debug", "console.log"],
+  color: true,
+  legalComments: "inline",
+  bundle: true,
+  treeShaking: true,
 
-    minify: prod,
-    logOverride: {
-        "direct-eval": "silent"
-    },
-    metafile: true,
-    plugins: [
-        manifestPlugin({ includeAllOutputJs: true, isESM: true }),
-    ]
-})
+  minify: prod,
+  logOverride: {
+    "direct-eval": "silent",
+  },
+  metafile: true,
+  plugins: [manifestPlugin({ includeAllOutputJs: true })],
+});
 
 const pluginResult = await build({
-    entryPoints: pluginEntryPoints,
-    sourcemap: "linked",
-    outdir: "./dist/plugins",
-    platform: "node",
-    format: "esm",
-    color: true,
-    legalComments: "inline",
-    bundle: true,
-    treeShaking: true,
-    minify: false,
-    logOverride: {
-        "direct-eval": "silent"
-    },
-    metafile: true,
+  entryPoints: pluginEntryPoints,
+  sourcemap: "linked",
+  outdir: "./dist/plugins",
+  platform: "node",
+  format: "esm",
+  color: true,
+  legalComments: "inline",
+  bundle: true,
+  treeShaking: true,
+  minify: false,
+  logOverride: {
+    "direct-eval": "silent",
+  },
+  metafile: true,
+});
 
-})
-
-// 
+//
 await analyzeMetafile(result.metafile, { color: true, verbose: false });
 await analyzeMetafile(pluginResult.metafile, { color: true, verbose: false });
 
-console.table(Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
+console.table(
+  Object.getOwnPropertyNames(result.metafile.outputs).map((key) => {
     return {
-        name: key,
-        size: `${Math.floor(result.metafile.outputs[key].bytes / 1024)}KB`,
-    }
-}));
+      name: key,
+      size: `${Math.floor(result.metafile.outputs[key].bytes / 1024)}KB`,
+    };
+  })
+);
 
-console.table(Object.getOwnPropertyNames(pluginResult.metafile.outputs).map((key) => {
+console.table(
+  Object.getOwnPropertyNames(pluginResult.metafile.outputs).map((key) => {
     return {
-        name: key,
-        size: `${Math.floor(pluginResult.metafile.outputs[key].bytes / 1024)}KB`,
-    }
-}));
+      name: key,
+      size: `${Math.floor(pluginResult.metafile.outputs[key].bytes / 1024)}KB`,
+    };
+  })
+);
 
-await $`tsc`
+await $`tsc`;
