@@ -1,22 +1,32 @@
 import { loadCoreForSPFxOrClassic } from "./__spfxLoader";
+
 const SPFXPREFIX = "[SPFxExtensions/Wrapper]";
 const IS_MODERN_EXPIRIENCE = !window._spBodyOnLoadFunctions;
-let corePromise: Promise<void> | undefined = undefined;
+
 async function initClassicCore() {
   if (IS_MODERN_EXPIRIENCE) {
-    console.error(
-      SPFXPREFIX,
-      "This module can only be initialized in classic mode"
-    );
+    console.error(SPFXPREFIX, "This module can only be initialized in classic mode");
     return;
   }
-  if (!corePromise) {
-    console.info(SPFXPREFIX, "Initializing SPFx Extensions Core from Classic SharePoint page");
-    const coreUrl = import.meta.resolve(`./spfx-extension-core.js?v=${Date.now()}`);
-    const configuratorUrl = import.meta.resolve(`./spfx-extension-coreconfigurator.js?v=${Date.now()}`);
-    corePromise = loadCoreForSPFxOrClassic(async () => { return { coreUrl, configuratorUrl }; }, "ClassicSharePoint", false)
+
+  if (window.__SPFxExtensions?.__CoreInitializationPromise) {
+    return window.__SPFxExtensions.__CoreInitializationPromise;
   }
-  return corePromise;
+  const { promise, resolve } = Promise.withResolvers<void>();
+  (window.__SPFxExtensions as any) = {
+    __CoreInitializationPromise: promise,
+    __CoreInitializationResolver: resolve,
+  };
+  console.info(SPFXPREFIX, "Initializing SPFxExtensions Core from Classic SharePoint page");
+  const coreUrl = import.meta.resolve(`./spfx-extension-core.js?v=${Date.now()}`);
+  const configuratorUrl = import.meta.resolve(
+    `./spfx-extension-coreconfigurator.js?v=${Date.now()}`
+  );
+  const urlResolver = async () => {
+    return { coreUrl, configuratorUrl };
+  };
+  await loadCoreForSPFxOrClassic(urlResolver, "ClassicSharePoint", false);
+  window.__SPFxExtensions.__CoreInitializationResolver();
 }
 
 export function init() {

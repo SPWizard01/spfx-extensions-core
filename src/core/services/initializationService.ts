@@ -4,14 +4,8 @@ import { registerAppInstanceService } from "./appInstanceService";
 import { cleanCacheOnUpgrade } from "./browserCache";
 import { loadModernApps } from "./componentLoaderService";
 import { initializeContextEventService } from "./contextEventService";
-import {
-  getSiteAbsoluteUrl,
-  getWebAbsoluteUrl,
-} from "./contextService";
-import {
-  getCoreConfig,
-  initializeCoreConfiguration,
-} from "./coreConfigService";
+import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
+import { getCoreConfig, initializeCoreConfiguration } from "./coreConfigService";
 import { registerGlobalListeners } from "./globalModernAppsListeners";
 import { initHistoryInterception } from "./historyService";
 import { getHubSiteUrl } from "./hubDataService";
@@ -39,8 +33,7 @@ async function initGlobalInternal() {
   registerGlobalListeners();
   registerAppService();
   registerAppInstanceService();
-  const { promise: assetPromise, resolve: assetPromiseResolver } =
-    Promise.withResolvers<void>();
+  const { promise: assetPromise, resolve: assetPromiseResolver } = Promise.withResolvers<void>();
   if (!window.__SPFxExtensions.AllAppAssetsLoadedPromise) {
     window.__SPFxExtensions.AllAppAssetsLoadedPromise = assetPromise;
     window.__SPFxExtensions.AllAppAssetsLoadedResolver = assetPromiseResolver;
@@ -53,30 +46,21 @@ async function initGlobalInternal() {
 export async function initCoreServices() {
   await cleanCacheOnUpgrade();
   await initGlobal();
-  window.__SPFxExtensions.__CorePromiseResolver?.();
+  window.__SPFxExtensions.__CorePromiseResolver();
 
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
   const hubSiteUrl = await getHubSiteUrl();
   await loadModernApps(siteUrl, webUrl, hubSiteUrl, getCurrentContextId());
-  window.addEventListener(
-    "contextChange",
-    async () => {
-      logGenericCoreInfo("Context changed, reloading apps...");
-      const siteUrl = getSiteAbsoluteUrl();
-      const webUrl = getWebAbsoluteUrl();
-      const hubSiteUrl = await getHubSiteUrl();
-      const newCtx = getNewContext();
-      await loadModernApps(
-        siteUrl,
-        webUrl,
-        hubSiteUrl,
-        newCtx,
-        true
-      );
-      registerManifestWatcher(siteUrl, webUrl, hubSiteUrl, true);
-    }
-  );
+  window.addEventListener("contextChange", async () => {
+    logGenericCoreInfo("Context changed, reloading apps...");
+    const siteUrl = getSiteAbsoluteUrl();
+    const webUrl = getWebAbsoluteUrl();
+    const hubSiteUrl = await getHubSiteUrl();
+    const newCtx = getNewContext();
+    await loadModernApps(siteUrl, webUrl, hubSiteUrl, newCtx, true);
+    registerManifestWatcher(siteUrl, webUrl, hubSiteUrl, true);
+  });
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);
   logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");
 }

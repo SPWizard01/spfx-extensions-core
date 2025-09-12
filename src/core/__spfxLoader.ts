@@ -47,12 +47,11 @@ async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
 }
 
 function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThroughSPFX: boolean) {
-  if (!window.__SPFxExtensions) {
+  //assumes that window.__SPFxExtensions prepared by SPFx or Classic loader
+  if (!window.__SPFxExtensions.__CorePromise) {
     const { promise: corePromise, resolve: coreResolver } = Promise.withResolvers<void>();
-    (window.__SPFxExtensions as any) = {
-      __CorePromise: corePromise,
-      __CorePromiseResolver: coreResolver,
-    };
+    window.__SPFxExtensions.__CorePromise = corePromise;
+    window.__SPFxExtensions.__CorePromiseResolver = coreResolver;
   }
 
   if (!window.__SPFxExtensions.Utils) {
@@ -77,7 +76,7 @@ function prepareEnv(environmentType: CompatibleEnvironmentType, initializedThrou
 }
 
 /**
- * Should only be used inside of SPFx or content script in classic pages on SP
+ * Should only be used inside of SPFx or Classic Wrapper
  * @returns Singleton promise that resolves once the core is loaded
  */
 export async function loadCoreForSPFxOrClassic(
@@ -85,23 +84,24 @@ export async function loadCoreForSPFxOrClassic(
   envType: CompatibleEnvironmentType,
   initializedThroughSPFX: boolean
 ) {
-  if (window.__SPFxExtensions?.__CorePromise) {
+  //assumes that window.__SPFxExtensions prepared by SPFx or Classic wrapper
+  if (window.__SPFxExtensions.__CorePromise) {
     return window.__SPFxExtensions.__CorePromise;
   }
 
   prepareEnv(envType, initializedThroughSPFX);
 
-  const coreAddress = await getRootCoreLocation(suggestedUrlResolver);
-  window.__SPFxExtensions.__ConfiguratorUrl = coreAddress.configuratorUrl;
-
+  const locations = await getRootCoreLocation(suggestedUrlResolver);
+  window.__SPFxExtensions.__ConfiguratorUrl = locations.configuratorUrl;
+  console.info(SPFXPREFIX, "Loading SPFxExtensions Core from", locations);
   const coreScript = document.createElement("script");
-  coreScript.src = coreAddress.core;
+  coreScript.src = locations.core;
   coreScript.type = "module";
   coreScript.addEventListener("error", (err) => {
     console.error(
       SPFXPREFIX,
       "Catastrophic failure, cannot load SPFxExtensions Core from",
-      coreAddress,
+      locations,
       err
     );
   });
