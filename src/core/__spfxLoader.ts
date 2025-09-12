@@ -42,7 +42,6 @@ async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
   }
   coreUrls.core = coreUrl;
   coreUrls.configuratorUrl = configuratorUrl;
-  console.info(SPFXPREFIX, "Core location resolved to", coreUrls);
   return coreUrls;
 }
 
