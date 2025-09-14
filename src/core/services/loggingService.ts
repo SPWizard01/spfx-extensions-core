@@ -1,53 +1,29 @@
-import type { SPFxExtensionAppDefinition } from "../../models/appModel";
+import type { SPFxExtensionAppDefinitionBase } from "../../models/appModel";
 import { SPFxExtensionCore } from "../../utilities/constants";
 import { greenBright } from "../utility/colors";
 
 export function logGenericCore(...args: any[]) {
-  console.log(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.log(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 export function logGenericCoreError(...args: any[]) {
-  console.error(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.error(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 export function logGenericCoreWarning(...args: any[]) {
-  console.warn(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.warn(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 export function logGenericCoreTrace(...args: any[]) {
-  console.trace(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.trace(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 export function logGenericCoreInfo(...args: any[]) {
-  console.info(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.info(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 
 export function logGenericCoreDebug(...args: any[]) {
-  console.debug(
-    greenBright(SPFxExtensionCore),
-    new Date().toISOString(),
-    ...args
-  );
+  console.debug(greenBright(SPFxExtensionCore), new Date().toISOString(), ...args);
 }
 
 export function logInstanceRequestedError(
-  app: SPFxExtensionAppDefinition,
+  app: SPFxExtensionAppDefinitionBase,
   e: any,
   additionalData?: string
 ) {

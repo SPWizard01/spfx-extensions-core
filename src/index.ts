@@ -3,6 +3,7 @@ export * from "./models/allowedAppsListData";
 export * from "./models/appConfig";
 export * from "./models/appFolderManifest";
 export * from "./models/appModel";
+export * from "./models/appModelCard";
 export * from "./models/appUtils";
 export * from "./models/blackListData";
 export * from "./models/cache";
@@ -16,4 +17,3 @@ export * from "./models/spoContextInitializationData";
 export * from "./models/teamsModels";
 export * from "./services/spContextService";
 export * from "./utilities/display";
-

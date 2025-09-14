@@ -1,6 +1,9 @@
-import type { SPFxExtensionAppDefinition } from "../../models/appModel";
+import type {
+  SPFxExtensionAppDefinition,
+  SPFxExtensionEnsuredAppDefinitionCompleted,
+  SPFxExtensionEnsuredAppDefinitionWaiting,
+} from "../../models/appModel";
 import { APP_LOADING } from "../../utilities/constants";
-import { emptyDummy } from "../../utilities/helpers";
 import { loadAppInstance } from "./appServices";
 import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
 
@@ -22,11 +25,10 @@ export function ensureApp(appId: string) {
 
   if (!foundApp) {
     logGenericCoreDebug(`Registering new app`, appId);
-    foundApp = {
+    const newApp: SPFxExtensionEnsuredAppDefinitionWaiting = {
       id: appId,
       name: APP_LOADING,
       description: APP_LOADING,
-      isWebPartApp: false,
       unmountOnRender: true,
       keepOnContextChange: false,
       autoExecute: false,
@@ -36,11 +38,9 @@ export function ensureApp(appId: string) {
       registrationCompleted: false,
       isManual: false,
       instances: [],
-      async onInstanceRequested() {
-        return emptyDummy;
-      },
     };
-    window.__SPFxExtensions.Apps.push(foundApp);
+    window.__SPFxExtensions.Apps.push(newApp);
+    return newApp;
   }
   return foundApp;
 }
@@ -56,26 +56,27 @@ export function registerAppService() {
       if (appDefinition.registrationCompleted) {
         return appDefinition;
       }
-      appDefinition.name = newAppDefinition.name;
-      appDefinition.description = newAppDefinition.description;
-      appDefinition.isWebPartApp = newAppDefinition.isWebPartApp;
-      appDefinition.keepOnContextChange = newAppDefinition.keepOnContextChange ?? false;
-      appDefinition.autoExecute = newAppDefinition.autoExecute ?? false;
-      appDefinition.isManual = newAppDefinition.isManual ?? false;
-      appDefinition.unmountOnRender = newAppDefinition.unmountOnRender ?? true;
-      appDefinition.maxInstances = newAppDefinition.maxInstances ?? Infinity;
-      appDefinition.hideAppSelectorWhenAppLoaded =
-        newAppDefinition.hideAppSelectorWhenAppLoaded ?? false;
-      appDefinition.hideConfiguratorButton = newAppDefinition.hideConfiguratorButton ?? false;
-      appDefinition.icon = newAppDefinition.icon;
-      appDefinition.onInstanceRequested = newAppDefinition.onInstanceRequested;
-      appDefinition.registrationCompleted = true;
-      executeAppAddedEvents(appDefinition);
+
+      const completeRegistration: SPFxExtensionEnsuredAppDefinitionCompleted = {
+        ...appDefinition,
+        ...newAppDefinition,
+        registrationCompleted: true,
+      };
+
+      //find app in registry and replace it
+      const appIdx = window.__SPFxExtensions.Apps.findIndex((a) => a.id === newAppDefinition.id);
+      if (appIdx > -1) {
+        window.__SPFxExtensions.Apps[appIdx] = completeRegistration;
+      }
+
+      const allInstancePromises: Promise<void>[] = [];
+      executeAppAddedEvents(completeRegistration);
       appDefinition.instances.forEach((appInstance) => {
-        loadAppInstance(appDefinition, appInstance);
+        allInstancePromises.push(loadAppInstance(completeRegistration, appInstance));
       });
 
-      return appDefinition;
+      await Promise.allSettled(allInstancePromises);
+      return completeRegistration;
     };
   }
 

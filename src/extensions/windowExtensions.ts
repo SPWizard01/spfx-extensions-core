@@ -1,7 +1,7 @@
-import type { SPFxExtensionAppRuntimeConfig } from "../models/appConfig";
 import type {
   SPFxExtensionAppInstance,
   SPFxExtensionAppRegistration,
+  SPFxExtensionAppRuntimeConfig,
   SPFxExtensionEnsuredAppDefinition,
 } from "../models/appModel";
 import type { SPFxExtensionAppUtils } from "../models/appUtils";
@@ -90,6 +90,18 @@ declare global {
         appId: string,
         runTimeConfig: SPFxExtensionAppRuntimeConfig
       ): Promise<SPFxExtensionAppInstance | undefined>;
+      // InstantiateApp(
+      //   appId: string,
+      //   runTimeConfig: SPFxExtensionAppCustomizerRuntimeConfig
+      // ): Promise<SPFxExtensionAppCustomizerInstance | undefined>;
+      // InstantiateApp(
+      //   appId: string,
+      //   runTimeConfig: SPFxExtensionAppWebpartRuntimeConfig
+      // ): Promise<SPFxExtensionAppWebpartInstance | undefined>;
+      // InstantiateApp(
+      //   appId: string,
+      //   runTimeConfig: SPFxExtensionAppAdaptiveCardRuntimeConfig
+      // ): Promise<SPFxExtensionAppAdaptiveCardInstance | undefined>;
       /**
        * Ensures that app is registered in global registry, returns app definition.
        *
@@ -101,8 +113,16 @@ declare global {
        *
        * @param app app definition
        */
-
       RegisterApp(app: SPFxExtensionAppRegistration): Promise<SPFxExtensionEnsuredAppDefinition>;
+      // RegisterApp(
+      //   app: SPFxExtensionAppCustomizerRegistration
+      // ): Promise<SPFxExtensionEnsuredAppCustomizerDefinition>;
+      // RegisterApp(
+      //   app: SPFxExtensionAppWebpartRegistration
+      // ): Promise<SPFxExtensionEnsuredAppWebpartDefinition>;
+      // RegisterApp(
+      //   app: SPFxExtensionAppAdaptiveCardRegistration
+      // ): Promise<SPFxExtensionEnsuredAppAdaptiveCardDefinition>;
 
       /**
        * Unregisters app from global registry, removes all instances of the app.

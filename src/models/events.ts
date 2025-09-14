@@ -1,5 +1,9 @@
 import type { SPFxExtensionAppConfig, SPFxExtensionAppPropertyPaneConfigRender } from "./appConfig";
-import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "./appModel";
+import type {
+  SPFxExtensionAppDefinition,
+  SPFxExtensionAppInstance,
+  SPFxExtensionEnsuredAppDefinition,
+} from "./appModel";
 import type { ContextChangeEventDetails } from "./customEvents";
 import type { CompatibleDisplayMode } from "./environment";
 
@@ -45,7 +49,7 @@ export type SPFxExtensionAppInstanceEventListener<
 export type SPFxExtensionAppEvents = {
   appAdded: SPFxExtensionAppDefinition;
   instanceAdded: {
-    app: SPFxExtensionAppDefinition;
+    app: SPFxExtensionEnsuredAppDefinition;
     instance: SPFxExtensionAppInstance;
   };
 };

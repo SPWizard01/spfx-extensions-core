@@ -273,9 +273,9 @@ async function executeRegistrations(
     }
     const registeredApp = await window.__SPFxExtensions.RegisterApp(appReg);
     successfullyRegistered.push(appReg);
-    if (!appReg.isWebPartApp && appReg.autoExecute) {
+    if (appReg.instanceType === "appCustomizer" && appReg.autoExecute) {
       if (registeredApp.instances.length < (appReg.maxInstances ?? Infinity)) {
-        window.__SPFxExtensions.InstantiateApp(appReg.id, {});
+        window.__SPFxExtensions.InstantiateApp(appReg.id, { instanceType: "appCustomizer" });
       }
     }
   }

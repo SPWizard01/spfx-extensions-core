@@ -1,12 +1,43 @@
-import type { SPFxExtensionAppRuntimeConfig } from "./appConfig";
+import type {
+  SPFxExtensionAppCustomizerDefinition,
+  SPFxExtensionAppCustomizerInstance,
+  SPFxExtensionAppCustomizerRuntimeConfig,
+} from "./appModelAppCustomizer";
+import type {
+  SPFxExtensionAppAdaptiveCardDefinition,
+  SPFxExtensionAppAdaptiveCardInstance,
+  SPFxExtensionAppAdaptiveCardRuntimeConfig,
+} from "./appModelCard";
+import type {
+  SPFxExtensionAppWebpartDefinition,
+  SPFxExtensionAppWebpartInstance,
+  SPFxExtensionAppWebpartRuntimeConfig,
+} from "./appModelWebpart";
 import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
   SPFxExtensionCleanup,
 } from "./events";
 
-export interface SPFxExtensionAppInstance<TConfig = unknown>
-  extends SPFxExtensionAppRuntimeConfig<TConfig> {
+export type SPFxExtensionAppInstanceType = "webpart" | "adaptiveCard" | "appCustomizer";
+export interface SPFxExtensionAppIcon {
+  iconType: "svg" | "font" | "url";
+  iconData: string;
+  fontFamily?: string;
+}
+
+export interface SPFxExtensionAppInstanceRequestedDetails<T = SPFxExtensionAppInstance> {
+  /**
+   * Called once an instance of the app was created and app is registered.
+   *
+   * This method is also called by the SPFx and Core solutions.
+   *
+   * @param newInstance The instance that is created usually by `window.__SPFxExtensions.InstantiateApp` call if you do not own the app.
+   */
+  onInstanceRequested(newInstance: T): Promise<SPFxExtensionCleanup>;
+}
+
+export interface SPFxExtensionAppInstanceBase<TConfig = unknown> {
   key: string;
 
   contextId: string;
@@ -57,22 +88,16 @@ export interface SPFxExtensionAppInstance<TConfig = unknown>
   ): void;
   allEventListeners: SPFxExtensionAppInstanceEventListener<TConfig>[];
   /**
-   * this ensures that webpart config change events are only called on the instance when its loaded
+   * This ensures that all relevant calls are called once onInstanceRequested is completed
    */
   instanceLoadPromise: Promise<void>;
   /**
-   * this should only be called by the core when instance is loaded and the promise is used by spfx
+   * This should only be called by the core when instance is loaded and the promise is used by spfx
    */
   instanceLoadPromiseResolver(): void;
 }
 
-export interface SPFxExtensionAppIcon {
-  iconType: "svg" | "font" | "url";
-  iconData: string;
-  fontFamily?: string;
-}
-
-export interface SPFxExtensionAppDefinition {
+export interface SPFxExtensionAppDefinitionBase {
   /**
    * Unique id of an app
    */
@@ -86,13 +111,9 @@ export interface SPFxExtensionAppDefinition {
    */
   description: string;
   /**
-   * If set to false or undefined the app wont show in webpart picker
-   *
-   * You will have to call `window.__SPFxExtensions.InstantiateApp` method to run the app.
-   *
-   * Or set `autoExecute` to true;
+   * If set to true, the app will not show in webpart picker
    */
-  isWebPartApp: boolean;
+  hideWebPartButton?: boolean;
   /**
    * Hide app selection dropdown in property pane when app is loaded
    */
@@ -106,9 +127,9 @@ export interface SPFxExtensionAppDefinition {
   /**
    * If set to true, the app will not be unmounted when the SPO context changes and app belongs to that context.
    *
-   * Usefull for apps that do not need to be unmounted when the context changes. i.e. styles/footer etc.
+   * Useful for apps that do not need to be unmounted when the context changes. i.e. styles/footer etc.
    *
-   * Only applicable for apps that have `isWebPartApp` set to `false`.
+   * Only applicable for apps that have `instanceType` set to `appCustomizer`.
    *
    * It will still be unmounted regardless of this flag if the app does not belong (not allowed) to the new context.
    */
@@ -151,19 +172,47 @@ export interface SPFxExtensionAppDefinition {
    * Fluent UI
    */
   icon?: SPFxExtensionAppIcon;
-
-  /**
-   * Called once an instance of the app was created and app is registered.
-   *
-   * This method is also called by the SPFx and Core solutions.
-   *
-   * @param newInstance The instance that is created usually by `window.__SPFxExtensions.InstantiateApp` call if you do not own the app.
-   */
-  onInstanceRequested(newInstance: SPFxExtensionAppInstance): Promise<SPFxExtensionCleanup>;
 }
 
-export type SPFxExtensionAppRegistration = Omit<SPFxExtensionAppDefinition, "instances">;
+export type SPFxExtensionAppRuntimeConfig =
+  | SPFxExtensionAppWebpartRuntimeConfig
+  | SPFxExtensionAppCustomizerRuntimeConfig
+  | SPFxExtensionAppAdaptiveCardRuntimeConfig;
 
-export interface SPFxExtensionEnsuredAppDefinition extends SPFxExtensionAppDefinition {
-  registrationCompleted: boolean;
-}
+export type SPFxExtensionAppInstance<TConfig = unknown> =
+  | SPFxExtensionAppCustomizerInstance<TConfig>
+  | SPFxExtensionAppWebpartInstance<TConfig>
+  | SPFxExtensionAppAdaptiveCardInstance<TConfig>;
+
+export type SPFxExtensionAppDefinition =
+  | SPFxExtensionAppWebpartDefinition
+  | SPFxExtensionAppAdaptiveCardDefinition
+  | SPFxExtensionAppCustomizerDefinition;
+
+type SPFxExtensionAppCustomizerRegistration = Omit<
+  SPFxExtensionAppCustomizerDefinition,
+  "instances"
+>;
+type SPFxExtensionAppWebpartRegistration = Omit<SPFxExtensionAppWebpartDefinition, "instances">;
+type SPFxExtensionAppAdaptiveCardRegistration = Omit<
+  SPFxExtensionAppAdaptiveCardDefinition,
+  "instances"
+>;
+
+export type SPFxExtensionAppRegistration =
+  | SPFxExtensionAppCustomizerRegistration
+  | SPFxExtensionAppWebpartRegistration
+  | SPFxExtensionAppAdaptiveCardRegistration;
+
+export type SPFxExtensionEnsuredAppDefinitionCompleted = SPFxExtensionAppDefinition & {
+  registrationCompleted: true;
+};
+
+export type SPFxExtensionEnsuredAppDefinitionWaiting = SPFxExtensionAppDefinitionBase & {
+  instanceType?: SPFxExtensionAppInstanceType;
+  registrationCompleted: false;
+};
+
+export type SPFxExtensionEnsuredAppDefinition =
+  | SPFxExtensionEnsuredAppDefinitionCompleted
+  | SPFxExtensionEnsuredAppDefinitionWaiting;
