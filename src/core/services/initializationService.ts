@@ -1,3 +1,4 @@
+import { getContextInfoAsync } from "../../services/spContextService";
 import { getCurrentContextId, getNewContext } from "../../utilities/helpers";
 import { registerAppService } from "./appDefinitionService";
 import { registerAppInstanceService } from "./appInstanceService";
@@ -21,6 +22,11 @@ async function initGlobal() {
   coreGlobalPromise = initGlobalInternal();
   return coreGlobalPromise;
 }
+
+async function initContextData() {
+  window.__SPFxExtensions.__CurrentContext = await getContextInfoAsync();
+}
+
 async function initGlobalInternal() {
   await initializeCoreConfiguration();
   const coreConfig = await getCoreConfig();
@@ -46,20 +52,21 @@ async function initGlobalInternal() {
 export async function initCoreServices() {
   await cleanCacheOnUpgrade();
   await initGlobal();
+  await initContextData();
   window.__SPFxExtensions.__CorePromiseResolver();
 
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
   const hubSiteUrl = await getHubSiteUrl();
   await loadModernApps(siteUrl, webUrl, hubSiteUrl, getCurrentContextId());
-  window.addEventListener("contextChange", async () => {
+  window.addEventListener("contextChange", async (event) => {
     logGenericCoreInfo("Context changed, reloading apps...");
-    const siteUrl = getSiteAbsoluteUrl();
-    const webUrl = getWebAbsoluteUrl();
-    const hubSiteUrl = await getHubSiteUrl();
+    const newSiteUrl = event.detail?.initializationData?.site?.absoluteUrl || getSiteAbsoluteUrl();
+    const newWebUrl = event.detail?.initializationData?.web?.absoluteUrl || getWebAbsoluteUrl();
+    const newHubSiteUrl = await getHubSiteUrl();
     const newCtx = getNewContext();
-    await loadModernApps(siteUrl, webUrl, hubSiteUrl, newCtx, true);
-    registerManifestWatcher(siteUrl, webUrl, hubSiteUrl, true);
+    await loadModernApps(newSiteUrl, newWebUrl, newHubSiteUrl, newCtx, true);
+    registerManifestWatcher(newSiteUrl, newWebUrl, newHubSiteUrl, true);
   });
   registerManifestWatcher(siteUrl, webUrl, hubSiteUrl);
   logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");

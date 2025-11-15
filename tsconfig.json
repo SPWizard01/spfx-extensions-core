@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
-    // Enable latest features
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "es2024",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
@@ -13,7 +12,6 @@
     "esModuleInterop": true,
     "rootDir": "./src",
     // Bundler mode
-    "moduleResolution": "bundler",
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,

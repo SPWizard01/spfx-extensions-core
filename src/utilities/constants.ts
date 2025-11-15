@@ -4,6 +4,7 @@ import type {
   SPFxExtensionFolderManifest,
 } from "../models/appFolderManifest";
 
+export const SPFX_SOLUTION_ID = "7d56fff0-e90e-40a7-98cf-fcdbc63a9b01";
 /**
  * Found in `SpfxExtensionloaderWebpart.manifest.json`
  */

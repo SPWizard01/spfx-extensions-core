@@ -26,6 +26,7 @@ interface ModuleLoaderPromiseResult {
 declare global {
   interface _spPageContextInfo {
     hubSiteId: string;
+    isHubSite: boolean;
   }
   interface WindowEventMap {
     historyPush: CustomEvent<HistoryEventDetails>;
@@ -53,6 +54,15 @@ declare global {
     MSOLayout_IsWikiEditMode?: () => boolean;
 
     __SPFxExtensions: {
+      __CurrentContext:
+        | {
+            contextType: "SPOModernContext";
+            context: SPOPageContext;
+          }
+        | {
+            contextType: "ClassicContext";
+            context: _spPageContextInfo;
+          };
       /**
        * Used by SPFx to ensure loading happens only once.
        */

@@ -41,6 +41,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
 };
 
 const buildDate = BUILD_DATE;
+
 logGenericCoreInfo(`Initializing SPFxExtensions Core Built:`, buildDate);
 await initCoreServices();
 try {

@@ -1,34 +1,47 @@
-import { getContextInfoAsync } from "../../services/spContextService";
 import { EMPTY_GUID } from "../../utilities/constants";
 import { extractGUIDFromString } from "../../utilities/helpers";
 
-const initialContext = await getContextInfoAsync();
-
-export function getWebId(): string {
-    return initialContext.contextType === "SPOModernContext" ? initialContext.context.web.id.toString() : extractGUIDFromString(initialContext.context.webId)
+export function getWebId() {
+  return window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+    ? (window.__SPFxExtensions.__CurrentContext.context.web.id.toString() as string)
+    : extractGUIDFromString(window.__SPFxExtensions.__CurrentContext.context.webId);
 }
 
 export function getWebAbsoluteUrl() {
-    const absoluteUrl = (initialContext.contextType === "SPOModernContext" ? initialContext.context.web.absoluteUrl : initialContext.context.webAbsoluteUrl) as string;
-    return absoluteUrl.replace(/\/$/, "");
+  const absoluteUrl = (
+    window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+      ? (window.__SPFxExtensions.__CurrentContext.context.web.absoluteUrl as string)
+      : window.__SPFxExtensions.__CurrentContext.context.webAbsoluteUrl
+  ) as string;
+  return absoluteUrl.replace(/\/$/, "");
 }
 
 export function getSiteId() {
-    return initialContext.contextType === "SPOModernContext" ? (initialContext.context.site.id.toString() as string) : extractGUIDFromString(initialContext.context.siteId)
+  return window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+    ? (window.__SPFxExtensions.__CurrentContext.context.site.id.toString() as string)
+    : extractGUIDFromString(window.__SPFxExtensions.__CurrentContext.context.siteId);
 }
 
-export function getSiteAbsoluteUrl(): string {
-    return initialContext.contextType === "SPOModernContext" ? initialContext.context.site.absoluteUrl : initialContext.context.siteAbsoluteUrl;
+export function getSiteAbsoluteUrl() {
+  return window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+    ? (window.__SPFxExtensions.__CurrentContext.context.site.absoluteUrl as string)
+    : window.__SPFxExtensions.__CurrentContext.context.siteAbsoluteUrl;
 }
 
-export function getHubSiteId(): string {
-    return (initialContext.contextType === "SPOModernContext" ? initialContext.context.legacyPageContext.hubSiteId?.toString() : initialContext.context.hubSiteId) ?? EMPTY_GUID;
+export function getHubSiteId() {
+  return (
+    (window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+      ? (window.__SPFxExtensions.__CurrentContext.context.legacyPageContext.hubSiteId?.toString() as string)
+      : window.__SPFxExtensions.__CurrentContext.context.hubSiteId) ?? EMPTY_GUID
+  );
 }
 
 export function getIsHubSite() {
-    return initialContext.contextType === "SPOModernContext" ? initialContext.context.legacyPageContext.isHubSite : (initialContext.context as any).isHubSite;
+  return window.__SPFxExtensions.__CurrentContext.contextType === "SPOModernContext"
+    ? (window.__SPFxExtensions.__CurrentContext.context.legacyPageContext.isHubSite as boolean)
+    : window.__SPFxExtensions.__CurrentContext.context.isHubSite;
 }
 
 export function getIsRootWeb() {
-    return getSiteAbsoluteUrl() === getWebAbsoluteUrl();
+  return getSiteAbsoluteUrl() === getWebAbsoluteUrl();
 }

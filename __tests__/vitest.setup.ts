@@ -14,12 +14,11 @@ Object.defineProperty(jsdom.window, "crypto", {
 const windowInstance = jsdom.window;
 // const windowInstance = new Window({ url: "https://example.com" });
 const { document } = windowInstance;
-
 // Expose globals expected by the code under test
 // DEBUG is referenced at module top-level; set to false to avoid importing preact/debug during tests.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).DEBUG = false;
-
+vi.stubGlobal("DEBUG", false);
+vi.stubGlobal("asd", () => {});
 // Mirror browser-like globals
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).window = windowInstance;
@@ -28,7 +27,7 @@ const { document } = windowInstance;
 // Some libs might check for navigator
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).navigator = { userAgent: "happy-dom" };
-
+(globalThis as any).alert = () => {};
 // fake-indexeddb/auto has populated globalThis with IDB* constructors and indexedDB
 
 // Provide minimal structure used by App component

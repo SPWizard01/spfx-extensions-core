@@ -1,8 +1,9 @@
-import type { ConfigurationNames } from '../core/utility/defaultConfig';
+import type { ConfigurationNames } from "../core/utility/defaultConfig";
 
-export interface ConfigurationListData {
-    Title: keyof typeof ConfigurationNames;
-    Data: any;
-    date: string;
-    expires: string;
+export interface ConfigurationListBaseData {
+  Title: keyof typeof ConfigurationNames;
+  Data: any;
+}
+export interface ConfigurationListData extends ConfigurationListBaseData {
+  expires: string;
 }
