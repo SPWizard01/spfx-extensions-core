@@ -4,6 +4,7 @@ export default defineConfig({
   // Provide global constant replacements for tests (mirrors esbuild define)
   define: {
     BUILD_DATE: JSON.stringify("test-build"),
+    DEBUG: JSON.stringify(false),
   },
   test: {
     environment: "happy-dom",
