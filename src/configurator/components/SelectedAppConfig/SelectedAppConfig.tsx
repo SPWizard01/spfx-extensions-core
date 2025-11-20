@@ -32,9 +32,6 @@ export function SelectedAppConfig() {
   return (
     <Stack
       gap={20}
-      style={{
-        height: "100%",
-      }}
     >
       <Stack horizontalAlign="space-between" horizontal verticalAlign="center">
         <Stack gap={10} horizontal verticalAlign="center">
