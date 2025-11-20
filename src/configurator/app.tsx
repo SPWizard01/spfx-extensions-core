@@ -21,9 +21,6 @@ export function App(_props: AppProps) {
   return (
     <FluentProvider
       theme={thm}
-      style={{
-        height: "100%",
-      }}
     >
       <Index />
     </FluentProvider>
