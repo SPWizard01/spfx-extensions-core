@@ -27,10 +27,7 @@ import { toasterId } from "../common/ToastNotification";
 export function AddAppCollection() {
   const [inputValue, setInputValue] = useState("");
   const AddAppDialogOpen = useSignal(false);
-  async function dialogOpenChange(
-    _event: DialogOpenChangeEvent,
-    data: DialogOpenChangeData
-  ) {
+  async function dialogOpenChange(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) {
     AddAppDialogOpen.value = data.open;
   }
 
@@ -100,15 +97,11 @@ export function AddAppCollection() {
           <DialogTitle
             action={
               <DialogTrigger disableButtonEnhancement action="close">
-                <Button
-                  appearance="subtle"
-                  aria-label="close"
-                  icon={<Dismiss24Regular />}
-                />
+                <Button appearance="subtle" aria-label="close" icon={<Dismiss24Regular />} />
               </DialogTrigger>
             }
           >
-            Create new application
+            Create new collection
           </DialogTitle>
           <DialogContent style={{ padding: "16px 0" }}>
             <Input

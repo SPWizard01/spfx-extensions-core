@@ -58,23 +58,13 @@ function getBadges() {
   }
   if (configWebType === "subsite") {
     badges.push(
-      <Badge
-        key="subsite"
-        size="extra-large"
-        shape="rounded"
-        color="informative"
-      >
+      <Badge key="subsite" size="extra-large" shape="rounded" color="informative">
         Sub site
       </Badge>
     );
   } else {
     badges.push(
-      <Badge
-        key="siteCollectionRoot"
-        size="extra-large"
-        shape="rounded"
-        color="informative"
-      >
+      <Badge key="siteCollectionRoot" size="extra-large" shape="rounded" color="informative">
         Site collection
       </Badge>
     );

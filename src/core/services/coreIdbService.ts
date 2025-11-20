@@ -204,7 +204,7 @@ export async function addOrUpdateAllowedAppsToCache(
   const baseCache = getCacheItemBase(cacheTimeMinutes);
   const tx = spfxExtensionsCoreDB.transaction(StoreNames.AllowedApps, "readwrite");
   const txStore = tx.objectStore(StoreNames.AllowedApps);
-  items.forEach((item) => txStore.put({ ...baseCache, ...item }));
+  items.forEach((item) => txStore.put({ ...item, ...baseCache }));
   return tx.done;
 }
 
