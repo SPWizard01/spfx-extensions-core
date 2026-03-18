@@ -51,7 +51,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: bun install
       - run: bun run build
-      - run: npm publish --access public
+      - run: npm publish
         if: steps.tagauto.outputs.previous-version != steps.tagauto.outputs.current-version && steps.tagauto.outputs.current-version != ''
         # env:
         #   NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

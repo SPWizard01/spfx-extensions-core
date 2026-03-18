@@ -1,10 +1,14 @@
 {
   "name": "@spfx-extensions/core",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "author": "SPWizard01",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SPWizard01/spfx-extensions-core.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@types/sharepoint": "^2016.1.14"
