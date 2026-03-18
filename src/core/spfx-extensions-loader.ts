@@ -14,8 +14,6 @@ type SuggestedUrlResolver = () => Promise<SuggestedUrls>;
  * Points to core location, the holy grail that makes everything working.
  * Setting `window.localStorage["SPFXEXT"]` to a number i.e. `33343` makes it load
  * from `https://localhost:33343/`.
- *
- * Default URL: ```/sites/appcatalog/CDN/SPFxExtensionAppsCore/core.js```
  */
 async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
   const devPort = Number(localStorage.getItem("SPFXEXT"));
@@ -25,8 +23,8 @@ async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
   };
   if (devPort > 0) {
     const t = Date.now();
-    coreUrls.core = `https://localhost:${devPort}/__spfxCore.js?v=${t}`;
-    coreUrls.configuratorUrl = `https://localhost:${devPort}/__spfxCoreConfigurator.js?v=${t}`;
+    coreUrls.core = `https://localhost:${devPort}/spfx-extensions-core.js?v=${t}`;
+    coreUrls.configuratorUrl = `https://localhost:${devPort}/spfx-extensions-coreconfigurator.js?v=${t}`;
     return coreUrls;
   }
 

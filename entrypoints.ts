@@ -1,15 +1,14 @@
 export const coreEntryPoints = [
-    "./src/index.ts",
-    "./src/configurator/__spfxCoreConfigurator.ts",
-    "./src/core/__spfxCore.ts",
-    "./src/core/__spfxLoader.ts",
-    "./src/core/__spfxWrapperClassic.ts",
-    // "./src/core/coreClassicWrapper.ts",
-    // "./src/core/coreClassicCustomAction.ts",
-]
+  "./src/index.ts",
+  "./src/configurator/spfx-extensions-coreconfigurator.ts",
+  "./src/core/spfx-extensions-core.ts",
+  "./src/core/spfx-extensions-loader.ts",
+  "./src/core/spfx-extensions-classicwrapper.ts",
+  "./src/core/spfx-extensions-classiccustomaction.ts",
+];
 
 export const pluginEntryPoints = [
-    "./src/plugins/esbuild/index.ts",
-    "./src/plugins/bun/index.ts",
-    "./src/plugins/webpack/index.ts"
-]
+  "./src/plugins/esbuild/index.ts",
+  "./src/plugins/bun/index.ts",
+  "./src/plugins/webpack/index.ts",
+];

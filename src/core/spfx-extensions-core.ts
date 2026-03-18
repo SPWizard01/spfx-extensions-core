@@ -25,7 +25,7 @@ const configuratorApp: SPFxExtensionAppRegistration = {
       logGenericCoreDebug("Core is in debug mode");
     }
     const configuratorUrl = coreIsInDebug
-      ? import.meta.resolve(`./__spfxCoreConfigurator.js?v=${Date.now()}`)
+      ? import.meta.resolve(`./spfx-extensions-coreconfigurator.js?v=${Date.now()}`)
       : window.__SPFxExtensions.__ConfiguratorUrl;
     try {
       const module = await import(configuratorUrl);

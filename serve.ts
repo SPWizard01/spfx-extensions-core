@@ -5,15 +5,17 @@ startBunDevServer(
   {
     buildConfig: {
       entrypoints: [
-        "./src/core/__spfxCore.ts",
-        "./src/configurator/__spfxCoreConfigurator.ts",
-        "./src/core/__spfxWrapperClassic.ts",
+        "./src/core/spfx-extensions-core.ts",
+        "./src/configurator/spfx-extensions-coreconfigurator.ts",
+        "./src/core/spfx-extensions-classicwrapper.ts",
+        "./src/core/spfx-extensions-loader.ts",
+        "./src/core/spfx-extensions-classiccustomaction.ts",
       ],
       naming: {
         entry: "[name].[ext]",
       },
       sourcemap: "linked",
-      outdir: "./dist",
+      outdir: "dist",
       target: "browser",
       format: "esm",
       define: {
@@ -27,8 +29,9 @@ startBunDevServer(
     port: 33355,
     watchDir: "./src",
     enableTSC: true,
-    writeManifest: false,
+    writeManifest: true,
     cleanServePath: true,
+    cleanBuildPath: true,
     tls: {
       cert: file("./serve_cert.pem"),
       key: file("./serve_key.pem"),

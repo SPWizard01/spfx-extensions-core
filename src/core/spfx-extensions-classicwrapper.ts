@@ -1,4 +1,4 @@
-import { loadCoreForSPFxOrClassic } from "./__spfxLoader";
+import { loadCoreForSPFxOrClassic } from "./spfx-extensions-loader";
 
 const SPFXPREFIX = "[SPFxExtensions/Wrapper]";
 const IS_MODERN_EXPIRIENCE = !window._spBodyOnLoadFunctions;
@@ -18,9 +18,9 @@ async function initClassicCore() {
     __CoreInitializationResolver: resolve,
   };
   console.info(SPFXPREFIX, "Initializing SPFxExtensions Core from Classic SharePoint page");
-  const coreUrl = import.meta.resolve(`./spfx-extension-core.js?v=${Date.now()}`);
+  const coreUrl = import.meta.resolve(`./spfx-extensions-core.js?v=${Date.now()}`);
   const configuratorUrl = import.meta.resolve(
-    `./spfx-extension-coreconfigurator.js?v=${Date.now()}`
+    `./spfx-extensions-coreconfigurator.js?v=${Date.now()}`
   );
   const urlResolver = async () => {
     return { coreUrl, configuratorUrl };
@@ -28,7 +28,18 @@ async function initClassicCore() {
   await loadCoreForSPFxOrClassic(urlResolver, "ClassicSharePoint", false);
   window.__SPFxExtensions.__CoreInitializationResolver();
 }
-
+/**
+ * This method is called by `spfx-extensions-classiccustomaction` which is added to classic pages via custom actions script.
+ *
+ * We have to wait for body onload to ensure that the global defs added by sp.js are present before we try to use them.
+ *
+ * For modern pages, the `spfx-extensions-loader` is responsible for initializing the core.
+ *
+ * It is invoked either by app customizer or webpart, whichever loads first.
+ *
+ * This is because modern pages do not have the concept of onload functions queue like classic pages, so we can not rely on that mechanism to delay our initialization until sp.js is loaded.
+ * @returns
+ */
 export function init() {
   // page just loaded and body onload has not been called yet
   if (!window._spBodyOnLoadCalled && window._spBodyOnLoadFunctions) {

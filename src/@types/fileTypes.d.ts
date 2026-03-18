@@ -1,16 +1,9 @@
 declare module "*.txt" {
-    const content: string;
-    export default content;
+  const content: string;
+  export default content;
 }
 
-// declare module "__spfxCore.js" {
-//     const content: string;
-//     export default content;
-// }
-
-declare const BUILD_DATE: string;
-
 declare interface File {
-    path: string;
-    relativePath: string;
+  path: string;
+  relativePath: string;
 }

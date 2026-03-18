@@ -47,4 +47,4 @@ jobs:
       - run: bun publish
         if: steps.tagauto.outputs.previous-version != steps.tagauto.outputs.current-version && steps.tagauto.outputs.current-version != ''
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        #  NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

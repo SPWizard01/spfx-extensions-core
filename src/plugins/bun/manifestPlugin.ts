@@ -44,7 +44,7 @@ export async function bunManifestWriter(
   for (const ep of entryPoints) {
     const basePathUrl = Bun.pathToFileURL(manifestDir);
     const epUrl = Bun.pathToFileURL(ep.path);
-    const relativePath = epUrl.href.replace(`${basePathUrl.href}/`, "");
+    const relativePath = epUrl.href.replace(`${basePathUrl.href}/`, "./");
     // const nameNoJs = relativePath.replace(".js", "");
     const hashedImport = `${relativePath}`.replace(dist, "");
     epTable.push(hashedImport);
