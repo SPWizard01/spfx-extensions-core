@@ -44,9 +44,14 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         name: Setup Bun
+      - uses: actions/setup-node@v6
+        name: Setup Node.js
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
       - run: bun install
       - run: bun run build
-      - run: bunx npm publish --provenance
+      - run: npm publish
         if: steps.tagauto.outputs.previous-version != steps.tagauto.outputs.current-version && steps.tagauto.outputs.current-version != ''
         # env:
         #   NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
