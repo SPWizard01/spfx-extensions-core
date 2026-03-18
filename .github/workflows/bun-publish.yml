@@ -46,7 +46,7 @@ jobs:
         name: Setup Bun
       - run: bun install
       - run: bun run build
-      - run: bun publish
+      - run: bunx npm publish --provenance
         if: steps.tagauto.outputs.previous-version != steps.tagauto.outputs.current-version && steps.tagauto.outputs.current-version != ''
         # env:
         #   NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
