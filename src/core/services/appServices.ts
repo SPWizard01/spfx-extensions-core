@@ -1,7 +1,4 @@
-import type {
-  SPFxExtensionAppDefinition,
-  SPFxExtensionAppInstance,
-} from "../../models/appModel";
+import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
 import { CONFIGURATOR_APP_ID } from "../../utilities/constants";
 import { logInstanceRequestedError } from "./loggingService";
 
@@ -21,7 +18,7 @@ export function unmountAppInstance(
   }
 }
 
-export async function unmountInstancesOnContextChange(contextId: string) {
+export function unmountInstancesOnContextChange(contextId: string) {
   const instancesToUnmount = window.__SPFxExtensions.Apps.filter(
     (a) => !a.isWebPartApp && !a.keepOnContextChange && a.id !== CONFIGURATOR_APP_ID
   );

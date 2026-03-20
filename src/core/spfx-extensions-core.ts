@@ -1,5 +1,6 @@
 import type { SPFxExtensionAppRegistration } from "../models/appModel";
 import { CONFIGURATOR_APP_ID } from "../utilities/constants";
+import { CONFIGURATOR_JS_NAME, DEBUG_KEY_CORE } from "../utilities/runtimeConstants";
 import { initCoreServices } from "./services/initializationService";
 import {
   logGenericCoreDebug,
@@ -20,12 +21,15 @@ const configuratorApp: SPFxExtensionAppRegistration = {
   hideConfiguratorButton: true,
   name: "SPFx Extensions Configurator",
   async onInstanceRequested(newInstance) {
-    const coreIsInDebug = import.meta.url.indexOf("localhost") > -1;
+    const lsValue = window.localStorage.getItem(DEBUG_KEY_CORE) ?? "";
+    const lsValueIsNumber = /^\d+$/.test(lsValue ?? "");
+    const lsValueIsString = lsValue.trim() !== "";
+    const coreIsInDebug = lsValueIsNumber || lsValueIsString;
     if (coreIsInDebug) {
       logGenericCoreDebug("Core is in debug mode");
     }
     const configuratorUrl = coreIsInDebug
-      ? import.meta.resolve(`./spfx-extensions-coreconfigurator.js?v=${Date.now()}`)
+      ? import.meta.resolve(`./${CONFIGURATOR_JS_NAME}?v=${Date.now()}`)
       : window.__SPFxExtensions.__ConfiguratorUrl;
     try {
       const module = await import(configuratorUrl);
@@ -42,10 +46,14 @@ const configuratorApp: SPFxExtensionAppRegistration = {
 
 const buildDate = BUILD_DATE;
 
-logGenericCoreInfo(`Initializing SPFxExtensions Core Built:`, buildDate);
-await initCoreServices();
-try {
-  await window.__SPFxExtensions.RegisterApp(configuratorApp);
-} catch (e) {
-  logGenericCoreError("Error registering configurator app", e);
+//workaround safari problems that still does not support top level await in modules;
+async function init() {
+  logGenericCoreInfo(`Initializing SPFxExtensions Core Built:`, buildDate);
+  await initCoreServices();
+  try {
+    await window.__SPFxExtensions.RegisterApp(configuratorApp);
+  } catch (e) {
+    logGenericCoreError("Error registering configurator app", e);
+  }
 }
+init();

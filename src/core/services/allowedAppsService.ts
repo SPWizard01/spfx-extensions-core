@@ -1,6 +1,7 @@
 import type { AllowedAppsListData } from "../../models/allowedAppsListData";
 import { ALLOWEDAPPSLIST_NAME } from "../../utilities/constants";
-import { DEBUG_KEYS, isFileInDebug } from "../../utilities/debug";
+import { appIsInDebug } from "../../utilities/debug";
+import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getCoreConfig } from "./coreConfigService";
 import {
@@ -93,12 +94,8 @@ function fileIsAllowed(absoluteFileUrl: URL, allowedList: AllowedAppsListData[])
   });
 }
 
-export async function isFileAllowedToRun(
-  absoluteFileUrl: URL,
-  manifestName: string,
-  fresh = false
-) {
-  if (isFileInDebug(absoluteFileUrl)) return true;
+export async function isFileAllowedToRun(absoluteFileUrl: URL, appName: string, fresh = false) {
+  if (appIsInDebug(appName)) return true;
 
   // Service should load list data from whatever source which can be reached by everyone.
   const allowedList = fresh
@@ -111,7 +108,7 @@ export async function isFileAllowedToRun(
       `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.`
     );
     logGenericCoreWarning(
-      `If you are a developer you can enable this app by adding window.localStorage item ${DEBUG_KEYS.SPFXEXT}${manifestName} with a number value corresponding to development port of the localhost server.`
+      `If you are a developer you can enable this app by adding window.localStorage item ${DEBUG_KEY_APP_PREFIX}${appName} with a number value corresponding to development port of the localhost server or a base URL where manifest.txt resides.`
     );
 
     return false;

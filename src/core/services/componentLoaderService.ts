@@ -5,7 +5,8 @@ import type {
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
 import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
-import { isAppInDebug } from "../../utilities/debug";
+import { appIsInDebug } from "../../utilities/debug";
+import { getNewContext } from "../../utilities/helpers";
 import { isFileAllowedToRun } from "./allowedAppsService";
 import { unmountInstancesOnContextChange } from "./appServices";
 import { getHubSiteId, getSiteId, getWebId } from "./contextService";
@@ -112,7 +113,7 @@ async function parseManifestAndImportEntryPoints(manifestToParse: CacheableAppFo
   logGenericCoreDebug("Parsing", manifestToParse.type, "manifest:", manifestToParse.manifest);
   let cacheString = "";
   if (manifestToParse.manifest.cacheString && manifestToParse.manifest.enableCaching) {
-    cacheString = isAppInDebug(manifestToParse.name)
+    cacheString = appIsInDebug(manifestToParse.name)
       ? `${new Date().getTime()}`
       : manifestToParse.manifest.cacheString;
   }
@@ -143,21 +144,14 @@ async function parseManifestAndImportEntryPoints(manifestToParse: CacheableAppFo
 
   return returnPromiseArray;
 }
-export async function loadModernApps(
-  siteUrl: string,
-  webUrl: string,
-  hubUrl: string,
-  contextId: string,
-  contextChange = false
-) {
+export async function loadModernApps(contextChange = false) {
   if (contextChange) {
-    handleContextChange(contextId);
+    handleContextChange();
   }
   if (isLoaded) return;
   isLoaded = true;
-  // window.__SPFxExtensions.LoadedAppAssets = [];
   //LOAD collectionConfig.txt
-  const coreCollection = await fetchAppCollectionConfigFromAllLocations(siteUrl, webUrl, hubUrl);
+  const coreCollection = await fetchAppCollectionConfigFromAllLocations();
   const allManifestTXTs = getManifestTXTFromAllLocations(coreCollection);
 
   window.__SPFxExtensions.Utils.appManifestPromises = allManifestTXTs;
@@ -168,6 +162,7 @@ export async function loadModernApps(
 
   const successfullAppRegistrations: Promise<SPFxExtensionAppRegistration[]>[] = [];
   const resolvedRootAppsManifests = resolvedManifestTXTs.filter((m) => m.value.type === "root");
+  const resolvedHubAppsManifests = resolvedManifestTXTs.filter((m) => m.value.type === "hub");
   const resolvedSiteAppsManifests = resolvedManifestTXTs.filter((m) => m.value.type === "site");
   const resolvedWebAppsManifests = resolvedManifestTXTs.filter((m) => m.value.type === "web");
 
@@ -179,6 +174,12 @@ export async function loadModernApps(
     successfullAppRegistrations.push(...rootEntries);
   }
   logGenericCoreDebug("Root apps loaded.");
+
+  for (const hubManifests of resolvedHubAppsManifests) {
+    const hubEntries = await parseManifestAndImportEntryPoints(hubManifests.value);
+    successfullAppRegistrations.push(...hubEntries);
+  }
+  logGenericCoreDebug("Hub apps loaded.");
 
   //wait for site stuff to load
   for (const siteManifests of resolvedSiteAppsManifests) {
@@ -202,13 +203,14 @@ export async function loadModernApps(
   logGenericCoreInfo("SPFx Extensions Core Components Loaded.");
 }
 
-function handleContextChange(contextId: string) {
+function handleContextChange() {
   isLoaded = false;
+  const contextId = getNewContext();
   loadedAssets.splice(0, loadedAssets.length);
   unmountInstancesOnContextChange(contextId);
-  const { promise: assetPromise, resolve: assetPromiseResolver } = Promise.withResolvers<void>();
-  window.__SPFxExtensions.AllAppAssetsLoadedPromise = assetPromise;
-  window.__SPFxExtensions.AllAppAssetsLoadedResolver = assetPromiseResolver;
+  const { promise, resolve } = Promise.withResolvers<void>();
+  window.__SPFxExtensions.AllAppAssetsLoadedPromise = promise;
+  window.__SPFxExtensions.AllAppAssetsLoadedResolver = resolve;
 }
 
 async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[]) {

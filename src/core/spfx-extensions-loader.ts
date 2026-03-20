@@ -1,7 +1,12 @@
 import type { SPFxExtensionUtilsPlaceHolderProvider } from "../models/appUtils";
 import type { CompatibleEnvironmentType } from "../models/environment";
-
-const SPFXPREFIX = "[SPFxExtensions/Core]";
+import {
+  CONFIGURATOR_JS_NAME,
+  CORE_JS_NAME,
+  DEBUG_KEY_CORE,
+  LOCAL_HOST,
+  SPFXPLOADERREFIX,
+} from "../utilities/runtimeConstants";
 
 interface SuggestedUrls {
   coreUrl: string;
@@ -12,31 +17,37 @@ type SuggestedUrlResolver = () => Promise<SuggestedUrls>;
 
 /**
  * Points to core location, the holy grail that makes everything working.
+ *
  * Setting `window.localStorage["SPFXEXT"]` to a number i.e. `33343` makes it load
  * from `https://localhost:33343/`.
  */
 async function getRootCoreLocation(suggestedUrlResolver: SuggestedUrlResolver) {
-  const devPort = Number(localStorage.getItem("SPFXEXT"));
+  const lsValue = window.localStorage.getItem(DEBUG_KEY_CORE) ?? "";
+  const lsValueIsNumber = /^\d+$/.test(lsValue ?? "");
+  const lsValueIsString = lsValue.trim() !== "";
   const coreUrls = {
     core: "",
     configuratorUrl: "",
   };
-  if (devPort > 0) {
-    const t = Date.now();
-    coreUrls.core = `https://localhost:${devPort}/spfx-extensions-core.js?v=${t}`;
-    coreUrls.configuratorUrl = `https://localhost:${devPort}/spfx-extensions-coreconfigurator.js?v=${t}`;
+  const t = Date.now();
+  if (lsValueIsNumber) {
+    coreUrls.core = `${LOCAL_HOST}:${lsValue}/${CORE_JS_NAME}?v=${t}`;
+    coreUrls.configuratorUrl = `${LOCAL_HOST}:${lsValue}/${CONFIGURATOR_JS_NAME}?v=${t}`;
+    return coreUrls;
+  }
+  if (lsValueIsString) {
+    coreUrls.core = `${lsValue}/${CORE_JS_NAME}?v=${t}`;
+    coreUrls.configuratorUrl = `${lsValue}/${CONFIGURATOR_JS_NAME}?v=${t}`;
     return coreUrls;
   }
 
   const { coreUrl, configuratorUrl } = await suggestedUrlResolver();
 
   if (!coreUrl) {
-    const msg = "Unable to resolve SPFx Core location";
-    throw new Error(`${SPFXPREFIX} ${msg}`);
+    throw new Error(`${SPFXPLOADERREFIX} Unable to resolve SPFx Core location`);
   }
   if (!configuratorUrl) {
-    const msg = "Unable to resolve SPFx Core Configurator location";
-    throw new Error(`${SPFXPREFIX} ${msg}`);
+    throw new Error(`${SPFXPLOADERREFIX} Unable to resolve SPFx Core Configurator location`);
   }
   coreUrls.core = coreUrl;
   coreUrls.configuratorUrl = configuratorUrl;
@@ -90,13 +101,13 @@ export async function loadCoreForSPFxOrClassic(
 
   const locations = await getRootCoreLocation(suggestedUrlResolver);
   window.__SPFxExtensions.__ConfiguratorUrl = locations.configuratorUrl;
-  console.info(SPFXPREFIX, "Loading SPFxExtensions Core from", locations);
+  console.info(SPFXPLOADERREFIX, "Loading SPFxExtensions Core from", locations);
   const coreScript = document.createElement("script");
   coreScript.src = locations.core;
   coreScript.type = "module";
   coreScript.addEventListener("error", (err) => {
     console.error(
-      SPFXPREFIX,
+      SPFXPLOADERREFIX,
       "Catastrophic failure, cannot load SPFxExtensions Core from",
       locations,
       err

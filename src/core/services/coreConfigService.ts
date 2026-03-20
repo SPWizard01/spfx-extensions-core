@@ -32,18 +32,16 @@ export async function getCoreConfig(fresh = false): Promise<ConfigurationListBas
   await initializeCoreConfiguration();
   return getConfigurationListData(fresh);
 }
+
+/**
+ * Points to root sharepoint location into app catalog
+ * OnPrem/SPO: ```{APP_CATALOG_URL}/SPFxExtensionsData/SPFxExtensions/```
+ */
 export async function getRootCDNLocation() {
   const coreConfig = await getCoreConfig();
   const ROOT_CDN_LOCATION =
     coreConfig.find((c) => c.Title === "RootCDNLocation")?.Data ?? `${SPFX_EXTENSIONS_SITE_URL}`;
-  /**
-   * Points to root sharepoint location into app catalog
-   * OnPrem/SPO: ```/sites/appcatalog/CDN/SPFxExtensionApps/```
-   */
+
   const ROOT_APPS_LOCATION = `${ROOT_CDN_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
-  /**
-   * Points to root sharepoint manifest location
-   * OnPrem/SPO: ```/sites/appcatalog/CDN/SPFxExtensionApps/collectionConfig.txt```
-   */
-  return `${ROOT_APPS_LOCATION}${APPCOLLECTION_MANIFEST_NAME}`;
+  return ROOT_APPS_LOCATION;
 }

@@ -7,7 +7,8 @@ import {
   PopoverTrigger,
 } from "@fluentui/react-components";
 import { useState } from "preact/hooks";
-import { DEBUG_KEYS, isAppInDebug } from "../../../utilities/debug";
+import { appIsInDebug } from "../../../utilities/debug";
+import { DEBUG_KEY_APP_PREFIX } from "../../../utilities/runtimeConstants";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 
 interface DebugPopupProps {
@@ -16,14 +17,14 @@ interface DebugPopupProps {
 
 export function DebugPopup({ app }: DebugPopupProps) {
   const [port, setPort] = useState(
-    window.localStorage.getItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`) ?? ""
+    window.localStorage.getItem(`${DEBUG_KEY_APP_PREFIX}${app.name}`) ?? ""
   );
   const [popoverOpen, setOpen] = useState(false);
   return (
     <Popover positioning={"after"} open={popoverOpen}>
       <PopoverTrigger disableButtonEnhancement>
         <Checkbox
-          checked={isAppInDebug(app.name)}
+          checked={appIsInDebug(app.name)}
           onChange={() => {
             setOpen(!popoverOpen);
           }}
@@ -40,7 +41,7 @@ export function DebugPopup({ app }: DebugPopupProps) {
         <Button
           appearance="primary"
           onClick={() => {
-            window.localStorage.setItem(`${DEBUG_KEYS.SPFXEXT}${app.name}`, port);
+            window.localStorage.setItem(`${DEBUG_KEY_APP_PREFIX}${app.name}`, port);
             setOpen(false);
           }}
         >

@@ -1,11 +1,12 @@
+import { CONFIGURATOR_JS_NAME, CORE_JS_NAME } from "../utilities/runtimeConstants";
 import { loadCoreForSPFxOrClassic } from "./spfx-extensions-loader";
 
-const SPFXPREFIX = "[SPFxExtensions/Wrapper]";
+const SPFXPWRAPPERREFIX = "[SPFxExtensions/Wrapper]";
 const IS_MODERN_EXPIRIENCE = !window._spBodyOnLoadFunctions;
 
 async function initClassicCore() {
   if (IS_MODERN_EXPIRIENCE) {
-    console.error(SPFXPREFIX, "This module can only be initialized in classic mode");
+    console.error(SPFXPWRAPPERREFIX, "This module can only be initialized in classic mode");
     return;
   }
 
@@ -17,11 +18,9 @@ async function initClassicCore() {
     __CoreInitializationPromise: promise,
     __CoreInitializationResolver: resolve,
   };
-  console.info(SPFXPREFIX, "Initializing SPFxExtensions Core from Classic SharePoint page");
-  const coreUrl = import.meta.resolve(`./spfx-extensions-core.js?v=${Date.now()}`);
-  const configuratorUrl = import.meta.resolve(
-    `./spfx-extensions-coreconfigurator.js?v=${Date.now()}`
-  );
+  console.info(SPFXPWRAPPERREFIX, "Initializing SPFxExtensions Core from Classic SharePoint page");
+  const coreUrl = import.meta.resolve(`./${CORE_JS_NAME}?v=${Date.now()}`);
+  const configuratorUrl = import.meta.resolve(`./${CONFIGURATOR_JS_NAME}.js?v=${Date.now()}`);
   const urlResolver = async () => {
     return { coreUrl, configuratorUrl };
   };
@@ -52,7 +51,7 @@ export function init() {
     return;
   }
   console.error(
-    SPFXPREFIX,
+    SPFXPWRAPPERREFIX,
     "No _spBodyOnLoadFunctions or _spBodyOnLoadCalled object present. Can not initialize classic wrapper"
   );
 }

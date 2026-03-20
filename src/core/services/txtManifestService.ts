@@ -6,6 +6,7 @@ import type {
 import type {
   CacheableAppCollectionManifest,
   CacheableAppFolderManifest,
+  ManifestBase,
   ManifestLocation,
 } from "../../models/cache";
 import {
@@ -14,8 +15,9 @@ import {
   MANIFEST_NAME,
   SPFxExtensionCore,
 } from "../../utilities/constants";
-import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import { somethingIsInDebug } from "../../utilities/debug";
 import { getContentDigest } from "../../utilities/digest";
+import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { fixupManifest } from "../utility/helpers";
 import { getManifestTXTFromCache, setOrUpdateManifestTXT } from "./coreIdbService";
 import {
@@ -53,19 +55,17 @@ function validateManifestTXT(manifest: SPFxExtensionFolderManifest) {
  * @param [cacheTimeMinutes] Default is ```60``` to cache for one hour
  */
 async function fetchAndCacheManifestTXT(
-  url: string,
-  name: string,
-  type: ManifestLocation,
-  isHubFetch: boolean,
+  manifestBase: Omit<ManifestBase, "hash">,
   skipCache = false,
   cacheTimeMinutes = 60
 ): Promise<CacheableAppFolderManifest> {
   let appManifest = { ...EMPTY_APP_MANIFEST };
-  const fetchLocation = url.toLowerCase();
-  if (!skipCache && !isInDebug) {
+  const fetchLocation = manifestBase.url.toLowerCase();
+  const isHub = manifestBase.type === "hub";
+  if (!skipCache && !somethingIsInDebug) {
     const cachedManifest = await getManifestTXTFromCache(fetchLocation);
     if (cachedManifest) {
-      cachedManifest.isHubFetch = isHubFetch;
+      cachedManifest.type = isHub ? "hub" : cachedManifest.type;
       return cachedManifest;
     }
   }
@@ -87,9 +87,9 @@ async function fetchAndCacheManifestTXT(
   }
   const hash = await getContentDigest(JSON.stringify(appManifest));
   const baseResult = {
-    name,
+    ...manifestBase,
     url: fetchLocation,
-    type,
+    type: isHub ? "site" : manifestBase.type,
     hash,
   };
 
@@ -98,8 +98,8 @@ async function fetchAndCacheManifestTXT(
     ...baseResult,
   };
 
-  await setOrUpdateManifestTXT(retResult, isInDebug ? 1 : cacheTimeMinutes);
-  retResult.isHubFetch = isHubFetch;
+  await setOrUpdateManifestTXT(retResult, somethingIsInDebug ? 1 : cacheTimeMinutes);
+  retResult.type = isHub ? "hub" : retResult.type;
   return retResult;
 }
 
@@ -112,11 +112,18 @@ async function fetchAndCacheManifestTXT(
  */
 function getManifestTXTLocation(baseUrl: string, appKey: string) {
   const siteLocation = `${baseUrl}${appKey}/${MANIFEST_NAME}`;
-  const lsKey = `${DEBUG_KEYS.SPFXEXT}${appKey}`;
-  const devSitePort = Number(window.localStorage.getItem(lsKey));
-  if (devSitePort > 0) {
-    const debugLoc = `https://localhost:${devSitePort}/${MANIFEST_NAME}`;
-    logGenericCoreInfo(`<${appKey}> App is in debug mode, loading from`, debugLoc);
+  const lsKey = `${DEBUG_KEY_APP_PREFIX}${appKey}`;
+  const lsValue = window.localStorage.getItem(lsKey) ?? "";
+  const lsValueIsNumber = /^\d+$/.test(lsValue ?? "");
+  const lsValueIsString = lsValue.trim() !== "";
+  if (lsValueIsNumber) {
+    const debugLoc = `https://localhost:${lsValue}/${MANIFEST_NAME}`;
+    logGenericCoreInfo(`<${appKey}> App is in debug port mode, loading from`, debugLoc);
+    return debugLoc;
+  }
+  if (lsValueIsString) {
+    const debugLoc = `${lsValue}/${MANIFEST_NAME}`;
+    logGenericCoreInfo(`<${appKey}> App is in debug url mode, loading from`, debugLoc);
     return debugLoc;
   }
   return siteLocation;
@@ -134,15 +141,12 @@ function loadManifestTXT(
       .replace(APPCOLLECTION_MANIFEST_NAME.toLowerCase(), "");
     for (const appFolderName of appCollectionManifest.manifest.enabledAppCollections) {
       const manifestLocation = getManifestTXTLocation(baseUrl, appFolderName);
-      manifestTXTPromises.push(
-        fetchAndCacheManifestTXT(
-          manifestLocation,
-          appFolderName,
-          appCollectionManifest.type,
-          appCollectionManifest.isHubFetch ?? false,
-          skipCache
-        )
-      );
+      const manifestBase: Omit<ManifestBase, "hash"> = {
+        name: appFolderName,
+        url: manifestLocation,
+        type: appCollectionManifest.type,
+      };
+      manifestTXTPromises.push(fetchAndCacheManifestTXT(manifestBase, skipCache));
     }
   }
   return manifestTXTPromises;
@@ -155,17 +159,20 @@ export function getManifestTXTFromAllLocations(
   const rootAppsCollectionManifest = coreCollection.filter((app) => app.type === "root");
   const rootAppPromises = loadManifestTXT(rootAppsCollectionManifest, skipCache);
 
+  const hubAppsManifest = coreCollection.filter((app) => app.type === "hub");
+  const hubAppPromises = loadManifestTXT(hubAppsManifest, skipCache);
+
   const siteCollectionAppsManifest = coreCollection.filter((app) => app.type === "site");
   const scAppPromises = loadManifestTXT(siteCollectionAppsManifest, skipCache);
 
-  // const siteIsWeb = siteUrl.toLowerCase() === webUrl.toLowerCase();
-  // let subsitePromises: Promise<ManifestItem>[] = [];
-  // if (!siteIsWeb) {
   const webAppCollectionManifest = coreCollection.filter((app) => app.type === "web");
   const subsitePromises = loadManifestTXT(webAppCollectionManifest, skipCache);
-  //}
 
-  //foreach app do stuff
-  const allManifestsTXT = [...rootAppPromises, ...scAppPromises, ...subsitePromises];
+  const allManifestsTXT = [
+    ...rootAppPromises,
+    ...hubAppPromises,
+    ...scAppPromises,
+    ...subsitePromises,
+  ];
   return allManifestsTXT;
 }

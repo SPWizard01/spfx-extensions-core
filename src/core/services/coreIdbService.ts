@@ -12,7 +12,8 @@ import type {
 } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
-import { DEBUG_KEYS, isInDebug } from "../../utilities/debug";
+import { somethingIsInDebug } from "../../utilities/debug";
+import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { cleanStorageCache } from "./browserCache";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
@@ -57,7 +58,7 @@ export const StoreNames: Stores = {
   // PNP_CACHE: "PNP_CACHE",
 } as const;
 
-const DBNAME = `${DEBUG_KEYS.SPFXEXT}COREDB`;
+const DBNAME = `${DEBUG_KEY_APP_PREFIX}COREDB`;
 const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
   blocking(_currentVersion, _blockedVersion, _event) {
     openDBPromise.then((db) => db.close());
@@ -248,7 +249,7 @@ export async function evictManifestTXTCache(item?: CacheableAppFolderManifest) {
   }
   return evictManifestFolderCache();
 }
-export async function evictAppsTXTCache(item?: CacheableAppCollectionManifest) {
+export async function evictCollectionConfigCache(item?: CacheableAppCollectionManifest) {
   if (item) {
     //check if there is an item that should be evicted
     const matchingItem = await getAppsTXTCacheItem(item.url);
@@ -270,7 +271,7 @@ export async function getManifestTXTFromCache(url: string) {
   await evictManifestTXTCache();
 
   //do not get cached manifests when debugging
-  if (isInDebug) {
+  if (somethingIsInDebug) {
     return undefined;
   }
 
@@ -283,7 +284,7 @@ export async function setOrUpdateManifestTXT(
 ) {
   await evictManifestTXTCache(retResult);
   const foundItem = await getManifestTXTCacheItem(retResult.url);
-  if (foundItem && foundItem.hash === retResult.hash && !isInDebug) {
+  if (foundItem && foundItem.hash === retResult.hash && !somethingIsInDebug) {
     return;
   }
   await addOrUpdateManifestTXTToCache(retResult, cacheTimeMinutes);
@@ -293,20 +294,20 @@ export async function setOrUpdateAppCollectionTXT(
   retResult: CacheableAppCollectionManifest,
   cacheTimeMinutes: number
 ) {
-  await evictAppsTXTCache(retResult);
+  await evictCollectionConfigCache(retResult);
   const foundItem = await getAppsTXTCacheItem(retResult.url);
-  if (foundItem && foundItem.hash === retResult.hash && !isInDebug) {
+  if (foundItem && foundItem.hash === retResult.hash && !somethingIsInDebug) {
     return;
   }
   await addOrUpdateAppsTXTToCache(retResult, cacheTimeMinutes);
 }
 
-export async function getAppCollectionTXTFromCache(url: string) {
+export async function getCollectionConfigFromCache(url: string) {
   //first lets do cache eviction
-  await evictAppsTXTCache();
+  await evictCollectionConfigCache();
 
   //do not get cached manifests when debugging
-  if (isInDebug) {
+  if (somethingIsInDebug) {
     return undefined;
   }
   return getAppsTXTCacheItem(url);
