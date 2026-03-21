@@ -1,4 +1,4 @@
-export async function getContentDigest(content: string, limit: number = 0) {
+export async function getContentHash(content: string, limit: number = 0) {
   const encoder = new TextEncoder();
   const data = encoder.encode(content);
   const hash = await window.crypto.subtle.digest("SHA-1", data);

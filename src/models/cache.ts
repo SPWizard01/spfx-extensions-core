@@ -14,18 +14,13 @@ export interface CacheItemBase {
 
 export interface CacheableAppFolderManifest extends ManifestBase {
   manifest: SPFxExtensionFolderManifest;
+  lastCheck: string;
 }
 
 export interface CacheableAppCollectionManifest extends ManifestBase {
   manifest: SPFxExtensionCollectionManifest;
+  lastCheck: string;
 }
 
 export type AppFolderManifestCacheItem = CacheItemBase & CacheableAppFolderManifest;
 export type AppCollectionManifestCacheItem = CacheItemBase & CacheableAppCollectionManifest;
-
-export interface PNPValue<T = any> {
-  keyHash: string;
-  url: string;
-  data: T;
-}
-export type PNPCacheItem<T = any> = CacheItemBase & PNPValue<T>;

@@ -1,5 +1,5 @@
 import { SPFX_SOLUTION_ID } from "../../utilities/constants";
-import { getContentDigest } from "../../utilities/digest";
+import { getContentHash } from "../../utilities/digest";
 import { getCoreConfig } from "./coreConfigService";
 import { addOrUpdateExtensionConfig } from "./coreIdbService";
 import { logGenericCoreInfo } from "./loggingService";
@@ -47,10 +47,10 @@ export function GetCacheStringForAsset(start: number, cacheTimeMinutes: number) 
 
 export async function GetCacheStringHashForAssetAsync(start: number, cacheTimeMinutes: number) {
   const cachedTime = GetCacheStringForAsset(start, cacheTimeMinutes);
-  const cacheDateStr = await getContentDigest(cachedTime, 13);
+  const cacheDateStr = await getContentHash(cachedTime, 13);
   return cacheDateStr;
 }
 
 export function GetRandomCacheStringAsync() {
-  return getContentDigest(`${Date.now()}`, 13);
+  return getContentHash(`${Date.now()}`, 13);
 }

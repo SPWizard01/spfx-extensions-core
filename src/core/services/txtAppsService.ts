@@ -11,10 +11,10 @@ import {
   WELL_KNOWN_MANIFEST_LOCATION,
 } from "../../utilities/constants";
 import { somethingIsInDebug } from "../../utilities/debug";
-import { getContentDigest } from "../../utilities/digest";
+import { getContentHash } from "../../utilities/digest";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
-import { getCollectionConfigFromCache, setOrUpdateAppCollectionTXT } from "./coreIdbService";
+import { getCollectionConfigFromCache, setOrUpdateCollectionConfig } from "./coreIdbService";
 import { getHubSiteUrl } from "./hubDataService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
@@ -28,12 +28,11 @@ function validateCollectionConfig(manifest: SPFxExtensionCollectionManifest) {
   }
 }
 
-async function fetchAndCacheCollectionConfig(
+export async function getCollectionConfig(
   partialManifest: Omit<ManifestBase, "hash">,
   skipCache = false,
   cacheTimeMinutes = 60
 ): Promise<CacheableAppCollectionManifest> {
-  let appCollection = EMPTY_COLLECTION_MANIFEST;
   const fetchLocation = partialManifest.url.toLowerCase();
   const isHub = partialManifest.type === "hub";
   if (!skipCache && !somethingIsInDebug) {
@@ -45,6 +44,26 @@ async function fetchAndCacheCollectionConfig(
     }
   }
   const fetchUrl = `${fetchLocation}?v=${Date.now()}`;
+  const appCollection = await fetchAndParseCollectionConfigManifest(fetchUrl);
+  const hash = await getContentHash(JSON.stringify(appCollection));
+  const baseResult = {
+    ...partialManifest,
+    url: fetchLocation,
+    //save it as site collection since hub is also site collection and we want to preserve that info.
+    type: isHub ? "site" : partialManifest.type,
+    hash,
+    lastCheck: new Date().toISOString(),
+  };
+
+  const retResult: CacheableAppCollectionManifest = { manifest: appCollection, ...baseResult };
+  await setOrUpdateCollectionConfig(retResult, somethingIsInDebug ? 1 : cacheTimeMinutes);
+  //return original value
+  retResult.type = isHub ? "hub" : retResult.type;
+  return retResult;
+}
+
+async function fetchAndParseCollectionConfigManifest(fetchUrl: string) {
+  let appCollection = EMPTY_COLLECTION_MANIFEST;
   try {
     logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
     const mnfReq = await fetch(fetchUrl);
@@ -59,20 +78,7 @@ async function fetchAndCacheCollectionConfig(
     logGenericCoreError(`Error while parsing ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl, err);
     appCollection = EMPTY_COLLECTION_MANIFEST;
   }
-  const hash = await getContentDigest(JSON.stringify(appCollection));
-  const baseResult = {
-    ...partialManifest,
-    url: fetchLocation,
-    //save it as site collection since hub is also site collection and we want to preserve that info.
-    type: isHub ? "site" : partialManifest.type,
-    hash,
-  };
-
-  const retResult: CacheableAppCollectionManifest = { manifest: appCollection, ...baseResult };
-  await setOrUpdateAppCollectionTXT(retResult, somethingIsInDebug ? 1 : cacheTimeMinutes);
-  //return original value
-  retResult.type = isHub ? "hub" : retResult.type;
-  return retResult;
+  return appCollection;
 }
 
 export async function fetchAppCollectionConfigFromAllLocations(skipCache = false) {
@@ -83,23 +89,23 @@ export async function fetchAppCollectionConfigFromAllLocations(skipCache = false
   const allAppManifests: Promise<CacheableAppCollectionManifest>[] = [];
   const rootLocation = await getRootCDNLocation();
   const rootManifest: Omit<ManifestBase, "hash"> = getCollectionConfigBase(rootLocation, "root");
-  allAppManifests.push(fetchAndCacheCollectionConfig(rootManifest, skipCache));
+  allAppManifests.push(getCollectionConfig(rootManifest, skipCache));
   if (hubUrl) {
     const normalizedHubUrl = hubUrl + WELL_KNOWN_MANIFEST_LOCATION;
     const hubManifest = getCollectionConfigBase(normalizedHubUrl, "hub");
-    allAppManifests.push(fetchAndCacheCollectionConfig(hubManifest, skipCache));
+    allAppManifests.push(getCollectionConfig(hubManifest, skipCache));
   }
 
   const normalizedSiteUrl = siteUrl + WELL_KNOWN_MANIFEST_LOCATION;
   const siteManifest = getCollectionConfigBase(normalizedSiteUrl, "site");
-  allAppManifests.push(fetchAndCacheCollectionConfig(siteManifest, skipCache));
+  allAppManifests.push(getCollectionConfig(siteManifest, skipCache));
 
   const normalizedWebUrl = webUrl + WELL_KNOWN_MANIFEST_LOCATION;
   const siteIsWeb = siteUrl.toLowerCase() === webUrl.toLowerCase();
   const webIsRoot = normalizedWebUrl.toLowerCase() === rootLocation.toLowerCase();
   if (!siteIsWeb && !webIsRoot) {
     const webManifest = getCollectionConfigBase(normalizedWebUrl, "web");
-    allAppManifests.push(fetchAndCacheCollectionConfig(webManifest, skipCache));
+    allAppManifests.push(getCollectionConfig(webManifest, skipCache));
   }
   const manifestResult = await Promise.all(allAppManifests);
 

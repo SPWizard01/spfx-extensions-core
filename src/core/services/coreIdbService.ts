@@ -12,7 +12,6 @@ import type {
 } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
-import { somethingIsInDebug } from "../../utilities/debug";
 import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { cleanStorageCache } from "./browserCache";
 import { logGenericCoreError, logGenericCoreWarning } from "./loggingService";
@@ -47,9 +46,8 @@ interface SPFxExtensionSchema {
 export interface SPFxExtensionCoreDB extends DBSchema, SPFxExtensionSchema {}
 
 type StoreKeys = keyof SPFxExtensionSchema;
-type Stores = { [key in StoreKeys]: key };
 
-export const StoreNames: Stores = {
+export const StoreNames = {
   AppFolderManifestCache: "AppFolderManifestCache",
   AppCollectionManifestCache: "AppCollectionManifestCache",
   AllowedApps: "AllowedApps",
@@ -145,6 +143,7 @@ export async function addOrUpdateExtensionConfig(
     ...getCacheItemBase(cacheTimeMinutes),
   });
 }
+
 export async function addOrUpdateExtensionConfigs(
   items: ConfigurationListBaseData[],
   cacheTimeMinutes: number
@@ -163,7 +162,7 @@ async function getManifestTXTCacheItem(url: string) {
   return spfxExtensionsCoreDB.get(StoreNames.AppFolderManifestCache, url);
 }
 
-async function getAppsTXTCacheItem(url: string) {
+async function getCollectionConfigCacheItem(url: string) {
   return spfxExtensionsCoreDB.get(StoreNames.AppCollectionManifestCache, url);
 }
 
@@ -173,26 +172,6 @@ export async function getHubData(id: string) {
 
 export async function addOrUpdateHubDataToCache(item: HubData, cacheTimeMinutes = 60) {
   await spfxExtensionsCoreDB.put(StoreNames.HubSiteData, {
-    ...item,
-    ...getCacheItemBase(cacheTimeMinutes),
-  });
-}
-
-async function addOrUpdateAppsTXTToCache(
-  item: CacheableAppCollectionManifest,
-  cacheTimeMinutes = 60
-) {
-  await spfxExtensionsCoreDB.put(StoreNames.AppCollectionManifestCache, {
-    ...item,
-    ...getCacheItemBase(cacheTimeMinutes),
-  });
-}
-
-async function addOrUpdateManifestTXTToCache(
-  item: CacheableAppFolderManifest,
-  cacheTimeMinutes = 60
-) {
-  await spfxExtensionsCoreDB.put(StoreNames.AppFolderManifestCache, {
     ...item,
     ...getCacheItemBase(cacheTimeMinutes),
   });
@@ -215,13 +194,6 @@ async function removeAppCollectionManifestFromCache(url: string) {
 
 async function removeAppFolderManifestFromCache(url: string) {
   return spfxExtensionsCoreDB.delete(StoreNames.AppFolderManifestCache, url);
-}
-
-async function evictAppCollectionCache() {
-  return evictItemsFromStore(StoreNames.AppCollectionManifestCache, "url");
-}
-async function evictManifestFolderCache() {
-  return evictItemsFromStore(StoreNames.AppFolderManifestCache, "url");
 }
 
 export async function evictAllowedAppsCache() {
@@ -247,12 +219,13 @@ export async function evictManifestTXTCache(item?: CacheableAppFolderManifest) {
       }
     }
   }
-  return evictManifestFolderCache();
+  return evictItemsFromStore(StoreNames.AppFolderManifestCache, "url");
 }
-export async function evictCollectionConfigCache(item?: CacheableAppCollectionManifest) {
+
+async function evictCollectionConfigCache(item?: CacheableAppCollectionManifest) {
   if (item) {
     //check if there is an item that should be evicted
-    const matchingItem = await getAppsTXTCacheItem(item.url);
+    const matchingItem = await getCollectionConfigCacheItem(item.url);
     if (matchingItem) {
       if (matchingItem.hash !== item.hash) {
         await removeAppCollectionManifestFromCache(item.url);
@@ -263,18 +236,12 @@ export async function evictCollectionConfigCache(item?: CacheableAppCollectionMa
       }
     }
   }
-  return evictAppCollectionCache();
+  return evictItemsFromStore(StoreNames.AppCollectionManifestCache, "url");
 }
 
 export async function getManifestTXTFromCache(url: string) {
   //first lets do cache eviction
   await evictManifestTXTCache();
-
-  //do not get cached manifests when debugging
-  if (somethingIsInDebug) {
-    return undefined;
-  }
-
   return getManifestTXTCacheItem(url);
 }
 
@@ -283,61 +250,25 @@ export async function setOrUpdateManifestTXT(
   cacheTimeMinutes: number
 ) {
   await evictManifestTXTCache(retResult);
-  const foundItem = await getManifestTXTCacheItem(retResult.url);
-  if (foundItem && foundItem.hash === retResult.hash && !somethingIsInDebug) {
-    return;
-  }
-  await addOrUpdateManifestTXTToCache(retResult, cacheTimeMinutes);
+  await spfxExtensionsCoreDB.put(StoreNames.AppFolderManifestCache, {
+    ...retResult,
+    ...getCacheItemBase(cacheTimeMinutes),
+  });
 }
 
-export async function setOrUpdateAppCollectionTXT(
+export async function setOrUpdateCollectionConfig(
   retResult: CacheableAppCollectionManifest,
   cacheTimeMinutes: number
 ) {
   await evictCollectionConfigCache(retResult);
-  const foundItem = await getAppsTXTCacheItem(retResult.url);
-  if (foundItem && foundItem.hash === retResult.hash && !somethingIsInDebug) {
-    return;
-  }
-  await addOrUpdateAppsTXTToCache(retResult, cacheTimeMinutes);
+  await spfxExtensionsCoreDB.put(StoreNames.AppCollectionManifestCache, {
+    ...retResult,
+    ...getCacheItemBase(cacheTimeMinutes),
+  });
 }
 
 export async function getCollectionConfigFromCache(url: string) {
   //first lets do cache eviction
   await evictCollectionConfigCache();
-
-  //do not get cached manifests when debugging
-  if (somethingIsInDebug) {
-    return undefined;
-  }
-  return getAppsTXTCacheItem(url);
+  return getCollectionConfigCacheItem(url);
 }
-
-// export async function evictPNPDataCache() {
-//     return evictItemsFromStore(StoreNames.PNP_CACHE, "keyHash");
-// }
-
-// export async function addOrUpdatePNPCacheItem(
-//     item: PNPValue,
-//     expires: Date
-// ) {
-//     await spfxExtensionsCoreDB.put(StoreNames.PNP_CACHE, {
-//         ...item,
-//         expires: expires.toISOString(),
-//     });
-// }
-// export async function getPNPCacheItem<T = any>(key: string): Promise<T | undefined> {
-//     const idbData = await spfxExtensionsCoreDB.get("PNP_CACHE", key);
-//     if (idbData) {
-//         const isExpired = new Date(idbData.expires) <= new Date();
-//         if (isExpired) {
-//             await deletePNPCacheItem(key);
-//             return;
-//         } else {
-//             return idbData.data as T;
-//         }
-//     }
-// }
-// async function deletePNPCacheItem(key: string) {
-//     return spfxExtensionsCoreDB.delete("PNP_CACHE", key);
-// }

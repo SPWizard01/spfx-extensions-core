@@ -16,7 +16,7 @@ import {
   SPFxExtensionCore,
 } from "../../utilities/constants";
 import { somethingIsInDebug } from "../../utilities/debug";
-import { getContentDigest } from "../../utilities/digest";
+import { getContentHash } from "../../utilities/digest";
 import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { fixupManifest } from "../utility/helpers";
 import { getManifestTXTFromCache, setOrUpdateManifestTXT } from "./coreIdbService";
@@ -85,7 +85,7 @@ async function fetchAndCacheManifestTXT(
     logGenericCoreError(`Error while parsing ${MANIFEST_NAME} from`, fetchUrl, err);
     appManifest = { ...EMPTY_APP_MANIFEST };
   }
-  const hash = await getContentDigest(JSON.stringify(appManifest));
+  const hash = await getContentHash(JSON.stringify(appManifest));
   const baseResult = {
     ...manifestBase,
     url: fetchLocation,
@@ -94,8 +94,9 @@ async function fetchAndCacheManifestTXT(
   };
 
   const retResult: CacheableAppFolderManifest = {
-    manifest: appManifest,
     ...baseResult,
+    manifest: appManifest,
+    lastCheck: new Date().toISOString(),
   };
 
   await setOrUpdateManifestTXT(retResult, somethingIsInDebug ? 1 : cacheTimeMinutes);
@@ -129,7 +130,7 @@ function getManifestTXTLocation(baseUrl: string, appKey: string) {
   return siteLocation;
 }
 
-function loadManifestTXT(
+function getManifestsFromCollectionConfig(
   appCollectionManifests: CacheableAppCollectionManifest[],
   skipCache = false
 ) {
@@ -140,16 +141,32 @@ function loadManifestTXT(
       .toLowerCase()
       .replace(APPCOLLECTION_MANIFEST_NAME.toLowerCase(), "");
     for (const appFolderName of appCollectionManifest.manifest.enabledAppCollections) {
-      const manifestLocation = getManifestTXTLocation(baseUrl, appFolderName);
-      const manifestBase: Omit<ManifestBase, "hash"> = {
-        name: appFolderName,
-        url: manifestLocation,
-        type: appCollectionManifest.type,
-      };
-      manifestTXTPromises.push(fetchAndCacheManifestTXT(manifestBase, skipCache));
+      const folderManifestPromise = getFolderManifest(
+        baseUrl,
+        appFolderName,
+        appCollectionManifest.type,
+        skipCache
+      );
+      manifestTXTPromises.push(folderManifestPromise);
     }
   }
   return manifestTXTPromises;
+}
+
+export function getFolderManifest(
+  baseUrl: string,
+  appFolderName: string,
+  type: ManifestLocation,
+  skipCache: boolean
+) {
+  const manifestLocation = getManifestTXTLocation(baseUrl, appFolderName);
+  const manifestBase: Omit<ManifestBase, "hash"> = {
+    name: appFolderName,
+    url: manifestLocation,
+    type,
+  };
+  const folderManifestPromise = fetchAndCacheManifestTXT(manifestBase, skipCache);
+  return folderManifestPromise;
 }
 
 export function getManifestTXTFromAllLocations(
@@ -157,16 +174,16 @@ export function getManifestTXTFromAllLocations(
   skipCache = false
 ) {
   const rootAppsCollectionManifest = coreCollection.filter((app) => app.type === "root");
-  const rootAppPromises = loadManifestTXT(rootAppsCollectionManifest, skipCache);
+  const rootAppPromises = getManifestsFromCollectionConfig(rootAppsCollectionManifest, skipCache);
 
   const hubAppsManifest = coreCollection.filter((app) => app.type === "hub");
-  const hubAppPromises = loadManifestTXT(hubAppsManifest, skipCache);
+  const hubAppPromises = getManifestsFromCollectionConfig(hubAppsManifest, skipCache);
 
   const siteCollectionAppsManifest = coreCollection.filter((app) => app.type === "site");
-  const scAppPromises = loadManifestTXT(siteCollectionAppsManifest, skipCache);
+  const scAppPromises = getManifestsFromCollectionConfig(siteCollectionAppsManifest, skipCache);
 
   const webAppCollectionManifest = coreCollection.filter((app) => app.type === "web");
-  const subsitePromises = loadManifestTXT(webAppCollectionManifest, skipCache);
+  const subsitePromises = getManifestsFromCollectionConfig(webAppCollectionManifest, skipCache);
 
   const allManifestsTXT = [
     ...rootAppPromises,
