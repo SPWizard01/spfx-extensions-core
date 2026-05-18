@@ -28,6 +28,7 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     // "types": ["vitest"],
+    "types": ["sharepoint"],
     "paths": {
       "react": ["./node_modules/preact/compat/"],
       "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
