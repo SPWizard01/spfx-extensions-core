@@ -150,7 +150,7 @@ export async function loadModernApps(contextChange = false) {
   }
   if (isLoaded) return;
   isLoaded = true;
-  //LOAD collectionConfig.txt
+  //LOAD collectionconfig.json
   const coreCollection = await fetchAppCollectionConfigFromAllLocations();
   const allManifestTXTs = getManifestTXTFromAllLocations(coreCollection);
 

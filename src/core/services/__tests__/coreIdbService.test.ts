@@ -55,9 +55,8 @@ describe("core/services/coreIdbService - config store", () => {
   });
 
   it("addOrUpdateExtensionConfigs (bulk) writes multiple items with expiry", async () => {
-    const { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } = await import(
-      "../coreIdbService"
-    );
+    const { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } =
+      await import("../coreIdbService");
 
     await addOrUpdateExtensionConfigs([{ Title: "CfgA" } as any, { Title: "CfgB" } as any], 15);
     const all = await getAllExtensionConfigFromDB();
@@ -93,7 +92,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
   it("evicts AppFolder manifest on hash mismatch and cleans storage", async () => {
     const { spfxExtensionsCoreDB, evictManifestTXTCache } = await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/manifest.txt";
+    const url = "/sites/demo/spfxextensions/manifest.json";
     await spfxExtensionsCoreDB.put(
       "AppFolderManifestCache" as any,
       {
@@ -112,7 +111,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
   it("evicts AppCollection manifest on hash mismatch and cleans storage", async () => {
     const { spfxExtensionsCoreDB, evictAppsTXTCache } = await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/collectionconfig.txt";
+    const url = "/sites/demo/spfxextensions/collectionconfig.json";
     await spfxExtensionsCoreDB.put(
       "AppCollectionManifestCache" as any,
       {
@@ -137,7 +136,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
 
     const { spfxExtensionsCoreDB, getManifestTXTFromCache } = await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/manifest.txt";
+    const url = "/sites/demo/spfxextensions/manifest.json";
     await spfxExtensionsCoreDB.put(
       "AppFolderManifestCache" as any,
       {
@@ -154,7 +153,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
   it("setOrUpdateManifestTXT updates when hash differs", async () => {
     const { spfxExtensionsCoreDB, setOrUpdateManifestTXT } = await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/manifest.txt";
+    const url = "/sites/demo/spfxextensions/manifest.json";
     // Seed with A
     await spfxExtensionsCoreDB.put(
       "AppFolderManifestCache" as any,
@@ -175,11 +174,10 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
       DEBUG_KEYS: { SPFXEXT: "SPFXEXT_", SPFXEXT_CORE: "SPFXEXT" },
       isInDebug: true,
     }));
-    const { spfxExtensionsCoreDB, getAppCollectionTXTFromCache } = await import(
-      "../coreIdbService"
-    );
+    const { spfxExtensionsCoreDB, getAppCollectionTXTFromCache } =
+      await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/collectionconfig.txt";
+    const url = "/sites/demo/spfxextensions/collectionconfig.json";
     await spfxExtensionsCoreDB.put(
       "AppCollectionManifestCache" as any,
       {
@@ -196,7 +194,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
   it("setOrUpdateAppCollectionTXT is a no-op when hash is equal (not in debug)", async () => {
     const { spfxExtensionsCoreDB, setOrUpdateAppCollectionTXT } = await import("../coreIdbService");
 
-    const url = "/sites/demo/spfxextensions/collectionconfig.txt";
+    const url = "/sites/demo/spfxextensions/collectionconfig.json";
     const expires = new Date(Date.now() + 60_000).toISOString();
     await spfxExtensionsCoreDB.put(
       "AppCollectionManifestCache" as any,
@@ -217,7 +215,7 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
       isInDebug: false,
     }));
     const { spfxExtensionsCoreDB, getManifestTXTFromCache } = await import("../coreIdbService");
-    const url = "/sites/demo/spfxextensions/manifest.txt";
+    const url = "/sites/demo/spfxextensions/manifest.json";
     await spfxExtensionsCoreDB.put(
       "AppFolderManifestCache" as any,
       {
@@ -235,10 +233,9 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
       DEBUG_KEYS: { SPFXEXT: "SPFXEXT_", SPFXEXT_CORE: "SPFXEXT" },
       isInDebug: false,
     }));
-    const { spfxExtensionsCoreDB, getAppCollectionTXTFromCache } = await import(
-      "../coreIdbService"
-    );
-    const url = "/sites/demo/spfxextensions/collectionconfig.txt";
+    const { spfxExtensionsCoreDB, getAppCollectionTXTFromCache } =
+      await import("../coreIdbService");
+    const url = "/sites/demo/spfxextensions/collectionconfig.json";
     await spfxExtensionsCoreDB.put(
       "AppCollectionManifestCache" as any,
       {
@@ -256,12 +253,12 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
     const expired = new Date(0).toISOString();
     await spfxExtensionsCoreDB.put(
       "AppFolderManifestCache" as any,
-      { url: "/u1/manifest.txt", hash: "E1", expires: expired } as any
+      { url: "/u1/manifest.json", hash: "E1", expires: expired } as any
     );
     await evictManifestTXTCache();
     const deleted = await spfxExtensionsCoreDB.get(
       "AppFolderManifestCache" as any,
-      "/u1/manifest.txt"
+      "/u1/manifest.json"
     );
     expect(deleted).toBeUndefined();
     expect(warnMock).toHaveBeenCalledWith("Evicted 1 items from AppFolderManifestCache cache.");
@@ -272,12 +269,12 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
     const expired = new Date(0).toISOString();
     await spfxExtensionsCoreDB.put(
       "AppCollectionManifestCache" as any,
-      { url: "/u1/collectionconfig.txt", hash: "E2", expires: expired } as any
+      { url: "/u1/collectionconfig.json", hash: "E2", expires: expired } as any
     );
     await evictAppsTXTCache();
     const deleted = await spfxExtensionsCoreDB.get(
       "AppCollectionManifestCache" as any,
-      "/u1/collectionconfig.txt"
+      "/u1/collectionconfig.json"
     );
     expect(deleted).toBeUndefined();
     expect(warnMock).toHaveBeenCalledWith("Evicted 1 items from AppCollectionManifestCache cache.");
@@ -286,9 +283,8 @@ describe("core/services/coreIdbService - manifest caches & debug bypass", () => 
 
 describe("core/services/coreIdbService - eviction helpers for stores", () => {
   it("evictAllowedAppsCache and evictHubDataCache remove expired entries", async () => {
-    const { spfxExtensionsCoreDB, evictAllowedAppsCache, evictHubDataCache } = await import(
-      "../coreIdbService"
-    );
+    const { spfxExtensionsCoreDB, evictAllowedAppsCache, evictHubDataCache } =
+      await import("../coreIdbService");
     const expired = new Date(0).toISOString();
     await spfxExtensionsCoreDB.put("AllowedApps" as any, { Id: 1, expires: expired } as any);
     await spfxExtensionsCoreDB.put("HubSiteData" as any, { SiteId: "S1", expires: expired } as any);

@@ -35,7 +35,7 @@ export async function getCollectionConfig(
 ): Promise<CacheableAppCollectionManifest> {
   const fetchLocation = partialManifest.url.toLowerCase();
   const isHub = partialManifest.type === "hub";
-  if (!skipCache && !somethingIsInDebug) {
+  if (!skipCache) {
     const cachedManifest = await getCollectionConfigFromCache(fetchLocation);
     if (cachedManifest) {
       //hub is arbitrary value because it is also a site collection, so we want to save it as site but preserve hub value for priority loading
@@ -67,8 +67,7 @@ async function fetchAndParseCollectionConfigManifest(fetchUrl: string) {
   try {
     logGenericCoreDebug(`Fetching ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
     const mnfReq = await fetch(fetchUrl);
-    const result = await mnfReq.text();
-    appCollection = JSON.parse(result);
+    appCollection = await mnfReq.json();
   } catch (err) {
     logGenericCoreWarning(`Unable to fetch ${APPCOLLECTION_MANIFEST_NAME} from`, fetchUrl);
   }
@@ -85,7 +84,7 @@ export async function fetchAppCollectionConfigFromAllLocations(skipCache = false
   const siteUrl = getSiteAbsoluteUrl();
   const webUrl = getWebAbsoluteUrl();
   const hubUrl = await getHubSiteUrl();
-  // all collectionconfig.txt accross the context (root / site /web)
+  // all collectionconfig.json accross the context (root / site /web)
   const allAppManifests: Promise<CacheableAppCollectionManifest>[] = [];
   const rootLocation = await getRootCDNLocation();
   const rootManifest: Omit<ManifestBase, "hash"> = getCollectionConfigBase(rootLocation, "root");

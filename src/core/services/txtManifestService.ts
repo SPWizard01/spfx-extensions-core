@@ -1,8 +1,4 @@
-import type {
-  SPFxExtensionAppDefinitionConfig,
-  SPFxExtensionFolderManifest,
-  SPFxExtensionManualAppEntry,
-} from "../../models/appFolderManifest";
+import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
 import type {
   CacheableAppCollectionManifest,
   CacheableAppFolderManifest,
@@ -62,7 +58,7 @@ async function fetchAndCacheManifestTXT(
   let appManifest = { ...EMPTY_APP_MANIFEST };
   const fetchLocation = manifestBase.url.toLowerCase();
   const isHub = manifestBase.type === "hub";
-  if (!skipCache && !somethingIsInDebug) {
+  if (!skipCache) {
     const cachedManifest = await getManifestTXTFromCache(fetchLocation);
     if (cachedManifest) {
       cachedManifest.type = isHub ? "hub" : cachedManifest.type;
@@ -73,8 +69,7 @@ async function fetchAndCacheManifestTXT(
   try {
     logGenericCoreDebug(`Fetching ${MANIFEST_NAME} from`, fetchUrl);
     const mnfReq = await fetch(fetchUrl);
-    const responseText = await mnfReq.text();
-    appManifest = JSON.parse(responseText) as SPFxExtensionFolderManifest;
+    appManifest = (await mnfReq.json()) as SPFxExtensionFolderManifest;
     fixupManifest(appManifest);
   } catch (err) {
     logGenericCoreWarning(`Unable to fetch ${MANIFEST_NAME} from`, fetchUrl, err);

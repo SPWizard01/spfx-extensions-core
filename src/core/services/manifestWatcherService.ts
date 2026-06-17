@@ -3,16 +3,13 @@ import {
   APPCOLLECTION_MANIFEST_NAME,
   WELL_KNOWN_MANIFEST_LOCATION,
 } from "../../utilities/constants";
-import { DEBUG_KEY_CORE } from "../../utilities/runtimeConstants";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
 import { getRootCDNLocation } from "./coreConfigService";
 import { getHubSiteUrl } from "./hubDataService";
 import { logGenericCoreError } from "./loggingService";
 import { getCollectionConfig } from "./txtAppsService";
 import { getFolderManifest } from "./txtManifestService";
-const CORE_MANIFEST_CHECK_INTERVAL = window.localStorage.getItem(DEBUG_KEY_CORE)?.trim()
-  ? 10000
-  : 90000;
+const CORE_MANIFEST_CHECK_INTERVAL = 90000;
 let manifestWatch: number = 0;
 
 export function registerManifestWatcher(contextChange = false) {

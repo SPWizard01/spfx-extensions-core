@@ -32,7 +32,7 @@ export async function bunManifestWriter(
 
   const entryPoints = buildOutput.outputs.filter((o) => o.kind === "entry-point");
   const manifestDir = options.outdir;
-  const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.txt`;
+  const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.json`;
   const dist = manifestDir.replace(/^\.*\//, "");
 
   if (!options.includeAllOutputJs) {

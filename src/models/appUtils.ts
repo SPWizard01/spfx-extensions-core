@@ -19,23 +19,23 @@ export interface SPFxExtensionAppUtils {
   placeHolderProviderPromise: Promise<SPFxExtensionUtilsPlaceHolderProvider>;
   placeHolderResolver: (plc: SPFxExtensionUtilsPlaceHolderProvider) => void;
   /**
-   * Promise that loads collectionConfig.txt from root, site and web location.
-   * 
+   * Promise that loads collectionconfig.json from root, site and web location.
+   *
    * Used by SPFx webpart `renderEditMode` to track assets that are in progress of loading
-   * 
+   *
    */
   spAppInitializationPromise: Promise<void>;
   spAppInitializationPromiseResolver(): void;
   /**
-   * All application manifest.txt collected from root, site, web, hub
-   * 
+   * All application manifest.json collected from root, site, web, hub
+   *
    * Used by SPFx webpart `renderEditMode` to track assets that are in progress of loading
    */
   appManifestPromises: Promise<CacheableAppFolderManifest>[];
   fluentIconsInitialized: boolean;
   /**
    * Url to the configurator page.
-   * 
+   *
    * Defaults to `{APP_CATALOG_URL}/SPFxExtensionsData/SitePages/SPFxExtensionsConfigurator.aspx`
    */
   ConfiguratorPageUrl: string;

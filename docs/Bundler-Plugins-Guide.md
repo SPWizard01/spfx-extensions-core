@@ -32,7 +32,7 @@ Each plugin implementation provides similar functionality but is adapted to the 
 
 ### Purpose
 
-The main purpose of the manifest plugin is to automatically generate a `manifest.txt` file that contains the necessary configuration for your SPFx Extension applications. This manifest includes:
+The main purpose of the manifest plugin is to automatically generate a `manifest.json` file that contains the necessary configuration for your SPFx Extension applications. This manifest includes:
 
 - Entry point URLs for your applications
 - Application definition mapping
@@ -43,16 +43,16 @@ The main purpose of the manifest plugin is to automatically generate a `manifest
 
 All manifest plugins accept similar configuration options:
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `isESM` | `boolean` | Required. Indicates whether the application uses ESM modules |
-| `includeAllOutputJs` | `boolean` | Optional. When `true`, automatically includes all output JS files as entry points |
-| `appRelativeEntryPointUrls` | `string[]` | Optional. Array of relative paths to entry point files |
-| `appDefinitionMap` | `Array` | Optional. Application configuration mapping |
-| `enableCaching` | `boolean` | Optional. Whether to enable caching for the application |
-| `generateCacheString` | `boolean` | Optional. Auto-generates a cache string for cache invalidation |
-| `cacheString` | `string` | Optional. Custom cache string value |
-| `outdir` | `string` | Optional for esbuild/webpack, required for Bun. Output directory for the manifest |
+| Option                      | Type       | Description                                                                       |
+| --------------------------- | ---------- | --------------------------------------------------------------------------------- |
+| `isESM`                     | `boolean`  | Required. Indicates whether the application uses ESM modules                      |
+| `includeAllOutputJs`        | `boolean`  | Optional. When `true`, automatically includes all output JS files as entry points |
+| `appRelativeEntryPointUrls` | `string[]` | Optional. Array of relative paths to entry point files                            |
+| `appDefinitionMap`          | `Array`    | Optional. Application configuration mapping                                       |
+| `enableCaching`             | `boolean`  | Optional. Whether to enable caching for the application                           |
+| `generateCacheString`       | `boolean`  | Optional. Auto-generates a cache string for cache invalidation                    |
+| `cacheString`               | `string`   | Optional. Custom cache string value                                               |
+| `outdir`                    | `string`   | Optional for esbuild/webpack, required for Bun. Output directory for the manifest |
 
 ## Using with esbuild
 
@@ -80,12 +80,12 @@ await build({
             includedIds: [],
             includedHubIds: [],
             excludedIds: [],
-            excludedHubIds: []
-          }
-        }
-      ]
-    })
-  ]
+            excludedHubIds: [],
+          },
+        },
+      ],
+    }),
+  ],
 });
 ```
 
@@ -95,13 +95,15 @@ The webpack plugin is a class implementation that can be included in your webpac
 
 ```typescript
 const path = require("path");
-const { SPFxExtensionManifestWriterPluginWebpack } = require("@spfx-extensions/core/plugins/webpack");
+const {
+  SPFxExtensionManifestWriterPluginWebpack,
+} = require("@spfx-extensions/core/plugins/webpack");
 
 module.exports = {
   entry: "./src/app.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js"
+    filename: "bundle.js",
   },
   plugins: [
     new SPFxExtensionManifestWriterPluginWebpack({
@@ -116,12 +118,12 @@ module.exports = {
             includedIds: [],
             includedHubIds: [],
             excludedIds: [],
-            excludedHubIds: []
-          }
-        }
-      ]
-    })
-  ]
+            excludedHubIds: [],
+          },
+        },
+      ],
+    }),
+  ],
 };
 ```
 
@@ -137,27 +139,30 @@ const result: BuildOutput = await build({
   entrypoints: ["./src/app.ts"],
   outdir: "./dist",
   target: "browser",
-  format: "esm"
+  format: "esm",
 });
 
 // Generate the manifest after build
-await bunManifestWriter({
-  isESM: true,
-  outdir: "./dist", // Required for Bun
-  includeAllOutputJs: true,
-  appDefinitionMap: [
-    {
-      appId: "my-bun-app",
-      config: {
-        enabledEverywhere: true,
-        includedIds: [],
-        includedHubIds: [],
-        excludedIds: [],
-        excludedHubIds: []
-      }
-    }
-  ]
-}, result);
+await bunManifestWriter(
+  {
+    isESM: true,
+    outdir: "./dist", // Required for Bun
+    includeAllOutputJs: true,
+    appDefinitionMap: [
+      {
+        appId: "my-bun-app",
+        config: {
+          enabledEverywhere: true,
+          includedIds: [],
+          includedHubIds: [],
+          excludedIds: [],
+          excludedHubIds: [],
+        },
+      },
+    ],
+  },
+  result
+);
 ```
 
 ## Advanced Usage Examples
@@ -171,10 +176,7 @@ If you want to manually specify the entry points rather than automatically inclu
 manifestPlugin({
   isESM: true,
   includeAllOutputJs: false, // Don't include all JS files automatically
-  appRelativeEntryPointUrls: [
-    "./my-main-app.js",
-    "./another-feature.js"
-  ],
+  appRelativeEntryPointUrls: ["./my-main-app.js", "./another-feature.js"],
   appDefinitionMap: [
     {
       appId: "my-main-app",
@@ -183,8 +185,8 @@ manifestPlugin({
         includedIds: [],
         includedHubIds: [],
         excludedIds: [],
-        excludedHubIds: []
-      }
+        excludedHubIds: [],
+      },
     },
     {
       appId: "another-feature",
@@ -193,11 +195,11 @@ manifestPlugin({
         includedIds: ["specific-web-id"],
         includedHubIds: [],
         excludedIds: [],
-        excludedHubIds: []
-      }
-    }
-  ]
-})
+        excludedHubIds: [],
+      },
+    },
+  ],
+});
 ```
 
 ### Enabling Caching with Hash Generation
@@ -213,8 +215,8 @@ new SPFxExtensionManifestWriterPluginWebpack({
   generateCacheString: true, // Generate a unique hash for cache invalidation
   appDefinitionMap: [
     // App configuration
-  ]
-})
+  ],
+});
 ```
 
 ### Non-ESM Application Configuration
@@ -234,11 +236,11 @@ manifestPlugin({
         includedIds: [],
         includedHubIds: [],
         excludedIds: [],
-        excludedHubIds: []
-      }
-    }
-  ]
-})
+        excludedHubIds: [],
+      },
+    },
+  ],
+});
 ```
 
 ### Hot Module Replacement Integration
@@ -261,9 +263,9 @@ const ctx = await context({
     manifestPlugin({
       isESM: true,
       includeAllOutputJs: true,
-      generateCacheString: true
-    })
-  ]
+      generateCacheString: true,
+    }),
+  ],
 });
 
 await ctx.watch();

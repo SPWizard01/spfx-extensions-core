@@ -37,7 +37,7 @@ export class SPFxExtensionManifestWriterPluginWebpack implements WebpackPluginIn
         manifestToWrite.cacheString = hashedString;
       }
       const manifestDir = this.options.outdir ?? stats.compilation.outputOptions.path ?? "";
-      const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.txt`;
+      const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.json`;
       if (!this.options.includeAllOutputJs) {
         this.writeManifestFile(outputManifest, manifestToWrite);
         return;

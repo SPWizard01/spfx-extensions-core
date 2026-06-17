@@ -17,11 +17,11 @@ This document provides a detailed exploration of the internal implementation of 
 
 ## Introduction
 
-The SPFx Extensions framework includes plugins for esbuild, Webpack, and Bun that generate a `manifest.txt` file necessary for the framework to function. While the basic usage is covered in `Bundler-Plugins-Guide.md`, this document delves into the implementation details to provide a deeper understanding of how these plugins work internally.
+The SPFx Extensions framework includes plugins for esbuild, Webpack, and Bun that generate a `manifest.json` file necessary for the framework to function. While the basic usage is covered in `Bundler-Plugins-Guide.md`, this document delves into the implementation details to provide a deeper understanding of how these plugins work internally.
 
 ## Manifest Format Deep Dive
 
-The `manifest.txt` file is the cornerstone of the SPFx Extensions framework, containing critical information required for application registration and execution. This section explores the structure of this file in detail.
+The `manifest.json` file is the cornerstone of the SPFx Extensions framework, containing critical information required for application registration and execution. This section explores the structure of this file in detail.
 
 ### SPFxExtensionFolderManifest Interface
 
@@ -29,21 +29,21 @@ The manifest is defined by the `SPFxExtensionFolderManifest` interface:
 
 ```typescript
 export interface SPFxExtensionFolderManifest {
-    /**
-     * Relative path from manifest to the app entry point i.e. `./app.js` or `./somefolder/app.js?v=hash`
-     */
-    appRelativeEntryPointUrls: string[];
-    appDefinitionMap: SPFxExtensionAppDefinitionMapItem[];
-    /**
-     * If set to false, the app will not be loaded as ESM module.
-     * 
-     * This means that app owner is responsible for loading the app by calling `window.__SPFxExtensions.RegisterApp` and/or `window.__SPFxExtensions.InstantiateApp` methods.
-     * 
-     * If set to true, the app will be loaded as ESM module and the app owner is responsible for providing a default export in the entry point as `SPFxExtensionAppRegistration[]`.
-     */
-    isESM: boolean;
-    cacheString?: string;
-    enableCaching?: boolean;
+  /**
+   * Relative path from manifest to the app entry point i.e. `./app.js` or `./somefolder/app.js?v=hash`
+   */
+  appRelativeEntryPointUrls: string[];
+  appDefinitionMap: SPFxExtensionAppDefinitionMapItem[];
+  /**
+   * If set to false, the app will not be loaded as ESM module.
+   *
+   * This means that app owner is responsible for loading the app by calling `window.__SPFxExtensions.RegisterApp` and/or `window.__SPFxExtensions.InstantiateApp` methods.
+   *
+   * If set to true, the app will be loaded as ESM module and the app owner is responsible for providing a default export in the entry point as `SPFxExtensionAppRegistration[]`.
+   */
+  isESM: boolean;
+  cacheString?: string;
+  enableCaching?: boolean;
 }
 ```
 
@@ -61,14 +61,14 @@ The app definition map is defined by the `SPFxExtensionAppDefinitionMapItem` int
 
 ```typescript
 export interface SPFxExtensionAppDefinitionMapItem {
-    /**
-     * Id of app definition item or entrypoint url for NON-ESM.
-     */
-    appId: string;
-    /**
-     * Configuration of said app definition item.
-     */
-    config: SPFxExtensionAppMapItemConfig;
+  /**
+   * Id of app definition item or entrypoint url for NON-ESM.
+   */
+  appId: string;
+  /**
+   * Configuration of said app definition item.
+   */
+  config: SPFxExtensionAppMapItemConfig;
 }
 ```
 
@@ -76,28 +76,28 @@ And the configuration is defined by:
 
 ```typescript
 export interface SPFxExtensionAppMapItemConfig {
-    /**
-     * If enabled `excludedIds` and `excludedHubIds` will be scanned for exclusion.
-     * 
-     * Else `includedIds` and `includedHubIds` will be scanned for inclusion.
-     */
-    enabledEverywhere: boolean;
-    /**
-     * WebId or SiteId of the sp site where the app should be enabled;
-     */
-    includedIds: string[];
-    /**
-     * HubId (which is site collection id) of the sp site where the app should be enabled.
-     */
-    includedHubIds: string[];
-    /**
-     * WebId or SiteId of the sp site where the app should be disabled;
-     */
-    excludedIds: string[];
-    /**
-     * HubId (which is site collection id) of the sp site where the app should be disabled.
-     */
-    excludedHubIds: string[];
+  /**
+   * If enabled `excludedIds` and `excludedHubIds` will be scanned for exclusion.
+   *
+   * Else `includedIds` and `includedHubIds` will be scanned for inclusion.
+   */
+  enabledEverywhere: boolean;
+  /**
+   * WebId or SiteId of the sp site where the app should be enabled;
+   */
+  includedIds: string[];
+  /**
+   * HubId (which is site collection id) of the sp site where the app should be enabled.
+   */
+  includedHubIds: string[];
+  /**
+   * WebId or SiteId of the sp site where the app should be disabled;
+   */
+  excludedIds: string[];
+  /**
+   * HubId (which is site collection id) of the sp site where the app should be disabled.
+   */
+  excludedHubIds: string[];
 }
 ```
 
@@ -105,7 +105,7 @@ export interface SPFxExtensionAppMapItemConfig {
 
 When the framework loads, it:
 
-1. Fetches the `manifest.txt` file
+1. Fetches the `manifest.json` file
 2. Validates the manifest structure
 3. For each entry point in `appRelativeEntryPointUrls`:
    - If `isESM` is true, dynamically imports the entry point as an ESM module
@@ -120,14 +120,14 @@ The esbuild plugin (`manifestPlugin`) is implemented as a function that returns 
 
 ```typescript
 export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugin {
-    return {
-        name: 'esbuild-spfxmanifest-plugin',
-        setup(build: PluginBuild) {
-            build.onEnd(async (buildResult) => {
-                // Manifest generation logic
-            });
-        }
-    }
+  return {
+    name: "esbuild-spfxmanifest-plugin",
+    setup(build: PluginBuild) {
+      build.onEnd(async (buildResult) => {
+        // Manifest generation logic
+      });
+    },
+  };
 }
 ```
 
@@ -145,22 +145,19 @@ The webpack plugin (`SPFxExtensionManifestWriterPluginWebpack`) is implemented a
 
 ```typescript
 export class SPFxExtensionManifestWriterPluginWebpack implements WebpackPluginInstance {
-    constructor(private options: SPFxWebpackManifestPluginOptions) {
-        // Validation logic
-    }
-    
-    writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionFolderManifest) {
-        // File writing logic
-    }
+  constructor(private options: SPFxWebpackManifestPluginOptions) {
+    // Validation logic
+  }
 
-    apply(compiler: Compiler) {
-        compiler.hooks.done.tap(
-            'SPFxExtensions Manifest Writer Plugin',
-            (stats) => {
-                // Manifest generation logic
-            }
-        );
-    }
+  writeManifestFile(outputManifest: string, manifestToWrite: SPFxExtensionFolderManifest) {
+    // File writing logic
+  }
+
+  apply(compiler: Compiler) {
+    compiler.hooks.done.tap("SPFxExtensions Manifest Writer Plugin", (stats) => {
+      // Manifest generation logic
+    });
+  }
 }
 ```
 
@@ -177,12 +174,13 @@ Key components of the implementation:
 Unlike the other plugins, the Bun implementation (`bunManifestWriter`) is not a plugin in the traditional sense but a function that's called after the build completes:
 
 ```typescript
-export async function bunManifestWriter(options: SPFxBunBuildManifestPluginOptions, buildOutput: BuildOutput) {
-    // Validation and setup
-    
-    // Manifest generation logic
-    
-    // File writing
+export async function bunManifestWriter(
+  options: SPFxBunBuildManifestPluginOptions,
+  buildOutput: BuildOutput
+) {
+  // Validation and setup
+  // Manifest generation logic
+  // File writing
 }
 ```
 
@@ -263,7 +261,7 @@ await build({
   plugins: [
     sassPlugin({
       type: "css",
-      loadPaths: ["./src/styles"]
+      loadPaths: ["./src/styles"],
     }),
     manifestPlugin({
       isESM: true,
@@ -278,12 +276,12 @@ await build({
             includedIds: [],
             includedHubIds: [],
             excludedIds: [],
-            excludedHubIds: []
-          }
-        }
-      ]
-    })
-  ]
+            excludedHubIds: [],
+          },
+        },
+      ],
+    }),
+  ],
 });
 ```
 
@@ -312,7 +310,7 @@ const ctx = await context({
   plugins: [
     // HMR plugin
     esbuildHMRPlugin({ port: 3333 }),
-    
+
     // Manifest plugin
     manifestPlugin({
       isESM: true,
@@ -326,24 +324,27 @@ const ctx = await context({
             includedIds: [],
             includedHubIds: [],
             excludedIds: [],
-            excludedHubIds: []
-          }
-        }
-      ]
-    })
-  ]
+            excludedHubIds: [],
+          },
+        },
+      ],
+    }),
+  ],
 });
 
 // Watch for changes
 await ctx.watch();
 
 // Start development server
-const devServer = createServer({
-  cert,
-  key
-}, async (req, res) => {
-  // Server implementation
-});
+const devServer = createServer(
+  {
+    cert,
+    key,
+  },
+  async (req, res) => {
+    // Server implementation
+  }
+);
 
 devServer.listen(3333, () => {
   console.log("Development server running on https://localhost:3333");
@@ -356,42 +357,40 @@ For a webpack setup with multiple entry points and optimization:
 
 ```javascript
 const path = require("path");
-const { SPFxExtensionManifestWriterPluginWebpack } = require("@spfx-extensions/core/plugins/webpack");
+const {
+  SPFxExtensionManifestWriterPluginWebpack,
+} = require("@spfx-extensions/core/plugins/webpack");
 const TerserPlugin = require("terser-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
   entry: {
     main: "./src/main.ts",
-    admin: "./src/admin.ts"
+    admin: "./src/admin.ts",
   },
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "[name].[contenthash].js",
-    clean: true
+    clean: true,
   },
   optimization: {
     minimizer: [new TerserPlugin()],
     splitChunks: {
-      chunks: 'all',
-    }
+      chunks: "all",
+    },
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: /node_modules/
+        exclude: /node_modules/,
       },
       {
         test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          "css-loader",
-          "sass-loader"
-        ]
-      }
-    ]
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+      },
+    ],
   },
   plugins: [
     new MiniCssExtractPlugin(),
@@ -404,19 +403,19 @@ module.exports = {
         {
           appId: "main-app",
           config: {
-            enabledEverywhere: true
-          }
+            enabledEverywhere: true,
+          },
         },
         {
           appId: "admin-app",
           config: {
             enabledEverywhere: false,
-            includedIds: ["admin-site-id"]
-          }
-        }
-      ]
-    })
-  ]
+            includedIds: ["admin-site-id"],
+          },
+        },
+      ],
+    }),
+  ],
 };
 ```
 
@@ -438,14 +437,14 @@ export interface CustomManifestPluginOptions {
 
 export function customManifestPlugin(options: CustomManifestPluginOptions): Plugin {
   return {
-    name: 'custom-spfxmanifest-plugin',
+    name: "custom-spfxmanifest-plugin",
     setup(build: PluginBuild) {
       build.onEnd(async (buildResult) => {
         if (!buildResult.metafile) {
           console.error("No metafile found");
           return;
         }
-        
+
         // Create manifest with custom logic
         const manifestToWrite: SPFxExtensionFolderManifest = {
           appRelativeEntryPointUrls: [],
@@ -457,31 +456,31 @@ export function customManifestPlugin(options: CustomManifestPluginOptions): Plug
                 includedIds: [],
                 includedHubIds: [],
                 excludedIds: [],
-                excludedHubIds: []
-              }
-            }
+                excludedHubIds: [],
+              },
+            },
           ],
           isESM: options.isESM,
           enableCaching: false,
-          cacheString: ""
+          cacheString: "",
         };
-        
+
         // Custom entry point processing
         const outputDir = build.initialOptions.outdir ?? "";
         const outputJs = Object.keys(buildResult.metafile.outputs)
-          .filter(k => k.toLowerCase().endsWith(".js"))
-          .map(key => {
+          .filter((k) => k.toLowerCase().endsWith(".js"))
+          .map((key) => {
             // Custom path transformation
             return key.replace(outputDir, ".");
           });
-        
+
         manifestToWrite.appRelativeEntryPointUrls = outputJs;
-        
+
         // Write the manifest
-        const manifestLocation = `${outputDir}/custom-manifest.txt`;
+        const manifestLocation = `${outputDir}/custom-manifest.json`;
         await writeFile(manifestLocation, JSON.stringify(manifestToWrite));
       });
-    }
+    },
   };
 }
 ```
@@ -500,49 +499,46 @@ export interface CustomWebpackManifestPluginOptions {
 
 export class CustomWebpackManifestPlugin implements WebpackPluginInstance {
   constructor(private options: CustomWebpackManifestPluginOptions) {}
-  
+
   apply(compiler: Compiler) {
-    compiler.hooks.done.tap(
-      'Custom SPFx Manifest Plugin',
-      (stats) => {
-        const outputPath = stats.compilation.outputOptions.path ?? "";
-        const outputManifest = `${outputPath}/custom-manifest.txt`;
-        
-        // Create manifest with custom logic
-        const manifestToWrite: SPFxExtensionFolderManifest = {
-          appRelativeEntryPointUrls: [],
-          appDefinitionMap: [
-            {
-              appId: "custom-webpack-app",
-              config: {
-                enabledEverywhere: true,
-                includedIds: [],
-                includedHubIds: [],
-                excludedIds: [],
-                excludedHubIds: []
-              }
-            }
-          ],
-          isESM: this.options.isESM,
-          enableCaching: false,
-          cacheString: ""
-        };
-        
-        // Custom entry point processing
-        const assets: string[] = [];
-        const keys = Array.from(stats.compilation.assetsInfo.keys());
-        keys.forEach((key: string) => {
-          assets.push(key.toLowerCase());
-        });
-        
-        const jsRegex = /\.js\??/;
-        const outputJs = assets.filter(k => jsRegex.test(k));
-        manifestToWrite.appRelativeEntryPointUrls = outputJs;
-        
-        // Write the manifest
-        writeFileSync(outputManifest, JSON.stringify(manifestToWrite));
-      }
-    );
+    compiler.hooks.done.tap("Custom SPFx Manifest Plugin", (stats) => {
+      const outputPath = stats.compilation.outputOptions.path ?? "";
+      const outputManifest = `${outputPath}/custom-manifest.json`;
+
+      // Create manifest with custom logic
+      const manifestToWrite: SPFxExtensionFolderManifest = {
+        appRelativeEntryPointUrls: [],
+        appDefinitionMap: [
+          {
+            appId: "custom-webpack-app",
+            config: {
+              enabledEverywhere: true,
+              includedIds: [],
+              includedHubIds: [],
+              excludedIds: [],
+              excludedHubIds: [],
+            },
+          },
+        ],
+        isESM: this.options.isESM,
+        enableCaching: false,
+        cacheString: "",
+      };
+
+      // Custom entry point processing
+      const assets: string[] = [];
+      const keys = Array.from(stats.compilation.assetsInfo.keys());
+      keys.forEach((key: string) => {
+        assets.push(key.toLowerCase());
+      });
+
+      const jsRegex = /\.js\??/;
+      const outputJs = assets.filter((k) => jsRegex.test(k));
+      manifestToWrite.appRelativeEntryPointUrls = outputJs;
+
+      // Write the manifest
+      writeFileSync(outputManifest, JSON.stringify(manifestToWrite));
+    });
   }
 }
 ```
@@ -574,30 +570,30 @@ export async function customBunManifestWriter(
           includedIds: [],
           includedHubIds: [],
           excludedIds: [],
-          excludedHubIds: []
-        }
-      }
+          excludedHubIds: [],
+        },
+      },
     ],
     isESM: options.isESM,
     enableCaching: false,
-    cacheString: ""
+    cacheString: "",
   };
-  
+
   // Custom entry point processing
-  const entryPoints = buildOutput.outputs.filter(o => o.kind === "entry-point");
+  const entryPoints = buildOutput.outputs.filter((o) => o.kind === "entry-point");
   const epTable: string[] = [];
-  
+
   for (const ep of entryPoints) {
     const basePathUrl = Bun.pathToFileURL(options.outdir);
     const epUrl = Bun.pathToFileURL(ep.path);
     const relativePath = epUrl.href.replace(`${basePathUrl.href}/`, "");
     epTable.push(relativePath);
   }
-  
+
   manifestToWrite.appRelativeEntryPointUrls = epTable;
-  
+
   // Write the manifest
-  const outputManifest = `${options.outdir}/custom-manifest.txt`;
+  const outputManifest = `${options.outdir}/custom-manifest.json`;
   await Bun.write(outputManifest, JSON.stringify(manifestToWrite));
 }
 ```
@@ -613,7 +609,7 @@ To integrate custom plugins with the SPFx Extensions framework, ensure they:
 The default paths and naming conventions expected by the framework are:
 
 - Location: Output directory of your bundler
-- Filename: `manifest.txt`
+- Filename: `manifest.json`
 - Format: JSON stringified object
 
 By following these patterns, your custom plugins will integrate seamlessly with the framework.

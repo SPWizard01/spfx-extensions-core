@@ -108,7 +108,7 @@ export async function isFileAllowedToRun(absoluteFileUrl: URL, appName: string, 
       `is not allowed to be executed. Please add it to whitelist @ ${SPFX_EXTENSIONS_SITE_URL}.`
     );
     logGenericCoreWarning(
-      `If you are a developer you can enable this app by adding window.localStorage item ${DEBUG_KEY_APP_PREFIX}${appName} with a number value corresponding to development port of the localhost server or a base URL where manifest.txt resides.`
+      `If you are a developer you can enable this app by adding window.localStorage item ${DEBUG_KEY_APP_PREFIX}${appName} with a number value corresponding to development port of the localhost server or a base URL where manifest.json resides.`
     );
 
     return false;

@@ -97,7 +97,7 @@ describe("allowedAppsService", () => {
     const cached = [{ Id: 1, Title: "A", EntryPointUrl: "*" }];
     const { mod } = await importServiceWithMocks({ cached, evicted: false });
     const url = new URL("https://contoso/site/app.js");
-    await expect(mod.isFileAllowedToRun(url, "manifest.txt")).resolves.toBe(true);
+    await expect(mod.isFileAllowedToRun(url, "manifest.json")).resolves.toBe(true);
   });
 
   it("logs info and refreshes when cache mismatch (evicted=true but cached>0)", async () => {
@@ -108,7 +108,7 @@ describe("allowedAppsService", () => {
     });
     // Import triggers cache check; calling isFileAllowedToRun ensures module was loaded
     const url = new URL("https://contoso/not-allowed/app.js");
-    await mod.isFileAllowedToRun(url, "manifest.txt");
+    await mod.isFileAllowedToRun(url, "manifest.json");
     expect(logs.info).toHaveBeenCalled();
   });
 
@@ -147,13 +147,13 @@ describe("allowedAppsService", () => {
       coreConfig: [{ Title: "EnableAppWhiteList", Data: "false" }],
     });
     const url = new URL("https://contoso.sharepoint.com/sites/site/SiteAssets/app.js");
-    await expect(mod.isFileAllowedToRun(url, "manifest.txt", true)).resolves.toBe(true);
+    await expect(mod.isFileAllowedToRun(url, "manifest.json", true)).resolves.toBe(true);
   });
 
   it("isFileAllowedToRun returns true when exact origin+path match (from API)", async () => {
     const url = new URL("https://contoso.sharepoint.com/sites/site/SiteAssets/app.js");
     const { mod } = await importServiceWithMocks({ apiList: [{ EntryPointUrl: url.href }] });
-    await expect(mod.isFileAllowedToRun(url, "manifest.txt", true)).resolves.toBe(true);
+    await expect(mod.isFileAllowedToRun(url, "manifest.json", true)).resolves.toBe(true);
   });
 
   it("isFileAllowedToRun logs error for invalid allowed URL entries and returns false", async () => {
@@ -162,7 +162,7 @@ describe("allowedAppsService", () => {
       evicted: false,
     });
     const url = new URL("https://contoso.sharepoint.com/sites/site/SiteAssets/app.js");
-    const res = await mod.isFileAllowedToRun(url, "manifest.txt");
+    const res = await mod.isFileAllowedToRun(url, "manifest.json");
     expect(res).toBe(false);
     expect(logs.error).toHaveBeenCalled();
   });
@@ -170,7 +170,7 @@ describe("allowedAppsService", () => {
   it("isFileAllowedToRun returns true when URL is in debug", async () => {
     const { mod } = await importServiceWithMocks({ debugUrl: "debug" });
     const url = new URL("https://contoso/debug/app.js");
-    await expect(mod.isFileAllowedToRun(url, "manifest.txt")).resolves.toBe(true);
+    await expect(mod.isFileAllowedToRun(url, "manifest.json")).resolves.toBe(true);
   });
 
   it("isFileAllowedToRun warns and returns false when not allowed and not debug", async () => {
@@ -181,7 +181,7 @@ describe("allowedAppsService", () => {
       coreConfig: [{ Title: "EnableAppWhiteList", Data: "true" }],
     });
     const url = new URL("https://contoso/not-allowed/app.js");
-    const res = await mod.isFileAllowedToRun(url, "manifest.txt", true);
+    const res = await mod.isFileAllowedToRun(url, "manifest.json", true);
     expect(res).toBe(false);
     expect(logs.warn).toHaveBeenCalled();
   });

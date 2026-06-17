@@ -22,12 +22,12 @@ export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<Fil
     isError: false,
   };
 
-  // dist/somdir/manifest.txt
+  // dist/somdir/manifest.json
   const manifestFile = files.find((fl) => fl.path.toLowerCase().endsWith(MANIFEST_NAME));
   let basePathIdx = -1;
   let basePath = "/";
   if (!manifestFile) {
-    result.warnings.push("No manifest.txt file found.");
+    result.warnings.push("No manifest.json file found.");
     result.isError = false;
   } else {
     basePathIdx = manifestFile.path.lastIndexOf("/");
@@ -62,7 +62,7 @@ export async function parseUploadFiles(files: File[]): Promise<ApiCallResult<Fil
   if (basePath !== "/") {
     nonBasePathFiles = files.filter((fl) => !fl.path.startsWith(basePath));
     if (nonBasePathFiles.length > 0) {
-      result.warnings.push("Some files are outside of manifest.txt directory.");
+      result.warnings.push("Some files are outside of manifest.json directory.");
       result.warnings.push(...nonBasePathFiles.map((file) => `File: ${file.relativePath}`));
     }
   }

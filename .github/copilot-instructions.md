@@ -24,7 +24,7 @@
 
 - `build.ts` runs Bun twice: once for core entrypoints (`entrypoints.ts`) and once for plugin packages (`src/plugins/{bun,esbuild,webpack}`), then emits declarations via `tsc -p tsconfig.json`.
 - `serve.ts` wraps `bun-dev-server` with HTTPS (cert/key files at repo root) and calls `bunManifestWriter` post-build; requests hit port `33355` unless overridden.
-- Manifest writers live in `src/plugins/*/manifestPlugin.*`; they all emit `manifest.txt` matching `models/appFolderManifest.ts`. Follow `docs/Advanced-Plugin-Implementation-Guide.md` and `docs/Plugin-Integration-Lifecycle.md` for option semantics.
+- Manifest writers live in `src/plugins/*/manifestPlugin.*`; they all emit `manifest.json` matching `models/appFolderManifest.ts`. Follow `docs/Advanced-Plugin-Implementation-Guide.md` and `docs/Plugin-Integration-Lifecycle.md` for option semantics.
 
 ## Developer Workflows
 

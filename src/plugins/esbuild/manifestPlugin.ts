@@ -36,7 +36,7 @@ export function manifestPlugin(options: SPFxESBuildManifestPluginOptions): Plugi
           manifestToWrite.cacheString = hashedString;
         }
         const outputDir = build.initialOptions.outdir ?? "";
-        const manifestLocation = `${outputDir ? `${outputDir}/` : ``}manifest.txt`;
+        const manifestLocation = `${outputDir ? `${outputDir}/` : ``}manifest.json`;
         if (!options.includeAllOutputJs) {
           await writeManifestFile(manifestLocation, manifestToWrite);
           return;
