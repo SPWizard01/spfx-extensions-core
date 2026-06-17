@@ -19,6 +19,7 @@ export const CONFIGURATION_LIST_NAME = "SPFxExtensionsConfiguration";
 export const ALLOWEDAPPSLIST_NAME = "SPFxExtensionsWhiteList";
 export const SPFX_EXTENSIONS_FOLDER = "SPFxExtensions";
 export const WELL_KNOWN_MANIFEST_LOCATION = `/${SPFX_EXTENSIONS_FOLDER}/`;
+export const PUBLIC_CDN_HOST = "public-cdn.sharepointonline.com";
 export const SPFX_EXTENSIONS_DATA_SITE = "SPFxExtensionsData";
 export const SPFxExtensionCore = "[SPFxExtensionCore]" as const;
 export const EMPTY_APP_MANIFEST: SPFxExtensionFolderManifest = {

@@ -71,4 +71,12 @@ export interface SPFxExtensionFolderManifest {
   appRelativeEntryPointUrls: string[];
   cacheString?: string;
   enableCaching?: boolean;
+  /**
+   * When `true`, entry point and manual entry URLs are loaded through the SharePoint Online
+   * public CDN instead of the originating SharePoint host.
+   *
+   * The resolved URL `https://{host}/{path}` is rewritten to
+   * `https://public-cdn.sharepointonline.com/{host}/{path}`, preserving the file name and cache query.
+   */
+  usePublicCDN?: boolean;
 }
