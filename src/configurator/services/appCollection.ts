@@ -112,7 +112,8 @@ export async function getAppCollectionConfig(sp: SPFI) {
   }
   try {
     const content = await appsQuery.getBlob();
-    const data = (await content.json()) as SPFxExtensionCollectionManifest;
+    const textContent = await content.text();
+    const data = JSON.parse(textContent) as SPFxExtensionCollectionManifest;
     if (!Array.isArray(data.enabledAppCollections) || !Array.isArray(data.urlMap)) {
       const msg = `Invalid data inside ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}, it should be an array`;
       logGenericCoreError(msg);

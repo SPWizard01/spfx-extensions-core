@@ -2,6 +2,7 @@ import { hash } from "crypto";
 import { writeFileSync } from "fs";
 import type { Compiler, WebpackPluginInstance } from "webpack";
 import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
+import { MANIFEST_NAME } from "../../utilities/constants";
 interface SPFxWebpackManifestPluginOptions extends Partial<SPFxExtensionFolderManifest> {
   includeAllOutputJs?: boolean;
   outdir?: string;
@@ -31,13 +32,14 @@ export class SPFxExtensionManifestWriterPluginWebpack implements WebpackPluginIn
         manualEntries: this.options.manualEntries ?? [],
         enableCaching: this.options.enableCaching ?? false,
         cacheString: this.options.cacheString ?? "",
+        usePublicCDN: this.options.usePublicCDN ?? false,
       };
       if (this.options.generateCacheString) {
         const hashedString = hash("sha1", `${Date.now()}`, "hex");
         manifestToWrite.cacheString = hashedString;
       }
       const manifestDir = this.options.outdir ?? stats.compilation.outputOptions.path ?? "";
-      const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.json`;
+      const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}${MANIFEST_NAME}`;
       if (!this.options.includeAllOutputJs) {
         this.writeManifestFile(outputManifest, manifestToWrite);
         return;
