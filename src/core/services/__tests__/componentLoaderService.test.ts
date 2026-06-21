@@ -5,11 +5,11 @@ import { toPublicCdnUrl } from "../componentLoaderService";
 describe("core/services/componentLoaderService toPublicCdnUrl", () => {
   it("rewrites the host into a path segment under the public CDN", () => {
     const input = new URL(
-      "https://dbgroupsyst.sharepoint.com/SPFxExtensions/spointra/js/entrypoint-j9hpz339.js"
+      "https://tenant.sharepoint.com/SPFxExtensions/app/js/entrypoint-j9hpz339.js"
     );
     const result = toPublicCdnUrl(input);
     expect(result.toString()).toBe(
-      "https://public-cdn.sharepointonline.com/dbgroupsyst.sharepoint.com/SPFxExtensions/spointra/js/entrypoint-j9hpz339.js"
+      "https://public-cdn.sharepointonline.com/tenant.sharepoint.com/SPFxExtensions/app/js/entrypoint-j9hpz339.js"
     );
   });
 
