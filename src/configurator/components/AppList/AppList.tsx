@@ -10,10 +10,7 @@ import {
   Toolbar,
   ToolbarButton,
 } from "@fluentui/react-components";
-import {
-  FolderRegular,
-  WebAsset16Regular,
-} from "@fluentui/react-icons";
+import { FolderRegular, WebAsset16Regular } from "@fluentui/react-icons";
 import { cloneObject } from "../../../utilities/helpers";
 import type { AppCollectionConfigurationItem } from "../../models/appCollectionConfigurationItem";
 import {
@@ -24,10 +21,7 @@ import {
   selectedAppItem,
   updateApp,
 } from "../../runtimeStore";
-import {
-  getAppCollectionConfig,
-  updateAppCollectionConfig,
-} from "../../services/appCollection";
+import { getAppCollectionConfig, updateAppCollectionConfig } from "../../services/appCollection";
 import { Stack } from "../common/Stack";
 import { AddAppCollection } from "./AddAppCollection";
 import { AppCollectionActivator } from "./AppCollectionActivator";
@@ -35,14 +29,9 @@ import { DebugPopup } from "./DebugPopup";
 import { DeleteApp } from "./DeleteApp";
 import { ManageSitesDrawerSignal } from "./ManageSitesDrawer";
 
-async function updateCollection(
-  app: AppCollectionConfigurationItem,
-  enabled: boolean
-) {
+async function updateCollection(app: AppCollectionConfigurationItem, enabled: boolean) {
   const dataOnServer = await getAppCollectionConfig(configurationWebSP);
-  const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(
-    app.name
-  );
+  const isEnabledOnServer = dataOnServer.data.enabledAppCollections.includes(app.name);
   if (enabled !== isEnabledOnServer) {
     if (enabled) {
       dataOnServer.data.enabledAppCollections.push(app.name);
@@ -103,9 +92,7 @@ export function AppList(_props: ApplistProps) {
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <TableHeaderCell key={column.columnId}>
-                {column.text}
-              </TableHeaderCell>
+              <TableHeaderCell key={column.columnId}>{column.text}</TableHeaderCell>
             ))}
           </TableRow>
         </TableHeader>
@@ -125,10 +112,7 @@ export function AppList(_props: ApplistProps) {
               </TableCell>
               <TableCell>
                 <TableCellLayout>
-                  <AppCollectionActivator
-                    app={item}
-                    onChange={updateCollection}
-                  />
+                  <AppCollectionActivator app={item} onChange={updateCollection} />
                 </TableCellLayout>
               </TableCell>
               <TableCell>

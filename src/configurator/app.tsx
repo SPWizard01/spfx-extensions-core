@@ -18,6 +18,14 @@ document.querySelector("#spCommandBar button[name='Edit']")?.setAttribute("style
 
 // const thm = createV9Theme(window.__themeState__.theme)
 export function App(_props: AppProps) {
+  //  const doc = window.document.implementation.createHTMLDocument();
+  delete window.__tabsterInstance;
+  delete window.__tabsterInstanceContext;
+  delete window.__tabsterShadowDOMAPI;
+
+  delete window.__keyborg;
+  delete window.__keyborgData;
+
   return (
     <FluentProvider
       theme={thm}
