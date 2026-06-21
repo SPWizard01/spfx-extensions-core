@@ -1,5 +1,6 @@
 import type { BuildOutput } from "bun";
 import type { SPFxExtensionFolderManifest } from "../../models/appFolderManifest";
+import { MANIFEST_NAME } from "../../utilities/constants";
 interface SPFxBunBuildManifestPluginOptions extends Partial<SPFxExtensionFolderManifest> {
   includeAllOutputJs?: boolean;
   outdir: string;
@@ -24,6 +25,7 @@ export async function bunManifestWriter(
     manualEntries: options.manualEntries ?? [],
     enableCaching: options.enableCaching ?? false,
     cacheString: options.cacheString ?? "",
+    usePublicCDN: options.usePublicCDN ?? false,
   };
   if (options.generateCacheString) {
     const hash = Bun.CryptoHasher.hash("sha1", `${Date.now()}`, "hex");
@@ -32,7 +34,7 @@ export async function bunManifestWriter(
 
   const entryPoints = buildOutput.outputs.filter((o) => o.kind === "entry-point");
   const manifestDir = options.outdir;
-  const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}manifest.json`;
+  const outputManifest = `${manifestDir ? `${manifestDir}/` : ``}${MANIFEST_NAME}`;
   const dist = manifestDir.replace(/^\.*\//, "");
 
   if (!options.includeAllOutputJs) {

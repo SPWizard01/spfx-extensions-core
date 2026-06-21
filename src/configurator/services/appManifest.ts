@@ -36,7 +36,8 @@ export async function getAppManifest(sp: SPFI, appName: string) {
   }
   try {
     const content = await manifestQuery.getBlob();
-    const data = (await content.json()) as SPFxExtensionFolderManifest;
+    const textContent = await content.text();
+    const data = JSON.parse(textContent) as SPFxExtensionFolderManifest;
     result.data = data;
     return result;
   } catch (error) {
