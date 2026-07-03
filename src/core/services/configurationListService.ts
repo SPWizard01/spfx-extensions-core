@@ -133,7 +133,7 @@ async function ensureConfigurationList() {
   return newList;
 }
 
-async function getConfigurationListItemsFromAPI() {
+export async function getConfigurationListItemsFromAPI() {
   const requestUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items?$select=Title,Data`;
   const config = {
     headers: {
@@ -150,6 +150,25 @@ async function getConfigurationListItemsFromAPI() {
   const data = await req.json();
   const results = data.d.results as ConfigurationListBaseData[];
   return results;
+}
+
+/**
+ * Cheap change signal: the list's `LastItemUserModifiedDate` changes whenever any
+ * item is added/edited/removed. Polling this avoids pulling all items every time.
+ */
+export async function getConfigChangeToken(): Promise<string> {
+  const requestUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')?$select=LastItemUserModifiedDate`;
+  const req = await fetch(requestUrl, {
+    headers: {
+      Accept: "application/json;odata=verbose",
+    },
+  });
+  if (req.status !== 200) {
+    logGenericCoreError("Unable to fetch configuration list change token.");
+    return "";
+  }
+  const data = await req.json();
+  return (data.d?.LastItemUserModifiedDate as string) ?? "";
 }
 
 async function createDefaultListItems() {
@@ -190,6 +209,23 @@ export function getConfigurationListData(fresh = false) {
   }
   configurationListDataPromise = getConfigurationListDataCached();
   return configurationListDataPromise;
+}
+
+/**
+ * Clears the in-memory memo so the next `getConfigurationListData()` re-reads IndexedDB.
+ * Used by non-leader tabs after the leader commits new config to the shared cache.
+ */
+export function invalidateConfigMemo() {
+  configurationListDataPromise = undefined;
+}
+
+/**
+ * Writes freshly fetched items to IndexedDB and refreshes the in-memory memo so
+ * `getCoreConfig()` serves the new values without a page reload.
+ */
+export async function commitConfigItems(items: ConfigurationListBaseData[]) {
+  await addOrUpdateExtensionConfigs(items, 240);
+  configurationListDataPromise = Promise.resolve(items);
 }
 
 async function getConfigurationListDataCached() {

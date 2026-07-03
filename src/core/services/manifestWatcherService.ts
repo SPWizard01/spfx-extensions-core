@@ -10,6 +10,7 @@ import { logGenericCoreError } from "./loggingService";
 import { getCollectionConfig } from "./txtAppsService";
 import { getFolderManifest } from "./txtManifestService";
 const CORE_MANIFEST_CHECK_INTERVAL = 90000;
+const MANIFEST_LOCK_PREFIX = "spfxext-manifest:";
 let manifestWatch: number = 0;
 
 export function registerManifestWatcher(contextChange = false) {
@@ -50,6 +51,23 @@ async function collectionCheckForLocation(
   locationType: ManifestLocation
 ) {
   const manifestUrl = (wellKnownLocation + APPCOLLECTION_MANIFEST_NAME).toLowerCase();
+  // Only one tab per browser needs to refresh a given location per tick. Locking
+  // per-location (not globally) de-duplicates the shared root check and prevents
+  // simultaneous-tick refetch races, while each tab still keeps its own
+  // site/web/hub manifests fresh.
+  await navigator.locks.request(
+    `${MANIFEST_LOCK_PREFIX}${manifestUrl}`,
+    { ifAvailable: true },
+    (lock) => checkCollectionLocation(lock, manifestUrl, locationType)
+  );
+}
+
+async function checkCollectionLocation(
+  lock: Lock | null,
+  manifestUrl: string,
+  locationType: ManifestLocation
+) {
+  if (lock === null) return; // another tab is already checking this location
   const collectionBase = {
     url: manifestUrl,
     type: locationType,

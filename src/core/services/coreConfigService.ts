@@ -27,14 +27,45 @@ export async function getCoreConfig(fresh = false): Promise<ConfigurationListBas
 }
 
 /**
+ * Reads a single global setting's raw value by its `Title`, or `undefined` when absent.
+ */
+export async function getCoreConfigValue(title: ConfigurationListBaseData["Title"], fresh = false) {
+  const coreConfig = await getCoreConfig(fresh);
+  return coreConfig.find((c) => c.Title === title)?.Data;
+}
+
+/**
+ * Reads a global setting as a boolean (`"true"` => `true`), falling back to
+ * `defaultValue` when the setting is missing.
+ */
+export async function getBooleanCoreConfig(
+  title: ConfigurationListBaseData["Title"],
+  defaultValue = false,
+  fresh = false
+): Promise<boolean> {
+  const value = await getCoreConfigValue(title, fresh);
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+  return value === "true";
+}
+
+/**
  * Points to root sharepoint location into app catalog
  * OnPrem/SPO: ```{APP_CATALOG_URL}/SPFxExtensionsData/SPFxExtensions/```
  */
 export async function getRootCDNLocation() {
-  const coreConfig = await getCoreConfig();
   const ROOT_CDN_LOCATION =
-    coreConfig.find((c) => c.Title === "RootCDNLocation")?.Data ?? `${SPFX_EXTENSIONS_SITE_URL}`;
+    (await getCoreConfigValue("RootCDNLocation")) ?? `${SPFX_EXTENSIONS_SITE_URL}`;
 
   const ROOT_APPS_LOCATION = `${ROOT_CDN_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
   return ROOT_APPS_LOCATION;
+}
+
+/**
+ * When enabled, `manifest.json` / `collectionconfig.json` are fetched through the
+ * SharePoint Online public CDN while scanning. Defaults to `false`.
+ */
+export function getUsePublicCDNForManifests() {
+  return getBooleanCoreConfig("UsePublicCDNForManifests", false);
 }

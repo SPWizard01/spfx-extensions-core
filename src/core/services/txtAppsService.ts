@@ -4,6 +4,7 @@ import type {
   ManifestBase,
   ManifestLocation,
 } from "../../models/cache";
+import { toPublicCdnUrl } from "../../utilities/cdn";
 import {
   APPCOLLECTION_MANIFEST_NAME,
   EMPTY_COLLECTION_MANIFEST,
@@ -13,7 +14,7 @@ import {
 import { somethingIsInDebug } from "../../utilities/debug";
 import { getContentHash } from "../../utilities/digest";
 import { getSiteAbsoluteUrl, getWebAbsoluteUrl } from "./contextService";
-import { getRootCDNLocation } from "./coreConfigService";
+import { getRootCDNLocation, getUsePublicCDNForManifests } from "./coreConfigService";
 import { getCollectionConfigFromCache, setOrUpdateCollectionConfig } from "./coreIdbService";
 import { getHubSiteUrl } from "./hubDataService";
 import { logGenericCoreDebug, logGenericCoreError, logGenericCoreWarning } from "./loggingService";
@@ -43,7 +44,9 @@ export async function getCollectionConfig(
       return cachedManifest;
     }
   }
-  const fetchUrl = `${fetchLocation}?v=${Date.now()}`;
+  const usePublicCdn = await getUsePublicCDNForManifests();
+  const cacheBustedUrl = new URL(`${fetchLocation}?v=${Date.now()}`, window.location.origin);
+  const fetchUrl = (usePublicCdn ? toPublicCdnUrl(cacheBustedUrl) : cacheBustedUrl).toString();
   const appCollection = await fetchAndParseCollectionConfigManifest(fetchUrl);
   const hash = await getContentHash(JSON.stringify(appCollection));
   const baseResult = {

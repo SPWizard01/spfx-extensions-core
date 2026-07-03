@@ -8,6 +8,7 @@ export const ConfigurationNames = {
   RootCDNLocation: "RootCDNLocation",
   InterceptHistory: "InterceptHistory",
   EnableAppWhiteList: "EnableAppWhiteList",
+  UsePublicCDNForManifests: "UsePublicCDNForManifests",
   AppCatalogUrl: "AppCatalogUrl",
   SPFxDataSite: "SPFxDataSite",
   ConfiguratorPageData: "ConfiguratorPageData",
@@ -22,6 +23,10 @@ const CoreDefaultConfiguration: ConfigurationListBaseData[] = [
   },
   {
     Title: "EnableAppWhiteList",
+    Data: "false",
+  },
+  {
+    Title: "UsePublicCDNForManifests",
     Data: "false",
   },
   {

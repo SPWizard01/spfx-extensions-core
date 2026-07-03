@@ -4,7 +4,8 @@ import type {
 } from "../../models/appFolderManifest";
 import type { SPFxExtensionAppRegistration } from "../../models/appModel";
 import type { CacheableAppFolderManifest } from "../../models/cache";
-import { CONFIGURATOR_APP_ID, MANIFEST_NAME, PUBLIC_CDN_HOST } from "../../utilities/constants";
+import { toPublicCdnUrl } from "../../utilities/cdn";
+import { CONFIGURATOR_APP_ID, MANIFEST_NAME } from "../../utilities/constants";
 import { appIsInDebug } from "../../utilities/debug";
 import { getNewContext } from "../../utilities/helpers";
 import { isFileAllowedToRun } from "./allowedAppsService";
@@ -21,18 +22,6 @@ import { getManifestTXTFromAllLocations } from "./txtManifestService";
 
 let isLoaded = false;
 const loadedAssets: string[] = [];
-
-/**
- * Rewrites a resolved entry point URL to load through the SharePoint Online public CDN.
- *
- * `https://{host}/{path}` becomes `https://public-cdn.sharepointonline.com/{host}/{path}`,
- * preserving the file name and any query string (e.g. the cache busting `v` parameter).
- */
-export function toPublicCdnUrl(url: URL): URL {
-  const cdnUrl = new URL(`https://${PUBLIC_CDN_HOST}/${url.host}${url.pathname}`);
-  cdnUrl.search = url.search;
-  return cdnUrl;
-}
 
 export async function importManualEntriesAndExecute(
   fullJSUrl: string,
