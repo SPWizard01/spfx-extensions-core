@@ -59,10 +59,6 @@ export async function initCoreServices() {
     await loadModernApps(true);
     registerManifestWatcher(true);
   });
-  window.addEventListener("configChange", async () => {
-    logGenericCoreInfo("Global configuration changed, reloading apps...");
-    await loadModernApps(true);
-  });
   registerManifestWatcher();
   registerConfigWatcher();
   logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");

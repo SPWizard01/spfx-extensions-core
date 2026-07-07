@@ -8,16 +8,16 @@ let appCatalogUrlPromise: Promise<string> | undefined;
 
 // const {promise:appCatalogUrlPromise, resolve:appCatalogPromiseResolver} = Promise.withResolvers<string>()
 
-export async function getAppCatalogUrlFromAPI(baseUrl = "") {
+export async function getAppCatalogUrlFromAPI() {
   if (appCatalogUrlPromise) {
     return appCatalogUrlPromise;
   }
-  appCatalogUrlPromise = new Promise<string>((resolve) => {
-    appCatalogPromiseResolver = resolve;
-  });
+  const { promise, resolve } = Promise.withResolvers<string>();
+  appCatalogUrlPromise = promise;
+  appCatalogPromiseResolver = resolve;
 
   try {
-    const apiResponse = await fetch(`${baseUrl}/_api/SP_TenantSettings_Current`, {
+    const apiResponse = await fetch(`/_api/SP_TenantSettings_Current`, {
       headers: {
         Accept: "application/json;odata=verbose",
       },
@@ -36,12 +36,12 @@ export async function getAppCatalogUrlFromAPI(baseUrl = "") {
   return appCatalogUrlPromise;
 }
 
-export async function getAppCatalogUrlCached(baseUrl = "") {
+export async function getAppCatalogUrlCached() {
   const appCatalog = await getRuntimeCacheItem("AppCatalogUrl");
   if (appCatalog?.Data) {
     return appCatalog.Data;
   }
-  const url = await getAppCatalogUrlFromAPI(baseUrl);
+  const url = await getAppCatalogUrlFromAPI();
   await addOrUpdateRuntimeCache({ Title: "AppCatalogUrl", Data: url }, 240);
   return url;
 }

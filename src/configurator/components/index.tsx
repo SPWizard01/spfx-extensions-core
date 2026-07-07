@@ -24,6 +24,7 @@ import { AppList } from "./AppList/AppList";
 import { ManageSitesDrawer } from "./AppList/ManageSitesDrawer";
 import { Stack } from "./common/Stack";
 import { toasterId, ToastNotification } from "./common/ToastNotification";
+import { GlobalConfig } from "./GlobalConfig/GlobalConfig";
 import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
@@ -111,7 +112,7 @@ export function Index() {
     >
       <Stack horizontal gap={16} verticalAlign="center">
         <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
-        {isSiteCollectionAdmin.value ? (
+        {configurationIsGlobal && isSiteCollectionAdmin.value ? (
           <>
             <Button
               icon={<Options20Regular />}
@@ -144,6 +145,7 @@ export function Index() {
       <AppList />
       <SelectedAppConfig />
       <ManageSitesDrawer />
+      <GlobalConfig />
       <ToastNotification />
     </Stack>
   );
