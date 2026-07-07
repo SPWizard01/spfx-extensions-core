@@ -33,7 +33,6 @@ import { toasterId } from "../common/ToastNotification";
 
 interface RuntimeInfo {
   appCatalogUrl?: string;
-  dataSiteUrl?: string;
 }
 
 function toDataSiteUrl(data: any): string | undefined {
@@ -56,13 +55,9 @@ export function GlobalConfig() {
       const effective = await getEffectiveSettings(configurationWebSP, configurationWebUrl.href);
       settings.value = effective;
       original.value = Object.fromEntries(effective.map((s) => [s.Title, `${s.Data}`]));
-      const [appCatalog, dataSite] = await Promise.all([
-        getRuntimeCacheItem("AppCatalogUrl"),
-        getRuntimeCacheItem("SPFxDataSite"),
-      ]);
+      const appCatalog = await getRuntimeCacheItem("AppCatalogUrl");
       runtime.value = {
         appCatalogUrl: appCatalog?.Data,
-        dataSiteUrl: toDataSiteUrl(dataSite?.Data),
       };
     } catch (err) {
       logGenericCoreError("Failed to load global configuration", err);
@@ -164,7 +159,6 @@ export function GlobalConfig() {
             <Stack gap={12}>
               <Subtitle2>Runtime</Subtitle2>
               <DiagRow label="App catalog URL" value={runtime.value.appCatalogUrl ?? "—"} />
-              <DiagRow label="Data site" value={runtime.value.dataSiteUrl ?? "—"} />
               <DiagRow label="Version" value={APP_VERSION} />
               <DiagRow label="Build date" value={BUILD_DATE} />
             </Stack>
