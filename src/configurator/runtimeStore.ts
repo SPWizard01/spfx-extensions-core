@@ -106,6 +106,7 @@ export const selectedAppManualDefinitionItem = signal<SPFxExtensionManualAppEntr
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppJSFiles = signal<string[]>([]);
 export const uploadProjectDrawerOpen = signal<boolean>(false);
+export const showGlobalConfigModal = signal<boolean>(false);
 
 export const configurationWebSubWebs: IWebInfo[] = [];
 if (DEBUG) {

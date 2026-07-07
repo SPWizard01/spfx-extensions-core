@@ -7,6 +7,10 @@ import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 const MINIMAL_CONFIG_COUNT = Object.keys(ConfigurationNames).length;
 
+// Elects a single tab per browser to ensure/create the SharePoint list and seed
+// the shared cache, so concurrent tabs do not race the check-then-create logic.
+const CONFIG_BOOTSTRAP_LOCK = "spfxext-config-bootstrap";
+
 let configurationListDataPromise: Promise<ConfigurationListBaseData[]> | undefined;
 
 async function ensureConfigurationListDataField() {
@@ -153,14 +157,18 @@ export async function getConfigurationListItemsFromAPI() {
 }
 
 /**
- * Cheap change signal: the list's `LastItemUserModifiedDate` changes whenever any
+ * Cheap change signal: the list's `LastItemModifiedDate` changes whenever any
  * item is added/edited/removed. Polling this avoids pulling all items every time.
  */
 export async function getConfigChangeToken(): Promise<string> {
-  const requestUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')?$select=LastItemUserModifiedDate`;
+  //SPO caches forcibly, so we need to add time to ensure that data is actual.
+  const requestUrl = `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')?$select=LastItemModifiedDate&v=${Date.now()}`;
   const req = await fetch(requestUrl, {
+    method: "GET",
     headers: {
-      Accept: "application/json;odata=verbose",
+      Accept: "application/json;odata=nometadata",
+      // Accept: "application/json;odata.metadata=minimal",
+      // "Odata-Version": "4.0",
     },
   });
   if (req.status !== 200) {
@@ -168,7 +176,7 @@ export async function getConfigChangeToken(): Promise<string> {
     return "";
   }
   const data = await req.json();
-  return (data.d?.LastItemUserModifiedDate as string) ?? "";
+  return (data?.LastItemModifiedDate as string) ?? "";
 }
 
 async function createDefaultListItems() {
@@ -230,7 +238,21 @@ export async function commitConfigItems(items: ConfigurationListBaseData[]) {
 
 async function getConfigurationListDataCached() {
   let allConfig = await getAllExtensionConfigFromDB();
-  if (allConfig.length < MINIMAL_CONFIG_COUNT) {
+  if (allConfig.length >= MINIMAL_CONFIG_COUNT) {
+    return allConfig;
+  }
+  // The shared cache is missing/incomplete. `ensureConfigurationList()` is a
+  // check-then-create against SharePoint, so coordinate across all same-origin
+  // tabs: only the tab holding the exclusive lock performs the ensure/seed while
+  // the rest queue behind it and then re-read the now-populated shared cache.
+  // This also closes the within-tab window where `invalidateConfigMemo()` can
+  // restart this routine before the first run has committed its data.
+  await window.navigator.locks.request(CONFIG_BOOTSTRAP_LOCK, { mode: "exclusive" }, async () => {
+    // Double-checked read: another tab may have seeded the cache while we waited.
+    allConfig = await getAllExtensionConfigFromDB();
+    if (allConfig.length >= MINIMAL_CONFIG_COUNT) {
+      return;
+    }
     const isNewList = await ensureConfigurationList();
     if (isNewList) {
       await createDefaultListItems();
@@ -238,6 +260,6 @@ async function getConfigurationListDataCached() {
     const allListData = await getConfigurationListItemsFromAPI();
     await addOrUpdateExtensionConfigs(allListData, 240);
     allConfig = await getAllExtensionConfigFromDB();
-  }
+  });
   return allConfig;
 }
