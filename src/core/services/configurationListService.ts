@@ -2,8 +2,15 @@ import type { ConfigurationListBaseData } from "../../models/configurationList";
 import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getDefaultSettings } from "../utility/defaultConfig";
 import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
-import { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } from "./coreIdbService";
+import { ensureSPFxWeb } from "./configurationWebService";
+import {
+  addOrUpdateExtensionConfigs,
+  getAllExtensionConfigFromDB,
+  getRuntimeCacheItem,
+} from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
+import { ensureConfiguratorPage } from "./pageService";
+import { ensureAppWhiteList } from "./whiteListService";
 
 /**
  * Overlays the persisted/API settings on top of the complete default set so every known
@@ -161,12 +168,10 @@ export async function getConfigurationListItemsFromAPI() {
     ...config,
   });
   if (req.status !== 200) {
-    logGenericCoreError("Unable to fetch configuration list items.");
-    return [];
+    throw new Error(`Unable to fetch configuration list items (status ${req.status}).`);
   }
   const data = await req.json();
-  const results = data.d.results as ConfigurationListBaseData[];
-  return results;
+  return data.d.results as ConfigurationListBaseData[];
 }
 
 /**
@@ -225,10 +230,11 @@ export function getConfigurationListData(fresh = false) {
   if (fresh) {
     return getConfigurationListItemsFromAPI().then(mergeSettings);
   }
-  if (configurationListDataPromise) {
-    return configurationListDataPromise;
+  // Memoized for the page's lifetime; the memo is reset explicitly via `invalidateConfigMemo`
+  // / `commitConfigItems` (after provisioning, or when the watcher detects a change).
+  if (!configurationListDataPromise) {
+    configurationListDataPromise = getConfigurationListDataCached();
   }
-  configurationListDataPromise = getConfigurationListDataCached();
   return configurationListDataPromise;
 }
 
@@ -250,29 +256,39 @@ export async function commitConfigItems(items: ConfigurationListBaseData[]) {
 }
 
 async function getConfigurationListDataCached() {
-  let allConfig = await getAllExtensionConfigFromDB();
-  if (allConfig.length > 0) {
-    return mergeSettings(allConfig);
+  const cached = await getAllExtensionConfigFromDB();
+  if (cached.length > 0) {
+    return mergeSettings(cached);
   }
-  // The shared cache is empty. `ensureConfigurationList()` is a check-then-create
-  // against SharePoint, so coordinate across all same-origin tabs: only the tab
-  // holding the exclusive lock performs the ensure/seed while the rest queue behind
-  // it and then re-read the now-populated shared cache. This also closes the
-  // within-tab window where `invalidateConfigMemo()` can restart this routine before
-  // the first run has committed its data.
+  // Cold cache: read the list directly. This throws when the data site / list is missing
+  // (i.e. not installed); `ensureCoreConfiguration` catches that and provisions.
+  const items = await getConfigurationListItemsFromAPI();
+  await addOrUpdateExtensionConfigs(items, 240);
+  return mergeSettings(items);
+}
+
+/**
+ * Provisions every piece of SharePoint infrastructure the extension needs, in dependency
+ * order, under a single cross-tab lock so concurrent tabs don't race the create. Called by
+ * `ensureCoreConfiguration` only when the optimistic config read fails (not installed).
+ * The installer is necessarily an admin, so this is effectively an admin-only path; for a
+ * non-admin on a genuinely un-provisioned tenant the ensures no-op and later reads hard-fail.
+ */
+export async function provisionInstall() {
   await window.navigator.locks.request(CONFIG_BOOTSTRAP_LOCK, { mode: "exclusive" }, async () => {
-    // Double-checked read: another tab may have seeded the cache while we waited.
-    allConfig = await getAllExtensionConfigFromDB();
-    if (allConfig.length > 0) {
+    // Another tab may have provisioned while we queued; its ensure-results are shared.
+    const provisioned = await getRuntimeCacheItem("SPFxDataSite");
+    if (provisioned?.Data) {
       return;
     }
+    await ensureSPFxWeb();
     const isNewList = await ensureConfigurationList();
     if (isNewList) {
       await createDefaultListItems();
     }
-    const allListData = await getConfigurationListItemsFromAPI();
-    await addOrUpdateExtensionConfigs(allListData, 240);
-    allConfig = await getAllExtensionConfigFromDB();
+    await ensureAppWhiteList();
+    await ensureConfiguratorPage();
   });
-  return mergeSettings(allConfig);
+  // Clear the memo so the next `getConfigurationListData()` re-reads the now-provisioned list.
+  invalidateConfigMemo();
 }

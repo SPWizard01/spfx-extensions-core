@@ -1,35 +1,39 @@
 import type { ConfigurationListBaseData } from "../../models/configurationList";
 import { CONFIGURATOR_PAGE_URL, WELL_KNOWN_MANIFEST_LOCATION } from "../../utilities/constants";
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
-import { getConfigurationListData } from "./configurationListService";
-import { ensureSPFxWeb } from "./configurationWebService";
-import { ensureConfiguratorPage } from "./pageService";
-import { ensureAppWhiteList } from "./whiteListService";
+import { getConfigurationListData, provisionInstall } from "./configurationListService";
+import { logGenericCoreInfo } from "./loggingService";
 
-let configurationInitializationPromise: Promise<void> | undefined;
-export async function initializeCoreConfiguration() {
-  if (configurationInitializationPromise) {
-    return configurationInitializationPromise;
+let coreConfigurationPromise: Promise<void> | undefined;
+export async function ensureCoreConfiguration() {
+  if (coreConfigurationPromise) {
+    return coreConfigurationPromise;
   }
-  configurationInitializationPromise = initializeCoreConfigurationInternal();
-  return configurationInitializationPromise;
+  coreConfigurationPromise = ensureCoreConfigurationInternal();
+  return coreConfigurationPromise;
 }
-async function initializeCoreConfigurationInternal() {
-  await ensureSPFxWeb();
-  await ensureAppWhiteList();
-  await ensureConfiguratorPage();
+async function ensureCoreConfigurationInternal() {
   window.__SPFxExtensions.Utils.ConfiguratorPageUrl = `${SPFX_EXTENSIONS_SITE_URL}/${CONFIGURATOR_PAGE_URL}`;
+  try {
+    // Optimistic: assume the extension is already installed (the installer is necessarily
+    // an admin, so the infrastructure exists before regular users arrive). Reading the
+    // config list throws when the data site / list is missing.
+    await getConfigurationListData();
+  } catch (err) {
+    logGenericCoreInfo("SPFx Extensions not provisioned; installing.", err);
+    await provisionInstall();
+  }
 }
 
-export async function getCoreConfig(fresh = false): Promise<ConfigurationListBaseData[]> {
-  await initializeCoreConfiguration();
+async function getCoreConfig(fresh = false): Promise<ConfigurationListBaseData[]> {
+  await ensureCoreConfiguration();
   return getConfigurationListData(fresh);
 }
 
 /**
  * Reads a single global setting's raw value by its `Title`, or `undefined` when absent.
  */
-export async function getCoreConfigValue(title: ConfigurationListBaseData["Title"], fresh = false) {
+async function getCoreConfigValue(title: ConfigurationListBaseData["Title"], fresh = false) {
   const coreConfig = await getCoreConfig(fresh);
   return coreConfig.find((c) => c.Title === title)?.Data;
 }

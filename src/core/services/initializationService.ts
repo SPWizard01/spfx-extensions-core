@@ -6,7 +6,7 @@ import { cleanCacheOnUpgrade } from "./browserCache";
 import { loadModernApps } from "./componentLoaderService";
 import { registerConfigWatcher } from "./configWatcherService";
 import { initializeContextEventService } from "./contextEventService";
-import { getBooleanCoreConfig, initializeCoreConfiguration } from "./coreConfigService";
+import { ensureCoreConfiguration, getBooleanCoreConfig } from "./coreConfigService";
 import { registerGlobalListeners } from "./globalModernAppsListeners";
 import { initHistoryInterception } from "./historyService";
 import { logGenericCoreInfo } from "./loggingService";
@@ -27,7 +27,7 @@ async function initContextData() {
 }
 
 async function initGlobalInternal() {
-  await initializeCoreConfiguration();
+  await ensureCoreConfiguration();
   const historyInterceptEnabled = await getBooleanCoreConfig("InterceptHistory");
   if (historyInterceptEnabled) {
     initHistoryInterception();
