@@ -1,6 +1,7 @@
 import { file } from "bun";
 import { startBunDevServer } from "bun-dev-server";
 import { bunManifestWriter } from "./src/plugins/bun/manifestPlugin";
+const pkg = await file("./package.json").json();
 startBunDevServer(
   {
     buildConfig: {
@@ -20,6 +21,7 @@ startBunDevServer(
       format: "esm",
       define: {
         BUILD_DATE: JSON.stringify(new Date().toISOString()),
+        APP_VERSION: JSON.stringify(pkg.version),
         DEBUG: JSON.stringify(true),
       },
       plugins: [

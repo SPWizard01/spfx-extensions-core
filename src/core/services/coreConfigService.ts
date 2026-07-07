@@ -3,7 +3,6 @@ import { CONFIGURATOR_PAGE_URL, WELL_KNOWN_MANIFEST_LOCATION } from "../../utili
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { getConfigurationListData } from "./configurationListService";
 import { ensureSPFxWeb } from "./configurationWebService";
-import { addOrUpdateExtensionConfig } from "./coreIdbService";
 import { ensureConfiguratorPage } from "./pageService";
 import { ensureAppWhiteList } from "./whiteListService";
 
@@ -46,10 +45,6 @@ export async function getBooleanCoreConfig(
 ): Promise<boolean> {
   const value = await getCoreConfigValue(title, fresh);
   if (value === undefined || value === null) {
-    await addOrUpdateExtensionConfig({
-      Title: title,
-      Data: defaultValue ? "true" : "false",
-    });
     return defaultValue;
   }
   return value === "true";
@@ -60,8 +55,9 @@ export async function getBooleanCoreConfig(
  * OnPrem/SPO: ```{APP_CATALOG_URL}/SPFxExtensionsData/SPFxExtensions/```
  */
 export async function getRootCDNLocation() {
-  const ROOT_CDN_LOCATION =
-    (await getCoreConfigValue("RootCDNLocation")) ?? `${SPFX_EXTENSIONS_SITE_URL}`;
+  // `RootCDNLocation` is always present because reads merge in defaults (its default is
+  // `SPFX_EXTENSIONS_SITE_URL`).
+  const ROOT_CDN_LOCATION = await getCoreConfigValue("RootCDNLocation");
 
   const ROOT_APPS_LOCATION = `${ROOT_CDN_LOCATION}${WELL_KNOWN_MANIFEST_LOCATION}`;
   return ROOT_APPS_LOCATION;

@@ -1,5 +1,5 @@
 import { SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
+import { addOrUpdateRuntimeCache, getRuntimeCacheItem } from "./coreIdbService";
 import { getDigest } from "./digestService";
 import { logGenericCoreError } from "./loggingService";
 
@@ -37,12 +37,12 @@ export async function getAppCatalogUrlFromAPI(baseUrl = "") {
 }
 
 export async function getAppCatalogUrlCached(baseUrl = "") {
-  const appCatalog = await getExtensionConfigFromDB("AppCatalogUrl");
+  const appCatalog = await getRuntimeCacheItem("AppCatalogUrl");
   if (appCatalog?.Data) {
     return appCatalog.Data;
   }
   const url = await getAppCatalogUrlFromAPI(baseUrl);
-  await addOrUpdateExtensionConfig({ Title: "AppCatalogUrl", Data: url }, 240);
+  await addOrUpdateRuntimeCache({ Title: "AppCatalogUrl", Data: url }, 240);
   return url;
 }
 

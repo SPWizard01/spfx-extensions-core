@@ -17,7 +17,7 @@ import { GetWebConfigContext } from "../../utilities/getConfigWebContext";
 import {
   configurationIsGlobal,
   isSiteCollectionAdmin,
-  showGlobalConfigModal,
+  showGlobalConfig,
 } from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
@@ -116,7 +116,7 @@ export function Index() {
             <Button
               icon={<Options20Regular />}
               onClick={() => {
-                showGlobalConfigModal.value = !showGlobalConfigModal.value;
+                showGlobalConfig.value = !showGlobalConfig.value;
               }}
             >
               {" "}

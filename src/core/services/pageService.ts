@@ -6,7 +6,7 @@ import {
   SPFX_WEBPART_ID,
 } from "../../utilities/constants";
 import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
+import { addOrUpdateRuntimeCache, getRuntimeCacheItem } from "./coreIdbService";
 
 // random guid to track instance of the configurator app
 const CONFIGURATOR_APP_INSTANCEID = "f3ab710f-2c08-422e-a7ad-5d93eb51e7a3";
@@ -150,13 +150,13 @@ async function createConfiguratorPage() {
 }
 
 async function getConfiguratorPageDataCached() {
-  const cache = await getExtensionConfigFromDB("ConfiguratorPageData");
+  const cache = await getRuntimeCacheItem("ConfiguratorPageData");
   if (cache?.Data) {
     return cache.Data;
   }
   const apiData = await getConfiguratorPageData();
   if (apiData) {
-    await addOrUpdateExtensionConfig({ Title: "ConfiguratorPageData", Data: apiData }, 480);
+    await addOrUpdateRuntimeCache({ Title: "ConfiguratorPageData", Data: apiData }, 480);
   }
   return apiData;
 }
@@ -169,7 +169,7 @@ export async function ensureConfiguratorPage() {
   if (data.CanvasContent1.indexOf(CONFIGURATOR_APP_INSTANCEID) === -1) {
     await setPageContent(data.Id);
     const refreshData = await getConfiguratorPageData();
-    await addOrUpdateExtensionConfig({ Title: "ConfiguratorPageData", Data: refreshData }, 480);
+    await addOrUpdateRuntimeCache({ Title: "ConfiguratorPageData", Data: refreshData }, 480);
     return refreshData;
   }
   return data;

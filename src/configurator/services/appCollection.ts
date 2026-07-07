@@ -98,17 +98,25 @@ export async function getAppCollectionConfig(sp: SPFI) {
     warnings: [],
   };
   if (!fileExists) {
-    await ensureSPFxExtensionsFolder(sp);
-    await sp.web.lists
-      .getByTitle(SPFX_EXTENSIONS_FOLDER)
-      .rootFolder.files.addUsingPath(
-        APPCOLLECTION_MANIFEST_NAME,
-        JSON.stringify(EMPTY_COLLECTION_MANIFEST)
+    try {
+      await ensureSPFxExtensionsFolder(sp);
+      await sp.web.lists
+        .getByTitle(SPFX_EXTENSIONS_FOLDER)
+        .rootFolder.files.addUsingPath(
+          APPCOLLECTION_MANIFEST_NAME,
+          JSON.stringify(EMPTY_COLLECTION_MANIFEST)
+        );
+      logGenericCoreInfo(
+        `Created ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}`
       );
-    logGenericCoreInfo(
-      `Created ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}`
-    );
-    return result;
+      return result;
+    } catch (error) {
+      const errMsg = `Error while creating ${APPCOLLECTION_MANIFEST_NAME} in ${SPFX_EXTENSIONS_FOLDER} folder in ${webUrl}`;
+      logGenericCoreError(errMsg, error);
+      result.error = errMsg;
+      result.isError = true;
+      return result;
+    }
   }
   try {
     const content = await appsQuery.getBlob();

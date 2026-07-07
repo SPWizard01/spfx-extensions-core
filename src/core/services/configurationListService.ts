@@ -1,11 +1,24 @@
 import type { ConfigurationListBaseData } from "../../models/configurationList";
 import { CONFIGURATION_LIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
-import { ConfigurationNames, getCoreDefaultConfiguration } from "../utility/defaultConfig";
+import { getDefaultSettings } from "../utility/defaultConfig";
 import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
 import { addOrUpdateExtensionConfigs, getAllExtensionConfigFromDB } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
-const MINIMAL_CONFIG_COUNT = Object.keys(ConfigurationNames).length;
+/**
+ * Overlays the persisted/API settings on top of the complete default set so every known
+ * setting always resolves (the API/cache value wins; defaults only fill the gaps).
+ */
+function mergeSettings(items: ConfigurationListBaseData[]): ConfigurationListBaseData[] {
+  const byTitle = new Map<ConfigurationListBaseData["Title"], ConfigurationListBaseData>();
+  for (const def of getDefaultSettings(SPFX_EXTENSIONS_SITE_URL)) {
+    byTitle.set(def.Title, def);
+  }
+  for (const item of items) {
+    byTitle.set(item.Title, item);
+  }
+  return [...byTitle.values()];
+}
 
 // Elects a single tab per browser to ensure/create the SharePoint list and seed
 // the shared cache, so concurrent tabs do not race the check-then-create logic.
@@ -182,7 +195,7 @@ export async function getConfigChangeToken(): Promise<string> {
 async function createDefaultListItems() {
   const appCatalogDigest = await getAppCatalogDigest(SPFX_EXTENSIONS_DATA_SITE);
 
-  for (const item of getCoreDefaultConfiguration(SPFX_EXTENSIONS_SITE_URL)) {
+  for (const item of getDefaultSettings(SPFX_EXTENSIONS_SITE_URL)) {
     const addReq = await fetch(
       `${SPFX_EXTENSIONS_SITE_URL}/_api/web/lists/GetByTitle('${CONFIGURATION_LIST_NAME}')/items`,
       {
@@ -210,7 +223,7 @@ async function createDefaultListItems() {
 
 export function getConfigurationListData(fresh = false) {
   if (fresh) {
-    return getConfigurationListItemsFromAPI();
+    return getConfigurationListItemsFromAPI().then(mergeSettings);
   }
   if (configurationListDataPromise) {
     return configurationListDataPromise;
@@ -233,24 +246,24 @@ export function invalidateConfigMemo() {
  */
 export async function commitConfigItems(items: ConfigurationListBaseData[]) {
   await addOrUpdateExtensionConfigs(items, 240);
-  configurationListDataPromise = Promise.resolve(items);
+  configurationListDataPromise = Promise.resolve(mergeSettings(items));
 }
 
 async function getConfigurationListDataCached() {
   let allConfig = await getAllExtensionConfigFromDB();
-  if (allConfig.length >= MINIMAL_CONFIG_COUNT) {
-    return allConfig;
+  if (allConfig.length > 0) {
+    return mergeSettings(allConfig);
   }
-  // The shared cache is missing/incomplete. `ensureConfigurationList()` is a
-  // check-then-create against SharePoint, so coordinate across all same-origin
-  // tabs: only the tab holding the exclusive lock performs the ensure/seed while
-  // the rest queue behind it and then re-read the now-populated shared cache.
-  // This also closes the within-tab window where `invalidateConfigMemo()` can
-  // restart this routine before the first run has committed its data.
+  // The shared cache is empty. `ensureConfigurationList()` is a check-then-create
+  // against SharePoint, so coordinate across all same-origin tabs: only the tab
+  // holding the exclusive lock performs the ensure/seed while the rest queue behind
+  // it and then re-read the now-populated shared cache. This also closes the
+  // within-tab window where `invalidateConfigMemo()` can restart this routine before
+  // the first run has committed its data.
   await window.navigator.locks.request(CONFIG_BOOTSTRAP_LOCK, { mode: "exclusive" }, async () => {
     // Double-checked read: another tab may have seeded the cache while we waited.
     allConfig = await getAllExtensionConfigFromDB();
-    if (allConfig.length >= MINIMAL_CONFIG_COUNT) {
+    if (allConfig.length > 0) {
       return;
     }
     const isNewList = await ensureConfigurationList();
@@ -261,5 +274,5 @@ async function getConfigurationListDataCached() {
     await addOrUpdateExtensionConfigs(allListData, 240);
     allConfig = await getAllExtensionConfigFromDB();
   });
-  return allConfig;
+  return mergeSettings(allConfig);
 }
