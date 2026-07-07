@@ -4,7 +4,21 @@ import type { IFolder } from "@pnp/sp/folders";
 import { SPFX_EXTENSIONS_FOLDER } from "../../utilities/constants";
 const listDescription = "This folder contains extensions that are loaded by the SPFxExtensions application.";
 
-export async function ensureSPFxExtensionsFolder(sp: SPFI) {
+// Single-flight guard: if several parts of the app call ensureSPFxExtensionsFolder
+// concurrently, they would race on sp.web.lists.ensure and can both try to create the
+// list. We dedupe concurrent calls so the ensure only runs once at a time.
+let ensureInFlight: Promise<void> | undefined;
+
+export function ensureSPFxExtensionsFolder(sp: SPFI): Promise<void> {
+    if (!ensureInFlight) {
+        ensureInFlight = doEnsureSPFxExtensionsFolder(sp).finally(() => {
+            ensureInFlight = undefined;
+        });
+    }
+    return ensureInFlight;
+}
+
+async function doEnsureSPFxExtensionsFolder(sp: SPFI): Promise<void> {
     try {
         await sp.web.lists.ensure(SPFX_EXTENSIONS_FOLDER, listDescription, 101, false, { Hidden: true })
     }

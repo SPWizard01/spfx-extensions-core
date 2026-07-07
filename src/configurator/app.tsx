@@ -23,8 +23,8 @@ export function App(_props: AppProps) {
   delete window.__tabsterInstanceContext;
   delete window.__tabsterShadowDOMAPI;
 
-  delete window.__keyborg;
-  delete window.__keyborgData;
+  // delete window.__keyborg;
+  // delete window.__keyborgData;
 
   return (
     <FluentProvider

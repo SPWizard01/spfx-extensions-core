@@ -100,7 +100,7 @@ export function registerConfigWatcher() {
   // Every tab reacts to changes the leader commits to shared storage.
   window.addEventListener("storage", onConfigStorageEvent);
   // Elect one leader across all same-origin tabs; only the winner polls SharePoint.
-  navigator.locks.request(CONFIG_POLL_LOCK, { mode: "exclusive" }, () => {
+  window.navigator.locks.request(CONFIG_POLL_LOCK, { mode: "exclusive" }, () => {
     startLeaderPolling();
     // Never resolves: hold the lock for this tab's lifetime so it stays the leader.
     return new Promise<void>(() => {});

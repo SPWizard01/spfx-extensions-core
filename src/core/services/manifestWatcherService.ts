@@ -55,7 +55,7 @@ async function collectionCheckForLocation(
   // per-location (not globally) de-duplicates the shared root check and prevents
   // simultaneous-tick refetch races, while each tab still keeps its own
   // site/web/hub manifests fresh.
-  await navigator.locks.request(
+  await window.navigator.locks.request(
     `${MANIFEST_LOCK_PREFIX}${manifestUrl}`,
     { ifAvailable: true },
     (lock) => checkCollectionLocation(lock, manifestUrl, locationType)
