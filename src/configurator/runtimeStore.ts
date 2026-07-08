@@ -16,21 +16,40 @@ import { getAllAppCollections, getAppCollectionConfig } from "./services/appColl
 import { getPnPSPForConfigurationWeb } from "./services/pnpService";
 import { getAllAppItems } from "./services/renderedAppCollection";
 import { getConfiguringWebUrl } from "./services/webConfiguratorService";
-import { getRootWeb, getSite, getSiteStructure, getWeb } from "./services/webInfoService";
+import {
+  getCurrentUser,
+  getRootWeb,
+  getSite,
+  getSiteStructure,
+  getWeb,
+} from "./services/webInfoService";
 const queryWeb = getConfiguringWebUrl();
 export const configurationWebUrl = new URL(queryWeb ? queryWeb : getWebAbsoluteUrl());
 export const configurationWebSP = getPnPSPForConfigurationWeb();
 
 // --- Parallel initial fetches (site, web, collections, enabled config) ---------
-const [configurationSite, configurationWeb, allAppCollectionsData, enabledAppsData] =
-  await Promise.all([
-    getSite(configurationWebSP),
-    getWeb(configurationWebSP),
-    getAllAppCollections(configurationWebSP),
-    getAppCollectionConfig(configurationWebSP),
-  ]);
+const [
+  configurationSite,
+  configurationWeb,
+  allAppCollectionsData,
+  enabledAppsData,
+  currentUserData,
+] = await Promise.all([
+  getSite(configurationWebSP),
+  getWeb(configurationWebSP),
+  getAllAppCollections(configurationWebSP),
+  getAppCollectionConfig(configurationWebSP),
+  getCurrentUser(configurationWebSP),
+]);
 export { configurationSite, configurationWeb };
 export const configurationIsGlobal = !queryWeb;
+
+// Is the visiting user a site collection administrator? Since the configurator
+// lives on a single page for the whole tenant, this effectively identifies a
+// global/tenant administrator.
+export const isSiteCollectionAdmin = signal<boolean>(
+  !currentUserData.isError && currentUserData.data.IsSiteAdmin === true
+);
 
 // Root web depends on site success
 export const configurationRootWeb: ApiCallResult<IWebInfo> = !configurationSite.isError
@@ -87,6 +106,7 @@ export const selectedAppManualDefinitionItem = signal<SPFxExtensionManualAppEntr
 export const deletingAppItem = signal<AppCollectionConfigurationItem>();
 export const selectedAppJSFiles = signal<string[]>([]);
 export const uploadProjectDrawerOpen = signal<boolean>(false);
+export const showGlobalConfig = signal<boolean>(false);
 
 export const configurationWebSubWebs: IWebInfo[] = [];
 if (DEBUG) {

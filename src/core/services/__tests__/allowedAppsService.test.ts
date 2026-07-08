@@ -38,6 +38,10 @@ async function importServiceWithMocks(opts?: {
   // coreConfig
   vi.doMock("../coreConfigService", () => ({
     getCoreConfig: async () => coreConfig,
+    getBooleanCoreConfig: async (title: string, defaultValue = false) => {
+      const value = coreConfig.find((c) => c.Title === title)?.Data;
+      return value === undefined ? defaultValue : value === "true";
+    },
   }));
 
   // logging

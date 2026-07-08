@@ -9,6 +9,8 @@ import type {
 import type {
   ConfigurationListBaseData,
   ConfigurationListData,
+  RuntimeCacheBaseData,
+  RuntimeCacheData,
 } from "../../models/configurationList";
 import type { HubData } from "../../models/hubData";
 import { APPCOLLECTION_MANIFEST_NAME, MANIFEST_NAME } from "../../utilities/constants";
@@ -37,6 +39,10 @@ interface SPFxExtensionSchema {
     key: string;
     value: ConfigurationListData;
   };
+  SPFxRuntimeCache: {
+    key: string;
+    value: RuntimeCacheData;
+  };
   // PNP_CACHE: {
   //     key: string;
   //     value: PNPCacheItem;
@@ -53,10 +59,14 @@ export const StoreNames = {
   AllowedApps: "AllowedApps",
   HubSiteData: "HubSiteData",
   SPFxExtensionConfig: "SPFxExtensionConfig",
+  SPFxRuntimeCache: "SPFxRuntimeCache",
   // PNP_CACHE: "PNP_CACHE",
 } as const;
 
-const DBNAME = `${DEBUG_KEY_APP_PREFIX}COREDB`;
+const DBNAME = `${DEBUG_KEY_APP_PREFIX}COREDB_${APP_VERSION}`;
+// Set while creating a brand-new database. Because the DB name is suffixed with the
+// package version, a fresh database means a newly deployed build.
+let coreDBWasCreated = false;
 const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
   blocking(_currentVersion, _blockedVersion, _event) {
     openDBPromise.then((db) => db.close());
@@ -65,6 +75,7 @@ const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
   async upgrade(database, oldVersion, _newVersion, _transaction, _event) {
     /// Create the object store
     if (oldVersion === 0) {
+      coreDBWasCreated = true;
       database.createObjectStore(StoreNames.AppFolderManifestCache, { keyPath: "url" });
       database.createObjectStore(StoreNames.AppCollectionManifestCache, {
         keyPath: "url",
@@ -72,6 +83,7 @@ const openDBPromise = openDB<SPFxExtensionCoreDB>(DBNAME, 1, {
       database.createObjectStore(StoreNames.AllowedApps, { keyPath: "Id" });
       database.createObjectStore(StoreNames.HubSiteData, { keyPath: "SiteId" });
       database.createObjectStore(StoreNames.SPFxExtensionConfig, { keyPath: "Title" });
+      database.createObjectStore(StoreNames.SPFxRuntimeCache, { keyPath: "Title" });
       // database.createObjectStore(StoreNames.PNP_CACHE, { keyPath: "keyHash" });
     }
     //diff between 0 and 1 just delete the old database and let it be repopulated
@@ -88,6 +100,13 @@ openDBPromise.catch((err) => {
   throw err;
 });
 export const spfxExtensionsCoreDB = await openDBPromise;
+
+/**
+ * True when this page load created a brand-new core database. Since the database name is
+ * suffixed with the package version, a fresh database indicates a newly deployed build —
+ * used to bust HTTP asset caches exactly once per deployment.
+ */
+export const isFreshCoreDB = coreDBWasCreated;
 
 function getCacheItemBase(cacheTimeMinutes: number) {
   let expires = "never";
@@ -152,6 +171,19 @@ export async function addOrUpdateExtensionConfigs(
   const txStore = tx.objectStore(StoreNames.SPFxExtensionConfig);
   items.forEach((u) => txStore.put({ ...u, ...getCacheItemBase(cacheTimeMinutes) }));
   return tx.done;
+}
+
+export async function getRuntimeCacheItem(title: RuntimeCacheBaseData["Title"]) {
+  await evictItemsFromStore(StoreNames.SPFxRuntimeCache, "Title");
+
+  return spfxExtensionsCoreDB.get(StoreNames.SPFxRuntimeCache, title);
+}
+
+export async function addOrUpdateRuntimeCache(item: RuntimeCacheBaseData, cacheTimeMinutes = 60) {
+  await spfxExtensionsCoreDB.put(StoreNames.SPFxRuntimeCache, {
+    ...item,
+    ...getCacheItemBase(cacheTimeMinutes),
+  });
 }
 
 export async function getAllAllowedAppsFromDB() {

@@ -4,8 +4,9 @@ import { registerAppService } from "./appDefinitionService";
 import { registerAppInstanceService } from "./appInstanceService";
 import { cleanCacheOnUpgrade } from "./browserCache";
 import { loadModernApps } from "./componentLoaderService";
+import { registerConfigWatcher } from "./configWatcherService";
 import { initializeContextEventService } from "./contextEventService";
-import { getCoreConfig, initializeCoreConfiguration } from "./coreConfigService";
+import { ensureCoreConfiguration, getBooleanCoreConfig } from "./coreConfigService";
 import { registerGlobalListeners } from "./globalModernAppsListeners";
 import { initHistoryInterception } from "./historyService";
 import { logGenericCoreInfo } from "./loggingService";
@@ -26,10 +27,8 @@ async function initContextData() {
 }
 
 async function initGlobalInternal() {
-  await initializeCoreConfiguration();
-  const coreConfig = await getCoreConfig();
-  const historyInterceptEnabled =
-    coreConfig.find((c) => c.Title === "InterceptHistory")?.Data === "true";
+  await ensureCoreConfiguration();
+  const historyInterceptEnabled = await getBooleanCoreConfig("InterceptHistory");
   if (historyInterceptEnabled) {
     initHistoryInterception();
   }
@@ -61,5 +60,6 @@ export async function initCoreServices() {
     registerManifestWatcher(true);
   });
   registerManifestWatcher();
+  registerConfigWatcher();
   logGenericCoreInfo("SPFx Extensions Core Has Been initialized.");
 }

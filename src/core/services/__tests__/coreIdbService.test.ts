@@ -23,9 +23,9 @@ beforeEach(async () => {
   warnMock.mockReset();
   errorMock.mockReset();
   cleanMock.mockReset();
-  // Ensure a clean db per test; DB name is derived from DEBUG_KEYS in the module
+  // Ensure a clean db per test; DB name is `${DEBUG_KEY_APP_PREFIX}COREDB_${APP_VERSION}`.
   try {
-    await deleteDB("SPFXEXT_COREDB");
+    await deleteDB(`SPFXEXT_COREDB_${APP_VERSION}`);
   } catch {}
 });
 

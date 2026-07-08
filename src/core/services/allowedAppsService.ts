@@ -3,7 +3,7 @@ import { ALLOWEDAPPSLIST_NAME } from "../../utilities/constants";
 import { appIsInDebug } from "../../utilities/debug";
 import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
-import { getCoreConfig } from "./coreConfigService";
+import { getBooleanCoreConfig } from "./coreConfigService";
 import {
   addOrUpdateAllowedAppsToCache,
   evictAllowedAppsCache,
@@ -34,9 +34,7 @@ async function getAllowedFilesDataCached() {
 }
 
 export async function getAllowedFilesFromApi(fresh = false) {
-  const coreConfig = await getCoreConfig(fresh);
-  const appWhiteListEnabled =
-    coreConfig.find((c) => c.Title === "EnableAppWhiteList")?.Data === "true";
+  const appWhiteListEnabled = await getBooleanCoreConfig("EnableAppWhiteList", false, fresh);
   if (!appWhiteListEnabled) {
     return [
       {

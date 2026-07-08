@@ -124,12 +124,12 @@ export async function* addFiles(sp: SPFI, appName: string, fileContents: FileCon
 
 export async function getAllAppFiles(sp: SPFI, appName: string) {
   //https://8s2kdn.sharepoint.com/sites/CommunicationNoDeletePolicy/_api/web/lists/getbytitle('SPFxExtensions')/items?$select=FileLeafRef,FileDirRef&$filter=FSObjType%20eq%200%20and%20substringof(%27SPFxExtensions%2FsomeApp%27,FileDirRef)
-  const webInfo = await sp.web.using(Caching())();
+  const webInfo = await sp.web();
   //<AppCollectionFiles[]>
   const filesIterator = sp.web.lists
     .getByTitle(SPFX_EXTENSIONS_FOLDER)
     .items.select("FileLeafRef", "FileDirRef")
-    .filter(`FSObjType eq 0 and substringof('${SPFX_EXTENSIONS_FOLDER}/${appName}',FileDirRef)`)
+    .filter(`FSObjType eq 0 and substringof('/${SPFX_EXTENSIONS_FOLDER}/${appName}/',FileRef)`)
     .top(100);
   const relativeFiles: string[] = [];
   const webInfoUrl = webInfo.ServerRelativeUrl.replace(/\/$/, "");

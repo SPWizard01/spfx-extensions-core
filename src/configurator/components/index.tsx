@@ -1,24 +1,30 @@
 import {
   Badge,
+  Button,
   Link,
   Title2,
   Toast,
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import { Copy16Regular } from "@fluentui/react-icons";
+import { Copy16Regular, Options20Regular } from "@fluentui/react-icons";
 import type { ComponentChildren } from "preact";
 import { useErrorBoundary } from "preact/hooks";
 import { getWebAbsoluteUrl } from "../../core/services/contextService";
 import { logGenericCoreError } from "../../core/services/loggingService";
 
 import { GetWebConfigContext } from "../../utilities/getConfigWebContext";
-import { configurationIsGlobal } from "../runtimeStore";
+import {
+  configurationIsGlobal,
+  isSiteCollectionAdmin,
+  showGlobalConfig,
+} from "../runtimeStore";
 import { getConfiguringWebUrl } from "../services/webConfiguratorService";
 import { AppList } from "./AppList/AppList";
 import { ManageSitesDrawer } from "./AppList/ManageSitesDrawer";
 import { Stack } from "./common/Stack";
 import { toasterId, ToastNotification } from "./common/ToastNotification";
+import { GlobalConfig } from "./GlobalConfig/GlobalConfig";
 import { SelectedAppConfig } from "./SelectedAppConfig/SelectedAppConfig";
 
 const queryWeb = getConfiguringWebUrl();
@@ -27,6 +33,14 @@ const configWebType = GetWebConfigContext();
 
 function getBadges() {
   const badges: ComponentChildren[] = [];
+  if (isSiteCollectionAdmin.value) {
+    badges.push(
+      <Badge key="siteAdmin" size="extra-large" shape="rounded" color="success">
+        Admin
+      </Badge>
+    );
+  }
+
   if (configurationIsGlobal) {
     badges.push(
       <Badge key="global" size="extra-large" shape="rounded" color="danger">
@@ -35,6 +49,7 @@ function getBadges() {
     );
     return badges;
   }
+
   if (configWebType === "hubRoot") {
     badges.push(
       <Badge key="hubRoot" size="extra-large" shape="rounded" color="success">
@@ -97,8 +112,22 @@ export function Index() {
     >
       <Stack horizontal gap={16} verticalAlign="center">
         <Title2>{queryWeb ? "Web" : "Global"} application list</Title2>
+        {configurationIsGlobal && isSiteCollectionAdmin.value ? (
+          <>
+            <Button
+              icon={<Options20Regular />}
+              onClick={() => {
+                showGlobalConfig.value = !showGlobalConfig.value;
+              }}
+            >
+              {" "}
+              Settings
+            </Button>
+          </>
+        ) : null}
         {...getBadges()}
       </Stack>
+
       {queryWeb && (
         <Stack horizontal gap={8} verticalAlign="center">
           <Link target="_blank" href={cfgWeb}>
@@ -116,6 +145,7 @@ export function Index() {
       <AppList />
       <SelectedAppConfig />
       <ManageSitesDrawer />
+      <GlobalConfig />
       <ToastNotification />
     </Stack>
   );

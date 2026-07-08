@@ -1,6 +1,6 @@
 import { ALLOWEDAPPSLIST_NAME, SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getAppCatalogDigest, SPFX_EXTENSIONS_SITE_URL } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
+import { addOrUpdateRuntimeCache, getRuntimeCacheItem } from "./coreIdbService";
 import { logGenericCoreError, logGenericCoreInfo } from "./loggingService";
 
 async function ensureAppWhiteListFields() {
@@ -142,13 +142,13 @@ async function ensureWhitelistCreated() {
 }
 
 export async function ensureAppWhiteList() {
-  const cachedData = await getExtensionConfigFromDB("AppWhiteList");
+  const cachedData = await getRuntimeCacheItem("AppWhiteList");
   if (cachedData?.Data) {
     return cachedData.Data;
   }
   const apiData = await ensureWhitelistCreated();
   if (apiData) {
-    await addOrUpdateExtensionConfig({ Title: "AppWhiteList", Data: apiData }, 480);
+    await addOrUpdateRuntimeCache({ Title: "AppWhiteList", Data: apiData }, 480);
   }
   return apiData;
 }

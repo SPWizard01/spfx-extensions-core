@@ -5,16 +5,18 @@ import type {
   ManifestBase,
   ManifestLocation,
 } from "../../models/cache";
+import { toPublicCdnUrl } from "../../utilities/cdn";
 import {
   APPCOLLECTION_MANIFEST_NAME,
   EMPTY_APP_MANIFEST,
   MANIFEST_NAME,
   SPFxExtensionCore,
 } from "../../utilities/constants";
-import { somethingIsInDebug } from "../../utilities/debug";
+import { appIsInDebug, somethingIsInDebug } from "../../utilities/debug";
 import { getContentHash } from "../../utilities/digest";
 import { DEBUG_KEY_APP_PREFIX } from "../../utilities/runtimeConstants";
 import { fixupManifest } from "../utility/helpers";
+import { getUsePublicCDNForManifests } from "./coreConfigService";
 import { getManifestTXTFromCache, setOrUpdateManifestTXT } from "./coreIdbService";
 import {
   logGenericCoreDebug,
@@ -65,7 +67,9 @@ async function fetchAndCacheManifestTXT(
       return cachedManifest;
     }
   }
-  const fetchUrl = `${fetchLocation}?v=${Date.now()}`;
+  const usePublicCdn = (await getUsePublicCDNForManifests()) && !appIsInDebug(manifestBase.name);
+  const cacheBustedUrl = new URL(`${fetchLocation}?v=${Date.now()}`, window.location.origin);
+  const fetchUrl = (usePublicCdn ? toPublicCdnUrl(cacheBustedUrl) : cacheBustedUrl).toString();
   try {
     logGenericCoreDebug(`Fetching ${MANIFEST_NAME} from`, fetchUrl);
     const mnfReq = await fetch(fetchUrl);

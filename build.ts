@@ -1,7 +1,8 @@
-import { $, build, BuildOutput } from "bun";
+import { $, build, BuildOutput, file } from "bun";
 import { coreEntryPoints, pluginEntryPoints } from "./entrypoints";
 await $`rm -rf dist`;
 const prod = process.argv.includes("--prod");
+const pkg = await file("./package.json").json();
 const result = await build({
   entrypoints: coreEntryPoints,
   sourcemap: "none",
@@ -11,6 +12,7 @@ const result = await build({
   format: "esm",
   define: {
     BUILD_DATE: JSON.stringify(new Date().toISOString()),
+    APP_VERSION: JSON.stringify(pkg.version),
     DEBUG: JSON.stringify(prod ? false : true),
   },
   drop: ["console.debug", "console.log"],

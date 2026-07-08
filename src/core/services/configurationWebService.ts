@@ -1,7 +1,7 @@
 import type { ApiCallResult } from "../../configurator/models/apiCallResult";
 import { SPFX_EXTENSIONS_DATA_SITE } from "../../utilities/constants";
 import { getAppCatalogDigest, getAppCatalogUrlFromAPI } from "./appCatalogService";
-import { addOrUpdateExtensionConfig, getExtensionConfigFromDB } from "./coreIdbService";
+import { addOrUpdateRuntimeCache, getRuntimeCacheItem } from "./coreIdbService";
 import { logGenericCoreError } from "./loggingService";
 
 async function createWeb(webUrl: string) {
@@ -71,7 +71,7 @@ async function getWebData(): Promise<ApiCallResult<any>> {
 }
 
 async function getWebDataCached() {
-  const appCatalogWebs = await getExtensionConfigFromDB("SPFxDataSite");
+  const appCatalogWebs = await getRuntimeCacheItem("SPFxDataSite");
   return appCatalogWebs?.Data;
 }
 let ensureWebDataPromise: Promise<any> | undefined;
@@ -90,7 +90,7 @@ async function ensureWebDataInternal() {
       const result = await createWeb(SPFX_EXTENSIONS_DATA_SITE);
       apiResponse.data = result;
     }
-    await addOrUpdateExtensionConfig({ Title: "SPFxDataSite", Data: apiResponse.data }, 240);
+    await addOrUpdateRuntimeCache({ Title: "SPFxDataSite", Data: apiResponse.data }, 240);
     return apiResponse.data;
   }
   return webData;

@@ -1,14 +1,12 @@
 import { SPFX_SOLUTION_ID } from "../../utilities/constants";
 import { getContentHash } from "../../utilities/digest";
-import { getCoreConfig } from "./coreConfigService";
-import { addOrUpdateExtensionConfig } from "./coreIdbService";
+import { isFreshCoreDB } from "./coreIdbService";
 import { logGenericCoreInfo } from "./loggingService";
 export async function cleanCacheOnUpgrade() {
-  let coreConfig = await getCoreConfig();
-  const keyParts = [SPFX_SOLUTION_ID];
-  if (coreConfig.find((c) => c.Title === "Version")?.Data !== BUILD_DATE) {
-    await addOrUpdateExtensionConfig({ Title: "Version", Data: BUILD_DATE }, Infinity);
-    await cleanStorageCache(keyParts, true);
+  // The core DB name is suffixed with the package version, so a freshly created DB means a
+  // new build was deployed. Bust the solution's HTTP asset caches exactly once per version.
+  if (isFreshCoreDB) {
+    await cleanStorageCache([SPFX_SOLUTION_ID], true);
   }
 }
 
