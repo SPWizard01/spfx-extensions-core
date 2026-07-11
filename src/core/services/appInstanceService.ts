@@ -1,24 +1,17 @@
 import type { SPFxExtensionAppRuntimeConfig } from "../../models/appConfig";
-import type {
-  SPFxExtensionAppDefinition,
-  SPFxExtensionAppInstance,
-} from "../../models/appModel";
+import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
 import type {
   SPFxExtensionAppInstanceEventListener,
   SPFxExtensionAppInstanceEvents,
 } from "../../models/events";
 import { emptyDummy, getCurrentContextId } from "../../utilities/helpers";
 import { ensureApp } from "./appDefinitionService";
-import { loadAppInstance } from "./appServices";
-import { logGenericCoreDebug, logGenericCoreError } from "./loggingService";
+import { loadAppInstance, unmountAppInstance } from "./appServices";
+import { logGenericCoreDebug, logGenericCoreError, logGenericCoreWarning } from "./loggingService";
 
 function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
-  const removeInstanceEventListener = (
-    eventListener: SPFxExtensionAppInstanceEventListener
-  ) => {
-    const idx = appInstance.allEventListeners.findIndex(
-      (el) => el.key === eventListener.key
-    );
+  const removeInstanceEventListener = (eventListener: SPFxExtensionAppInstanceEventListener) => {
+    const idx = appInstance.allEventListeners.findIndex((el) => el.key === eventListener.key);
     if (idx > -1) {
       logGenericCoreDebug("Removing event listener", eventListener);
       appInstance.allEventListeners.splice(idx, 1);
@@ -26,7 +19,7 @@ function registerEventHandlers(appInstance: SPFxExtensionAppInstance) {
   };
 
   const addInstanceEventListener = <
-    EVENT_TYPE extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents
+    EVENT_TYPE extends keyof SPFxExtensionAppInstanceEvents = keyof SPFxExtensionAppInstanceEvents,
   >(
     eventName: EVENT_TYPE,
     callback: (eventData: SPFxExtensionAppInstanceEvents[EVENT_TYPE]) => void
@@ -69,36 +62,43 @@ function executeInstanceAddedListeners(
     "instance",
     appInstance.key
   );
-  window.__SPFxExtensions.AppEventListeners.filter(
-    (l) => l.eventName === "instanceAdded"
-  ).forEach((listener) => {
-    try {
-      listener.handler({ app: appDefinition, instance: appInstance });
-    } catch (e) {
-      logGenericCoreError("Error executing instanceAdded event", e);
+  window.__SPFxExtensions.AppEventListeners.filter((l) => l.eventName === "instanceAdded").forEach(
+    (listener) => {
+      try {
+        listener.handler({ app: appDefinition, instance: appInstance });
+      } catch (e) {
+        logGenericCoreError("Error executing instanceAdded event", e);
+      }
     }
-  });
+  );
 }
 
 export function createAppInstance(
+  app: SPFxExtensionAppDefinition,
   runTimeConfig: SPFxExtensionAppRuntimeConfig
 ) {
-  const { promise: instanceLoadPromise, resolve: instanceLoadPromiseResolver } =
-    Promise.withResolvers<void>();
-
+  const {
+    promise: instanceLoadPromise,
+    resolve: instanceLoadPromiseResolver,
+    reject: instanceLoadPromiseReject,
+  } = Promise.withResolvers<void>();
+  const key = runTimeConfig.webpart?.instanceId ?? window.crypto.randomUUID();
   const appInstance: SPFxExtensionAppInstance = {
     ...runTimeConfig,
-    key: window.crypto.randomUUID(),
+    key,
     contextId: getCurrentContextId(),
     instanceRequested: false,
     instanceExecuted: false,
     unmountOnRender: true,
-    unmount: emptyDummy,
+    unmount: () => {
+      unmountAppInstance(app, key);
+    },
     allEventListeners: [],
     addEventListener: emptyDummy,
     executeListeners: emptyDummy,
     instanceLoadPromise,
     instanceLoadPromiseResolver,
+    instanceLoadPromiseReject,
   };
 
   registerEventHandlers(appInstance);
@@ -107,20 +107,20 @@ export function createAppInstance(
 
 export function registerAppInstanceService() {
   if (!window.__SPFxExtensions.InstantiateApp) {
-    window.__SPFxExtensions.InstantiateApp = async (
+    window.__SPFxExtensions.InstantiateApp = (
       appId: string,
       runTimeConfig: SPFxExtensionAppRuntimeConfig
     ) => {
-      const foundApp = ensureApp(appId);
+      const ensuredApp = ensureApp(appId);
       logGenericCoreDebug(`Creating app instance for app`, appId);
-      const appInstance = createAppInstance(runTimeConfig);
-      appInstance.unmountOnRender = foundApp.unmountOnRender ?? true;
-      foundApp.instances.push(appInstance);
+      const appInstance = createAppInstance(ensuredApp, runTimeConfig);
+      appInstance.unmountOnRender = ensuredApp.unmountOnRender ?? true;
+      ensuredApp.instances.push(appInstance);
 
-      executeInstanceAddedListeners(foundApp, appInstance);
+      executeInstanceAddedListeners(ensuredApp, appInstance);
       //this will only be available once the app registration passes
-      if (foundApp.registrationCompleted) {
-        loadAppInstance(foundApp, appInstance);
+      if (ensuredApp.registrationCompleted) {
+        loadAppInstance(ensuredApp, appInstance);
       }
 
       return appInstance;

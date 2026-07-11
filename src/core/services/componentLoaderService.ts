@@ -229,7 +229,7 @@ async function unregisterNonApplicable(allExports: SPFxExtensionAppRegistration[
   }
   for (const appId of shouldUnregisterIds) {
     //unregister app as it does not belong to this context
-    const unregistered = await window.__SPFxExtensions.UnregisterApp(appId);
+    const unregistered = window.__SPFxExtensions.UnregisterApp(appId);
     if (unregistered) {
       logGenericCoreWarning(
         `Unregistered App ${unregistered.id} (${unregistered.name}) as it does not belong in this context`
@@ -275,7 +275,7 @@ async function executeRegistrations(
       logGenericCoreInfo(notEnabledMSG);
       continue;
     }
-    const registeredApp = await window.__SPFxExtensions.RegisterApp(appReg);
+    const registeredApp = window.__SPFxExtensions.RegisterApp(appReg);
     successfullyRegistered.push(appReg);
     if (!appReg.isWebPartApp && appReg.autoExecute) {
       if (registeredApp.instances.length < (appReg.maxInstances ?? Infinity)) {

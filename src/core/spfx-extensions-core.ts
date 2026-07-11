@@ -51,7 +51,7 @@ async function init() {
   logGenericCoreInfo(`Initializing SPFxExtensions Core Built:`, buildDate);
   await initCoreServices();
   try {
-    await window.__SPFxExtensions.RegisterApp(configuratorApp);
+    window.__SPFxExtensions.RegisterApp(configuratorApp);
   } catch (e) {
     logGenericCoreError("Error registering configurator app", e);
   }

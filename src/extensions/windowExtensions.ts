@@ -99,7 +99,7 @@ declare global {
       InstantiateApp(
         appId: string,
         runTimeConfig: SPFxExtensionAppRuntimeConfig
-      ): Promise<SPFxExtensionAppInstance | undefined>;
+      ): SPFxExtensionAppInstance;
       /**
        * Ensures that app is registered in global registry, returns app definition.
        *
@@ -112,7 +112,7 @@ declare global {
        * @param app app definition
        */
 
-      RegisterApp(app: SPFxExtensionAppRegistration): Promise<SPFxExtensionEnsuredAppDefinition>;
+      RegisterApp(app: SPFxExtensionAppRegistration): SPFxExtensionEnsuredAppDefinition;
 
       /**
        * Unregisters app from global registry, removes all instances of the app.
@@ -121,7 +121,7 @@ declare global {
        *
        * @param appId application id to unregister
        */
-      UnregisterApp(appId: string): Promise<SPFxExtensionEnsuredAppDefinition | undefined>;
+      UnregisterApp(appId: string): SPFxExtensionEnsuredAppDefinition | undefined;
 
       AppEventListeners: SPFxExtensionAppEventListener[];
       AddAppEventListener<K extends keyof SPFxExtensionAppEvents = keyof SPFxExtensionAppEvents>(

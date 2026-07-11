@@ -5,8 +5,9 @@ import type {
   SPFxExtensionCleanup,
 } from "./events";
 
-export interface SPFxExtensionAppInstance<TConfig = unknown>
-  extends SPFxExtensionAppRuntimeConfig<TConfig> {
+export interface SPFxExtensionAppInstance<
+  TConfig = unknown,
+> extends SPFxExtensionAppRuntimeConfig<TConfig> {
   key: string;
 
   contextId: string;
@@ -39,8 +40,8 @@ export interface SPFxExtensionAppInstance<TConfig = unknown>
    * @param callback call back function that will be called once event is raised.
    */
   addEventListener<
-    K extends
-      keyof SPFxExtensionAppInstanceEvents<TConfig> = keyof SPFxExtensionAppInstanceEvents<TConfig>,
+    K extends keyof SPFxExtensionAppInstanceEvents<TConfig> =
+      keyof SPFxExtensionAppInstanceEvents<TConfig>,
   >(
     eventName: K,
     callback: (eventData: SPFxExtensionAppInstanceEvents<TConfig>[K]) => void
@@ -49,8 +50,8 @@ export interface SPFxExtensionAppInstance<TConfig = unknown>
   // removeEventListener(listener: SPFxExtensionAppInstanceEventListener): void;
 
   executeListeners<
-    K extends
-      keyof SPFxExtensionAppInstanceEvents<TConfig> = keyof SPFxExtensionAppInstanceEvents<TConfig>,
+    K extends keyof SPFxExtensionAppInstanceEvents<TConfig> =
+      keyof SPFxExtensionAppInstanceEvents<TConfig>,
   >(
     eventName: K,
     eventData: SPFxExtensionAppInstanceEvents<TConfig>[K]
@@ -64,6 +65,7 @@ export interface SPFxExtensionAppInstance<TConfig = unknown>
    * this should only be called by the core when instance is loaded and the promise is used by spfx
    */
   instanceLoadPromiseResolver(): void;
+  instanceLoadPromiseReject(reason?: any): void;
 }
 
 export interface SPFxExtensionAppIcon {

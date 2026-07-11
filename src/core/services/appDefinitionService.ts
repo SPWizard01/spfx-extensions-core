@@ -51,7 +51,7 @@ export function registerAppService() {
   }
 
   if (!window.__SPFxExtensions.RegisterApp) {
-    window.__SPFxExtensions.RegisterApp = async (newAppDefinition) => {
+    window.__SPFxExtensions.RegisterApp = (newAppDefinition) => {
       const appDefinition = ensureApp(newAppDefinition.id);
       if (appDefinition.registrationCompleted) {
         return appDefinition;
@@ -80,7 +80,7 @@ export function registerAppService() {
   }
 
   if (!window.__SPFxExtensions.UnregisterApp) {
-    window.__SPFxExtensions.UnregisterApp = async (appId) => {
+    window.__SPFxExtensions.UnregisterApp = (appId) => {
       const appDefinitionIdx = window.__SPFxExtensions.Apps.findIndex((a) => a.id === appId);
       if (appDefinitionIdx < 0) {
         return;

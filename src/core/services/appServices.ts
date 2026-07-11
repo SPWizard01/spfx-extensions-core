@@ -1,6 +1,6 @@
 import type { SPFxExtensionAppDefinition, SPFxExtensionAppInstance } from "../../models/appModel";
 import { CONFIGURATOR_APP_ID } from "../../utilities/constants";
-import { logInstanceRequestedError } from "./loggingService";
+import { logGenericCoreDebug, logInstanceRequestedError } from "./loggingService";
 
 export function unmountAppInstance(
   appDef: SPFxExtensionAppDefinition,
@@ -8,6 +8,9 @@ export function unmountAppInstance(
   userCleanupFunc?: () => void
 ) {
   const idx = appDef.instances.findIndex((i) => i.key === instanceKey);
+  logGenericCoreDebug(
+    `Unmounting app instance ${instanceKey} from app '${appDef.name}' (${appDef.id})`
+  );
   if (idx > -1) {
     const splicedInstance = appDef.instances.splice(idx, 1);
     if (splicedInstance.length < 1) return;
@@ -40,17 +43,19 @@ export function loadAppInstance(
   if (appInstance.instanceRequested) return;
   try {
     appInstance.instanceRequested = true;
+    logGenericCoreDebug(`Calling onInstanceRequested for app`, foundApp.id);
     foundApp
       .onInstanceRequested(appInstance)
       .then((userCleanupFunc) => {
+        appInstance.instanceExecuted = true;
         appInstance.unmount = () => {
           unmountAppInstance(foundApp, appInstance.key, userCleanupFunc);
         };
         appInstance.instanceLoadPromiseResolver();
-        appInstance.instanceExecuted = true;
       })
-      .catch((e) => {
-        logInstanceRequestedError(foundApp, e);
+      .catch((error) => {
+        logInstanceRequestedError(foundApp, error);
+        appInstance.instanceLoadPromiseReject(error);
       });
   } catch (e) {
     logInstanceRequestedError(foundApp, e);
